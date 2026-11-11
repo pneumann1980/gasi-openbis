@@ -1,0 +1,4 @@
+/data/datasheets/*
+!/data/datasheets/.gitkeep
+/data/measurements/*
+!/data/measurements/.gitkeep

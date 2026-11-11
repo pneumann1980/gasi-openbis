@@ -1,0 +1,373 @@
+# Verfahren zur Prüfung und Kennlinienbestimmung von Gas- und Feuchtesensoren
+
+Die QM-Dokumentation und deren Freigabestatus werden über die e-Akte zum Aktenzeichen 1150.02/0008#0004-0016 - StAA-8.1-41 Prüfung Gas- und Feuchtesensoren verwaltet. Ausdrucke unterliegen nicht dem Änderungsdienst.
+
+# **1 Verfahrensprinzip**
+
+Das Verfahren dient der Prüfung, Charakterisierung und Kalibrierung von Gas- und Multigassensoren sowie der Ermittlung des funktionalen Zusammenhangs zwischen Sensorsignal und Gaskonzentration. Darüber hinaus wird es für entwicklungsbegleitende Untersuchungen innovativer Sensoren und Sensorsysteme eingesetzt. Hierzu zählen Messmittel zur qualitativen und quantitativen Erfassung einzelner oder mehrerer gasförmiger Komponenten in Gasgemischen, beispielsweise Sensorelemente, Sensormodule, Sensorarrays, Sensorsysteme, Mikrosensoren, Chemosensoren, optische Sensoren, Luftgüte- und Feuchtesensoren.
+
+Die Untersuchungen erfolgen für Anwendungen in den Kategorien Komfort (A1), Diagnose (A2), Prozessüberwachung (A3), Sicherheit (A4) sowie für neuartige messtechnische Fragestellungen.
+
+Die Bereitstellung der Prüfgase erfolgt über die PC-gesteuerte automatische Prüfanlage „GASI“. Mithilfe thermischer Massendurchflussregler (MFR) können Prüfgase innerhalb weniger Sekunden in stufenlos einstellbaren Konzentrationen gemischt, mit einem Träger- bzw. Matrixgas verdünnt und bei Bedarf auf eine definierte Feuchte eingestellt werden. Für die Regelung der erforderlichen Gasströme stehen Massendurchflussregler unterschiedlicher Mess- und Regelbereiche zur Verfügung.
+
+Die Anlagensteuerung erfolgt über einen zentralen Steuerrechner mit integriertem Messplatzprogramm. Dieser übernimmt die Steuerung und Überwachung des gesamten Prüfstands, die Visualisierung von Prozess- und Messdaten, die automatisierte Durchführung von Messabläufen sowie die Erfassung, Verarbeitung und Speicherung der Messdaten.
+
+Im Rahmen dieses Verfahrens wird unter einem Sensor eine Messeinrichtung verstanden, die einen chemischen oder physikalischen Zustand erfasst und in ein elektrisches, optisches oder digitales Signal umwandelt. Das resultierende Signal wird entweder messtechnisch erfasst oder direkt durch eine integrierte Sensorelektronik ausgegeben und angezeigt.
+
+Zur Messwerterfassung werden die Sensoren abhängig vom Sensortyp entweder über eine Vierleitertechnik mit einem Impedanz-/Verstärkungs-Phasenanalysator HP 4194A, mit einem Datenlogger Hydra III 2638A oder über eine digitale CAN-Bus-Schnittstelle an einen PC angebunden. Auf diese Weise können Widerstands-, Kapazitäts-, Leitfähigkeits- und Induktivitätssignale in einem Frequenzbereich von 100 kHz bis 40 MHz sowie Spannungs-, Strom- und digitale CAN-Signale erfasst und mit geeigneter Mess- und Auswertesoftware verarbeitet werden.
+
+Die Prüfbedingungen werden in Abstimmung mit dem Auftraggeber in einem Prüfplan festgelegt. Dabei wird im Vorfeld geprüft, ob die physikalischen, technischen und sicherheitsrelevanten Voraussetzungen für die Durchführung der Untersuchungen erfüllt sind.
+
+Die zu untersuchenden Sensoren werden entsprechend ihres Platzbedarfs in angepassten und strömungsoptimierten Mess- bzw. Sensorkammern betrieben. Diese können in eine Klimakammer integriert werden, wodurch Untersuchungen in einem Temperaturbereich von −40 °C bis +180 °C möglich sind. Die Sensoren werden dabei kontrolliert mit Prüfgasen definierter Zusammensetzung beaufschlagt.
+
+Die Anbindung der Sensorkammern an das Gassystem erfolgt über Edelstahlrohrleitungen, die bei Bedarf mit inertisierten Innenoberflächen ausgeführt werden können. Innerhalb des Gassystems werden definierte Volumenströme reiner oder vorverdünnter Prüfgase erzeugt, gemischt, verdünnt und gegebenenfalls befeuchtet.
+
+Zur Einstellung der Feuchte dient ein Befeuchtersystem bestehend aus einer Waschflasche und einem Peltier-geregelten Messgaskühler. Mit dem System können definierte Tau- bzw. Frostpunkte eingestellt werden. Für die Dosierung der Verdünnungsgase und der zu befeuchtenden Gasströme stehen sechs Massendurchflussregler unterschiedlicher Regelbereiche zur Verfügung. Die Umschaltung der Gaswege erfolgt über totraumminimierte Zumischventile.
+
+Zur Bestimmung der Feuchte kann ein Taupunktspiegel-Präzisionshygrometer eingesetzt werden. Dieses wird abhängig von den Eigenschaften des Prüflings entweder parallel zur Messkammer oder in Reihe zum Prüfling betrieben und ermöglicht die hochgenaue Bestimmung des Taupunkts bzw. der Spurenfeuchte des Prüfgases.
+
+## Aufbau
+
+Das Gasmischsystem ist modulartig in einem Racksystem mit einer Gesamthöhe von **37 Höheneinheiten (37 U)** aufgebaut. Es dient als integrierte Mess-, Steuer- und Gasaufbereitungseinheit für den Labor- bzw. Prüfstandsbetrieb. Die Komponenten ermöglichen die Versorgung, Konditionierung sowie Überwachung von Prüfgasen und Messsystemen.
+
+![P_ID_RI_GASI-Flussdiagramm.png](uploads/49f73c593be799d6747c8e355303115e/P_ID_RI_GASI-Flussdiagramm.png){width="398" height="292"}
+
+**1. Notstromversorgung (2 U)**\
+Im oberen Bereich des Racks befindet sich eine kompakte Notstromversorgung (USV). Diese stellt bei Netzausfall die Versorgung kritischer Komponenten sicher und ermöglicht ein kontrolliertes Herunterfahren bzw. den unterbrechungsfreien Weiterbetrieb wichtiger Systeme.
+
+**2. Messgerät 473-SH2 (3 U)**\
+Unterhalb der USV ist das Messsystem **473-SH2** installiert. Dieses dient der analytischen Erfassung und Auswertung relevanter Prozess- oder Gasparameter und bildet eine zentrale Komponente der Messkette.
+
+**3. PC (4 U)**\
+Der PC **WS 8731 (Inventarnummer 23000103)** übernimmt die Datenerfassung, Steuerung der Anlage sowie die Speicherung und Verarbeitung der Messdaten. Über ihn erfolgt die Bedienung und Überwachung des Gesamtsystems.
+
+**4. Ausziehbare Schublade (1 U)**\
+Die Schublade bietet Platz für den PC.
+
+**5. MVCU-Modul (2 U)**\
+Das MVCU-Modul dient als Steuer- und Schnittstelleneinheit zwischen den Mess-, Regel- und Prozesskomponenten. Es übernimmt zentrale Aufgaben der Signalverarbeitung und Anlagensteuerung.
+
+**6. Modul Gasmischung (6 U)**\
+Das Gasmischmodul ermöglicht die präzise Erzeugung definierter Prüfgaszusammensetzungen aus verschiedenen Einzelgasströmen. Dadurch können realistische Betriebs- und Fehlerzustände simuliert sowie Sensor- und Messsysteme kalibriert und validiert werden.
+
+Die CAD-Zeichnung des Moduls ist im Pfad \\\\GFS01\\G01a\\ABT8LW\\ABT8_1\\08_FB-Austattung\\Geräteordner\\Geräteordner_FB\\Gasmischverfahren_94000297\\02_GASI-Komponenten\\033_Hauptmodul_2023\\Gasmischanlage_2023_64.exe, [Link](%5CGFS01%5CG01a%5CABT8LW%5CABT8_1%5C08_FB-Austattung%5CGer%C3%A4teordner%5CGer%C3%A4teordner_FB%5CGasmischverfahren_94000297%5C02_GASI-Komponenten%5C033_Hauptmodul_2023%5CGasmischanlage_2023_64.exe).
+
+**7. Modul Befeuchter (8 U)**\
+Das Befeuchtermodul dient der gezielten Einstellung der Gasfeuchte. Hierdurch können unterschiedliche Umgebungs- und Prozessbedingungen nachgebildet werden, um den Einfluss der Feuchtigkeit auf Sensoren, Materialien oder Verfahren zu untersuchen.
+
+Die CAD-Zeichnung des Moduls ist im Pfad \\\\GFS01\\G01a\\ABT8LW\\ABT8_1\\08_FB-Austattung\\Geräteordner\\Geräteordner_FB\\Gasmischverfahren_94000297\\02_GASI-Komponenten\\032_Modul-Befeuchter\\GASI_Befeuchter_64_final_230502.exe, [Link](%5CGFS01%5CG01a%5CABT8LW%5CABT8_1%5C08_FB-Austattung%5CGer%C3%A4teordner%5CGer%C3%A4teordner_FB%5CGasmischverfahren_94000297%5C02_GASI-Komponenten%5C032_Modul-Befeuchter%5CGASI_Befeuchter_64_final_230502.exe).
+
+**8. Freie bzw. Reservespaces (2 U)**\
+Im unteren Bereich des Racks stehen zusätzliche Höheneinheiten für Erweiterungen, Kabelführung oder zukünftige Systemkomponenten zur Verfügung.
+
+Funktion des Gesamtsystems
+
+Der 37-U-Rackschrank vereint Energieversorgung, Messdatenerfassung, Steuerung sowie Gasaufbereitung in einem kompakten System. Durch die Kombination von Notstromversorgung, Industrie-PC, Gasmischung und Befeuchtung können definierte Prüfgasatmosphären erzeugt, überwacht und dokumentiert werden. Das System eignet sich insbesondere für Anwendungen in der Gasanalytik, Sensorentwicklung, Kalibrierung sowie für Untersuchungen im Bereich Wasserstoff- und Energietechnologien.
+
+# **2 Qualifikationsanforderungen an das Personal**
+
+## Sachbearbeitung von messtechnischen Aufgaben
+
+Für die Durchführung von Aufbauten und messtechnischen Arbeiten wird als Grundqualifikation eine abgeschlossene Ausbildung zum/zur Chemielaboranten/in oder Chemisch-technischen Assistenten/Assistentin vorausgesetzt. Ergänzend ist eine spezifische Einweisung in die jeweiligen Versuchs- und Prüfeinrichtungen erforderlich. Die eingesetzten Fachkräfte verfügen über fundierte Kenntnisse im Bereich der Prüf- und Kalibrierverfahren sowie über praktische Erfahrungen in der Anwendung von Methoden der Hygrometrie, Gaschromatografie und Spektrometrie. Darüber hinaus besitzen sie Kenntnisse in der Sensorik, der Signal- und Datenverarbeitung sowie in der Auswertung und Interpretation von Messdaten. Sie sind befähigt, Berichte und technische Dokumentationen ei-genständig und nachvollziehbar zu erstellen.
+
+## Sachbearbeitung der Programmierung
+
+Programmierungs-, Automatisierungs- und Softwareentwicklungsarbeiten an der Prüfanlage sowie an den zugehörigen Mess- und Auswertesystemen dürfen ausschließlich von qualifiziertem Fachpersonal durchgeführt werden. Das eingesetzte Personal muss über ein abgeschlossenes Hochschulstudium (Bachelor, Master oder Diplom) der Informatik, Elektrotechnik, Automatisierungstechnik, Physik oder einer vergleichbaren technischen oder naturwissenschaftlichen Fachrichtung verfügen. Alternativ ist eine abgeschlossene technische Berufsausbildung mit mehrjähriger einschlägiger Berufserfahrung im Bereich der Automatisierungs- und Messtechnik ausreichend.
+
+Die Mitarbeiter müssen über fundierte Kenntnisse in der Entwicklung von Mess-, Steuer- und Auswertesoftware verfügen. Hierzu zählen insbesondere Kenntnisse in der Programmierung von Messdatenerfassungssystemen, der Gerätekommunikation über analoge und digitale Schnittstellen (z. B. CAN-Bus, RS-232, RS-485, Ethernet), der Datenbankanbindung sowie der automatisierten Prozesssteuerung.
+
+Darüber hinaus sind Erfahrungen im Umgang mit Labor- und Prüfstandstechnik, Sensormesstechnik, Massendurchflussreglern und Klimatisierungssystemen von Vorteil. Das Personal muss in der Lage sein, Messabläufe zu automatisieren, Softwarefunktionen zu validieren, Fehleranalysen durchzuführen sowie die Integrität und Nachvollziehbarkeit von Messdaten sicherzustellen.
+
+Vor der selbstständigen Durchführung von Programmierarbeiten ist eine Einweisung in die spezifische Prüfstands- und Anlagentechnik sowie in die geltenden Qualitäts-, Sicherheits- und Dokumentationsanforderungen durchzuführen. Änderungen an Steuerungs-, Mess- oder Auswertesoftware sind nachvollziehbar zu dokumentieren und vor der Freigabe hinsichtlich ihrer Funktionsfähigkeit zu überprüfen.
+
+## Prüfleitung
+
+Für die Kontrolle, fachliche Bewertung und Finalisierung der Arbeiten ist ein abgeschlossenes Hochschulstudium der Fachrichtungen Physik, Elektrotechnik, Chemie oder eines vergleichbaren technischen bzw. naturwissenschaftlichen Studiengangs erforderlich. Darüber hinaus wird eine abgeschlossene Promotion vorausgesetzt. Die verantwortlichen Fachkräfte verfügen über umfassende und vertiefte Kenntnisse sowohl der theoretischen Grundlagen als auch der praktischen Anwendung von Sensorelementen und Sensorsystemen zur Gasmessung. Ergänzend besitzen sie fundierte Erfahrungen auf den Gebieten der Multigassensorik, der Gas- und Feuchtemesstechnik sowie des Qualitätsmanagements. Sie sind in der Lage, komplexe Mess- und Auswerteverfahren wissenschaftlich zu bewerten, Ergebnisse kritisch einzuordnen und die Qualität der erarbeiteten Resultate sicherzustellen. Darüber hinaus beherrschen sie die deutsche und englische Spra-che verhandlungssicher in Wort und Schrift.
+
+# **3 Raumzuordnung**
+
+BAM/FB/89/379
+
+BAM/FB/89/300
+
+BAM/AH/O1.297
+
+# 4 Vorbereitende Arbeiten
+
+| Beschreibung | Datei |
+|--------------|-------|
+| Aktualisierung von Software | https://git.bam.de/bam81/gasi-2.0-python/-/wikis/home/%7Bnew_page_title%7D |
+| Messprogramm und Automatik | https://git.bam.de/bam81/gasi-2.0-python/-/wikis/Messprogramm-und-Automatik |
+
+## 4.1 Gasmischsystem
+
+Das Gassystem bildet den untersten Einschub des Geräteturmes. Im Gassystem werden reine oder vorverdünnte Prüfgase gemischt, mit Trägergas verdünnt und gegebenenfalls befeuchtet. Es können drei Komponentengase zugemischt werden. Zur Regelung des Verdünnungsgases und des zu befeuchtenden Gasstromes stehen sechs Massenflussregler (MFR) zur Verfügung. Die Gaswege wer-den über totraumminimierte Zumischventile geschaltet. An der Rückseite des Turmes befinden sich die Anschlüsse für das Trägergas (ein Anschluss für drei Massenflussregler mit maximalen Durchflüssen von (5000, 1000 und 100) cm³/min) und für drei Komponentengase (5000, 1000 und 100) cm³/min. Für den Betrieb müssen die gewünschten Referenzmaterialien mit den jeweils benötigten Anschlüssen über entsprechende Reduzierventile verbunden sein. Zur Überprüfung des Durchflusses der Massenflussregler wird während der Messung. Die Unterlagen sind in HUB-BAM archiviert. Die benötigten Gase befinden sich im Laboratorium (zentrale Gasversorgung im Haus 89) oder bei der Verwendung von Prüfgasen anderer Zusammensetzung (10 L oder 50 L-Flaschen) zeitweilig im Labor, siehe [Sicherheitsmaßnahmen](https://git.bam.de/bam81/gasi-2.0-python/-/wikis/home?edit=true#10-sicherheitsma%C3%9Fnahmen). Der Druck der Träger- und Komponentengase am Eingang der Prüfeinrichtung wird auf ca. 1,5 bar Überdruck mittels der Reduzierventile im Labor eingestellt. Das Gassystem benötigt Druckluft (6 bar Überdruck) zur Betätigung der pneumatischen Ventile. Der Anschluss befindet sich ebenfalls an der Rückseite des Geräteturmes, oberhalb der Anschlüsse für die Träger- und Komponentengase. Wird nur befeuchtetes Gas erzeugt, genügt ein Trägergas. Damit beim späteren automatischen Betrieb sofort das richtige Gas zugemischt wird, empfiehlt es sich, nach jedem Ankoppeln einer Gasversorgung mit Hilfe des Programmteils BEDIEN (Bedienerprogramm) den entsprechenden Anlageteil kurz zu spülen, indem das entsprechende Ventil und der zugeordnete MFR kurz geöffnet werden. Das trifft auch für die Trägergase zu, da bei jedem Öffnen der Verbindung Umgebungsluft undefinierter Zusammensetzung eindiffundieren kann. Zur Anpassung des Gasflusses an Messsysteme mit Probenahme über Kapillareingänge (µl-Probenschleifen) wird zur konstanten Regelung ein Hinterdruck-Regler eingesetzt (Vermeidung von Überdruck während der Generierung des Gasflusses).
+
+# **5 Verwendete Prüfmittel**
+
+<table>
+<tr>
+<th>Beschreibung</th>
+<th>Modell</th>
+<th>Messbereich</th>
+<th>Artikelnummer</th>
+<th>Hersteller</th>
+<th>BAM-HUB</th>
+</tr>
+<tr>
+<td>MFC 1</td>
+<td>EL-FLOW Prestige</td>
+<td>5000 mL/min FullScale</td>
+<td>FG-201CV-RGD-88-V-DA-000</td>
+<td>Bronkhorst Deutschland Nord GmbH</td>
+<td></td>
+</tr>
+<tr>
+<td>MFC 2</td>
+<td>EL-FLOW Prestige</td>
+<td>1000 mL/min FullScale</td>
+<td>FG-201CV-RGD-88-V-DA-000</td>
+<td>Bronkhorst Deutschland Nord GmbH</td>
+<td></td>
+</tr>
+<tr>
+<td>MFC 3</td>
+<td>EL-FLOW Prestige</td>
+<td>100 mL/min FullScale</td>
+<td>FG-201CV-RGD-88-V-DA-000</td>
+<td>Bronkhorst Deutschland Nord GmbH</td>
+<td></td>
+</tr>
+<tr>
+<td>MFC 4</td>
+<td>EL-FLOW Prestige</td>
+<td>5000 mL/min FullScale</td>
+<td>FG-201CV-RGD-88-V-DA-000</td>
+<td>Bronkhorst Deutschland Nord GmbH</td>
+<td></td>
+</tr>
+<tr>
+<td>MFC 5</td>
+<td>EL-FLOW Prestige</td>
+<td>1000 mL/min FullScale</td>
+<td>FG-201CV-RGD-88-V-DA-000</td>
+<td>Bronkhorst Deutschland Nord GmbH</td>
+<td></td>
+</tr>
+<tr>
+<td>MFC 6</td>
+<td>EL-FLOW Prestige</td>
+<td>100 mL/min FullScale</td>
+<td>FG-201CV-RGD-88-V-DA-000</td>
+<td>Bronkhorst Deutschland Nord GmbH</td>
+<td></td>
+</tr>
+<tr>
+<td>Taupunkthygrometer</td>
+<td>373-LX</td>
+<td>
+
+\-90 °C bis 20 °C
+</td>
+<td></td>
+<td>MBW Calibration AG</td>
+<td></td>
+</tr>
+<tr>
+<td>Taupunkthygrometer</td>
+<td>473-SH2</td>
+<td>
+
+\-30 °C bis 99 °C
+</td>
+<td>473-1A0-1-A1A1-A2B1-A2A2-A2A1</td>
+<td>MBW Calibration AG</td>
+<td>
+
+[PM-26-00707](https://hub.bam.de/apex/r/bam_hub_workspace/f_103106107107200990333500400/arbeitsbereich-pr%C3%BCfmittelverwaltung1?session=7835426289697)
+</td>
+</tr>
+<tr>
+<td>
+
+Messgaskühler
+
+(PIN: 1234)
+</td>
+<td>ECP1000C ohne WT</td>
+<td>2 °C bis 15 °C</td>
+<td>01K1400X</td>
+<td>M&C TechGroup Germany GmbH</td>
+<td></td>
+</tr>
+</table>
+
+# 6 Durchführung der Prüfung
+
+# 7 Aufzeichnungen/Rohdaten
+
+# 8 Auswertung der Prüfergebnisse
+
+# 9 Führen von Aufzeichnungen, Berichterstattung und Archivierung
+
+# 10 Sicherheitsmaßnahmen
+
+Es gelten die technischen Regeln für den Umgang mit Druckluft (6 bar bis 7 bar), Glaskomponenten zur Befeuchtung, Umgang mit elektrotechnischen Komponenten, Gefahrstoffe, BAM-Regeln [OHB B 100](https://infoportal.bam.de/cocoon/portal/portallink?doctype=Dokument&id=3048) sowie [OHB B 200](https://infoportal.bam.de/cocoon/portal/portallink?doctype=Dokument&id=2405) zum Arbeits-/Brandschutz sowie alle freigegebenen Betriebsanweisungen. Beim Betrieb der Klimakammer bei höheren Temperaturen sollte das Sichtfenster nicht berührt werden (starke Erwärmung).
+
+## Gefahrstoffe und Gasflaschen
+
+Erfolgt ein Betrieb mit schadstoffhaltigen, giftigen oder brennbaren Gasen müssen die entsprechenden Sicherheitsvorschriften eingehalten werden. Die Anweisungen enthalten die Betriebsanweisungen im Raum FB/89/379, sigmaBAM oder allgemein in der GESTIS-Stoffdatenbank http://gestis.itrust.de/nxt/gateway.dll/gestis_de/000000.xml. Bei der Lagerung von Gasen gemäß Tabelle 7 in den dort genannten Mengen sind zusätzliche Maßnahmen gemäß des TRGS 510 Abschnitts 10 anzuwenden ([TRGS 510](https://www.baua.de/DE/Angebote/Regelwerk/TRGS/TRGS-510)).
+
+<table>
+<tr>
+<th>Art des Gefahrstoffs</th>
+<th>Gefahrenhinweis nach CLP-Verordnung</th>
+<th>Menge</th>
+</tr>
+<tr>
+<td>akut toxische Gase, Kat. 1, 2, 3</td>
+<td>H330, H331 in Verbindung mit H280, H281</td>
+<td>
+
+`> 50 kg`
+
+`oder > 1 L`
+</td>
+</tr>
+<tr>
+<td>entzündbare Gase, Kat. 1A, 1B, 2</td>
+<td>H220, H221</td>
+<td>
+
+`> 50 kg und`
+
+`> 1 Flasche`
+</td>
+</tr>
+<tr>
+<td>oxidierende Gase, Kat. 1</td>
+<td>H270</td>
+<td>
+
+`> 50 kg und`
+
+`> 1 Flasche`
+</td>
+</tr>
+<tr>
+<td>Gase unter Druck, nicht akut toxisch Kat. 1, 2, 3, nicht entzündbar und nicht oxidierend</td>
+<td>H280, H281</td>
+<td>
+
+`> 50 kg und`
+
+`> 1 Flasche`
+</td>
+</tr>
+</table>
+
+* Druckgasbehälter müssen gegen Umfallen oder Herabfallen gesichert werden.
+* Druckgasbehälter sollen vor übermäßiger äußerer Wärmeeinwirkung (in der Regel Temperaturen, die 65 °C nicht übersteigen) geschützt aufgestellt werden; ein Schutz gegen Sonneneinstrahlung ist aber nicht erforderlich.
+* Druckgasbehälter in Lagern im Freien (Gasflaschenlager) sind durch geeignete Maßnahmen wie Gasflaschenboxen und ‑container oder Umzäunung der Anlage zu sichern.
+* Sehr gute Be- und Entlüftung des Arbeitsraumes vorsehen.
+* Deckenabsaugung vorsehen.
+* Einrichtungen zum Erkennen und Melden von Gasgefahren (Gasdetektoren mit Alarmauslösung) vorsehen.
+* Gas in einem geschlossenen System handhaben.
+* Das gesamte Gassystem vor dem Gebrauch und danach regelmäßig auf Lecks prüfen!
+* Das Gassystem mit trockenem Inertgas spülen (z.B. Stickstoff oder Helium) bevor das Gas eingeleitet wird und wenn das System außer Betrieb genommen wurde.
+* Gasaustritt an die Atmosphäre vermeiden.
+* Ist das Austreten des Stoffes nicht zu verhindern, ist dieser an der Austrittsstelle gefahrlos abzusaugen.
+* Behälter und Leitungen sind eindeutig zu kennzeichnen.
+* Leitungen sollten von ungefährdeter Stelle aus absperrbar sein.
+
+Hinweise zum sicheren Umgang
+
+* Keine Vorratsflaschen im Arbeitsraum lagern.
+* Gasflaschen vor mechanischer Beschädigung schützen; nicht ziehen, nicht rollen, nicht schieben, nicht fallen lassen.
+* Für den Transport von Gasflaschen immer einen Flaschenwagen oder ein anderes geeignetes Gerät benutzen.
+* Der Transport in Aufzügen zusammen mit Personen ist verboten.
+* Beim Transport Schutzkappen und Blindmuttern fest aufschrauben.
+* Die Gasflasche nicht an der Ventilschutzkappe oder dem Ventilschutzring anheben.
+* Bei Flaschenwechsel stets Ventile von gefüllten und leeren Flaschen auf Dichtigkeit prüfen.\
+  Flaschen gegen Umfallen sichern.
+* Ventilschutzkappe nicht entfernen bevor die Flasche an eine Wand oder einen Labortisch oder auf einen Flaschenständer gestellt wurde, und zum Gebrauch bereit ist.
+* Ventile langsam öffnen um Druckstöße zu vermeiden, nicht mit Gewalt öffnen.
+* Ventile nach jedem Gebrauch und nach der Entleerung schließen.
+* Verschlusskappen oder -muttern und Ventilschutzkappe wieder aufsetzen, sobald der Behälter von der Anlage getrennt wird.
+* Rückströmung des Gases in den Gasbehälter verhindern.
+* Rückfluss von Wasser oder anderen Flüssigkeiten in den Gasbehälter vermeiden.
+* Vor dem Einleiten des Gases Ausrüstung luftfrei spülen.
+* Niemals Gas von einem Behälter in einen anderen umfüllen!
+* Niemals Flammen oder elektrische Heizgeräte zur Druckerhöhung im Behälter benutzen!
+
+# 11 Entsorgung von Chemikalien, Prüfobjekten u.ä.
+
+Es müssen die relevanten, vorgangsspezifischen Entsorgungshinweise der BAM befolgt werden, siehe [Abfall-ABC](https://infoportal.bam.de/cocoon/portal/portallink?doctype=Navknoten&id=1633). Leere Prüfgasflaschen werden zeitnah dem Lieferanten zurückgegeben. Prüfobjekte werden nach erfolgten Durchführungen zeitnah dem Kunden zugestellt.
+
+# 12 Verzeichnis der zitierten Normen/Richtlinien
+
+| Norm/Richtlinie | Beschreibung | NAUTOS |
+|-----------------|--------------|--------|
+| TRGS 407 | Tätigkeiten mit Gasen - Gefährdungsbeurteilung | https://www.baua.de/DE/Angebote/Regelwerk/TRGS/TRGS-407 |
+| TRGS 510 | Lagerung von Gefahrstoffen in ortsbeweglichen Behältern | https://www.baua.de/DE/Angebote/Regelwerk/TRGS/TRGS-510 |
+| DIN EN 14470-2 | Feuerwiderstandsfähige Lagerschränke - Teil 2: Sicherheitsschränke für Druckgasflaschen; Deutsche Fassung EN 14470-2:2006 | https://nautos.de/MDA/search/item-detail/DE30019885 |
+| DIN EN ISO 6145-1:2020-02 | Gasanalyse - Herstellung von Kalibriergasgemischen mit Hilfe von dynamischen Verfahren - Teil 1: Allgemeine Aspekte (ISO 6145-1:2019); Deutsche Fassung EN ISO 6145-1:2019 | https://nautos.de/MDA/search/item-detail/DE30082388 |
+| DIN EN ISO 6145-7:2019-07 | Gasanalyse - Herstellung von Kalibriergasgemischen mit Hilfe von dynamischen Verfahren - Teil 7: Thermische Massendurchflussregler (ISO 6145-7:2018); Deutsche Fassung EN ISO 6145-7:2018 | https://nautos.de/MDA/search/item-detail/DE30080284 |
+| DIN EN ISO 6145-9:2011-03 | Gasanalyse - Herstellung von Kalibriergasgemischen mit Hilfe von dynamisch-volumetrischen Verfahren - Teil 9: Sättigungsverfahren (ISO 6145-9:2009); Deutsche Fassung EN ISO 6145-9:2010 | https://nautos.de/MDA/search/item-detail/DE30042933 |
+| ISO 26142:2010-06 | Wasserstoffdetektionsapparate - Stationäre Geräte | https://nautos.de/MDA/search/item-detail/IX30523269 |
+| DIN EN ISO 14912 | Gasanalyse - Umrechnung von Zusammensetzungsangaben für Gasgemische (ISO 14912:2025); Deutsche Fassung EN ISO 14912:2025 | https://nautos.de/MDA/search/item-detail/DE30106183 |
+| ISO 19229:2019-07 | Gasanalyse - Reinheitsanalyse und die Behandlung der Daten der Reinheit | https://nautos.de/MDA/search/item-detail/IX30557942 |
+| VDI/VDE 3514 Blatt 1:2016-11 | Gasfeuchtemessung - Kenngrößen und Formelzeichen | https://nautos.de/MDA/search/item-detail/DE88450083 |
+| VDI/VDE 3514 Blatt 2:2013-03 | Gasfeuchtemessung - Messverfahren | https://nautos.de/MDA/search/item-detail/DE88063065 |
+| VDI/VDE 3514 Blatt 3:2021-10 | Gasfeuchtemessung - Kalibrierung und Messunsicherheit | https://nautos.de/MDA/search/item-detail/DE88803491 |
+| JCGM GUM-1:2023 | Guide to the expression of uncertainty in measurement - Part 1 | https://www.bipm.org/documents/20126/2071204/JCGM_GUM-1.pdf |
+| SI Units | The International System of Units (SI) | https://www.bipm.org/en/measurement-units |
+| VIM | International vocabulary of metrology - Basic and general concepts and associated terms (VIM) (JCGM 200:2012, 3rd edition) | https://jcgm.bipm.org/vim/en/ |
+
+# 13 Wissenschaftliche Arbeiten
+
+Dieses Kapitel ist Thomas Hübert gewidmet. Das Verfahren existiert seit 1994 und wurde in wissenschaftlichen Studien \[1-18\] für Untersuchungen und Messungen verwendet. 
+
+\[1\]         M. E. Bayat, E. R. Nandayapa, C. Tiebe, E. L. Unger, E. J. W. List-Kratochvil, An _operando_ spectroscopic examination of the influence of trace humidity on interdigital back contact metal halide perovskite solar cells _Journal of Materials Chemistry A_ **2026**,  https://dx.doi.org/10.1039/d6ta01295g.
+
+\[2\]         C. Tiebe, M. E. Bayat, Sensorvalidierungen für die Sicherheit und Prozesskontrolle entlang der Wasserstoffwertschöpfungskette _gwf Gas + Energie_ **2025**, _166_, 9, 58–63, https://gwf-gas.de/.
+
+\[3\]         M. E. Bayat, H. Kipphardt, C. Tiebe, D. Tuma, C. Engelhard, Trace-Level Ammonia–Water Interactions in Hydrogen: Challenges in Gas Purity Analysis Using Optical-Feedback Cavity-Enhanced Absorption Spectroscopy (OF-CEAS) _ACS Measurement Science Au_ **2025**,  https://doi.org/10.1021/acsmeasuresciau.5c00105.
+
+\[4\]         M. Moufid, C. Tiebe, N. El Bari, M. Bartholmai, B. Bouchikhi, Advance in electronic nose technology developed for the detection and discrimination of ethanol, ammonia, and hydrogen sulfide gases _IEEE International symposium on olfaction and electronic nose (ISOEN 2022)_ **2022**, 1–3, https://doi.org/10.1109/ISOEN54820.2022.9789636.
+
+\[5\]         M. E. Bayat, Untersuchungen an einer Gasmischanlage für mess- oder prüftechnische Verfahren und die Ermittlung von Messunsicherheiten _Forschungsbeleg_ **2022**, 1–48, DOI/URL n/a.
+
+\[6\]         M. Detjens, T. Hübert, C. Tiebe, U. Banach, Coulometric trace humidity measurement in technical gases _Review of Scientific Instruments_ **2018**, _89_, 8, 085004, 085001–085008, https://doi.org/10.1063/1.5008463.
+
+\[7\]         T. Hübert, L. Boon-Brett, W. J. Buttner, _Sensors for Safety and Process Control in Hydrogen Technologies_, CRC Press Taylor & Francis Group, **2016** https://doi.org/10.1201/b19141.
+
+\[8\]         F. U. Erwamati, S. Pratapa, S. Suasmoro, T. Hübert, U. Banach, Preparation and structural study of Mg1−xZnxTiO3 ceramics and their dielectric properties from 1 Hz to 7.7 GHz _Journal of Materials Science: Materials in Electronics_ **2016**, _27_, 7, 6637–6645, https://doi.org/10.1007/s10854-016-4610-6.
+
+\[9\]         T. Hübert, L. Boon-Brett, V. Palmisano, M. A. Bader, Developments in gas sensor technology for hydrogen safety _International Journal of Hydrogen Energy_ **2014**, _39_, 35, 20474–20483, https://doi.org/10.1016/j.ijhydene.2014.05.042.
+
+\[10\]       M. Lang, Ulrich Banach, K. Nörthemann, A. K. Gerlitzke, M. Milstrey, R. Kaufer, M. Woratz, T. Hübert, W. Moritz, Long-term stability of a MEIS low energy hydrogen sensor _Sensors and Actuators B: Chemical_ **2013**, _187_, 395–400, https://doi.org/10.1016/j.snb.2012.12.081.
+
+\[11\]       T. Hübert, L. Boon-Brett, V. Palmisano, G. Frigo, A. Hellstrand, O. Kiesewetter, M. May, Trends in gas sensor development for hydrogen safety _ICHS2013 - 5th International conference on hydrogen safety (Proceedings)_ **2013**, Brussels, Belgium.
+
+\[12\]       T. Hübert, U. Banach, Response time of hydrogen sensors _ICHS2013 - 5th International conference on hydrogen safety (Proceedings)_ **2013**, Brussels, Belgium.
+
+\[13\]       A. K. Gerlitzke, K. Nörthemann, M. Lang, M. Milstrey, R. Kaufer, M. Woratz, U. Banach, T. Hübert, W. Moritz, Long-term stability of the low energy hydrogen sensor _IMCS 2012 - 14th International meeting on chemical sensors_ **2012**, Nuremberg, Germany.
+
+\[14\]       C. Lang, Sensoren zum Monitoring des Nachernteverhaltens von klimakterischen Früchten, Bundesanstalt für Materialforschung und -prüfung (BAM) (Berlin), **2011**, https://nbn-resolving.org/urn:nbn:de:kobv:b43-855
+
+\[15\]       T. Hübert, L. Boon-Brett, G. Black, U. Banach, Hydrogen sensors - A review _Sensors and Actuators B: Chemical_ **2011**, _157_, 2, 329–352, https://doi.org/10.1016/j.snb.2011.04.070.
+
+\[16\]       L. Boon-Brett, J. Bousek, G. Black, P. Moretto, P. Castello, T. Hübert, U. Banach, Identifiying performance gaps in hydrogen safety sensor technology for automotive and stationary applications _International Journal of Hydrogen Energy_ **2010**, _35_, 1, 373–384, https://doi.org/10.1016/j.ijhydene.2009.10.064.
+
+\[17\]       J. Pichlmaier, Befeuchtung von Prüfgas für die Kalibrierung von Gas- und Feuchtesensoren / Humidification of test gas for the calibration of gas sensors and humidity sensors _tm - Technisches Messen_ **1991**, _58_, 12, 471–477, https://doi.org/10.1524/teme.1991.58.jg.471.
+
+\[18\]       J. Pichlmaier, Kalibriertechnik für Gassensoren / Calibration techniques for gas sensors _tm - Technisches Messen_ **1990**, _57_, 11, 419–423, https://doi.org/10.1524/teme.1990.57.jg.419.
+
+# 14 Anlagen
+
+<details>
+<summary>
+
+Weiterführende Informationen \[wird fortgesetzt\]
+</summary></details>
