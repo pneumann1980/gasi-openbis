@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="gasi-view" content="full"><meta name="gasi-model-sha256" content="9f300c62b7697d03e93349fcde0f65e2fb3f2ee339ba11ad367b3116216fcd63">
+<meta name="gasi-view" content="full"><meta name="gasi-model-sha256" content="6bd5642ec55296f4732fc01d0f82414cfb3466eae519899d3935cc3bbcd26d48">
 <title>GaSi-Datenmodell: aktueller Aufbau und Messlauf</title><style>
 :root { color-scheme: light; --ink:#183448; --muted:#526b7b; --blue:#126b88;
   --line:#d9e4e9; --paper:#fff; --wash:#f0f5f7; }
@@ -317,7 +317,8 @@ fachliche Freigabe. Die allgemeinen Anlagen-/Modulbeziehungen bleiben ein Vorsch
 <h3 id="konkrete-openbis-beziehungen-des-schreibtests">Konkrete openBIS-Beziehungen des Schreibtests<a class="headerlink" href="#konkrete-openbis-beziehungen-des-schreibtests" title="Permanent link">&para;</a></h3>
 <p>Diese zweite Grafik zeigt ausschließlich den in Notebook 05 implementierten Test.
 <strong>Sie ist ein Erstellungsplan, kein Nachweis bereits vorhandener Einträge.</strong> Die
-beiden Collections müssen bestehen; der Test legt sie nicht an. Ihre exakten Pfade
+beiden Collections müssen bestehen; Notebook 05 legt sie nicht an. Die einmalige
+Anlage übernimmt <code>GaSi_Playground_Testbereich_anlegen.ipynb</code>. Ihre exakten Pfade
 stehen zentral in der lokalen <code>config/playground_test_target.json</code> und erscheinen
 vor dem Schreiben in Notebook 05. Die öffentliche Grafik enthält keine lokalen Zielpfade.</p>
 <p><a href="#diagram">Beziehungsgrafik oben ansehen</a></p><details class="diagram-source"><summary>Diagrammquelle anzeigen</summary><pre><code>flowchart LR
@@ -364,6 +365,8 @@ werden durch diesen Test <strong>nicht angelegt</strong>. Der allgemeine Modellv
 beschreibt spätere fachliche Zuordnungen. Testinstrument und Testlauf werden über
 ihre stabilen Codes wiedergefunden, das Dataset über seine Zugehörigkeit und den
 stabilen Namen. Dataset-Code/PermID vergibt der Server; sie erscheinen nach dem Test.</p>
+<p>Der ausgeführte Live-Test mit IDs, Browserlinks, Wiederaufnahme und Hashvergleich
+ist im <a href="GaSi_Playground_Testnachweis.md">Playground-Testnachweis</a> dokumentiert.</p>
 </div></details><details class="model-section"><summary>6. Zuordnung im BAM Data Store</summary><div class="section-body"><h2 id="6-zuordnung-im-bam-data-store">6. Zuordnung im BAM Data Store<a class="headerlink" href="#6-zuordnung-im-bam-data-store" title="Permanent link">&para;</a></h2>
 <div class="table-wrap"><table>
 <thead>
@@ -454,12 +457,17 @@ bleibt lokal unter <code>.local_playground_test/playground_discovery.json</code>
 </tr>
 </tbody>
 </table></div>
-<p>Ein FB-8.1-Laborbuch-Tutorialprojekt mit drei Collections ist sichtbar. Das
-FB-8.1-Projekt im gemeinsamen Geräteinventar ist sichtbar, eine zugehörige
-Inventar-Collection wurde jedoch nicht zurückgegeben. Ein privater Geräte-Space
-ist sichtbar, ohne zurückgegebenes Projekt. Damit ist noch <strong>kein vollständiges,
-freigegebenes Testzielpaar</strong> bestätigt. Fehlende Collection oder Leserechte,
-Laborbuch-Testziel, DSSt-Freigabe und zulässiger Standortcode bleiben zu klären.</p>
+<p>Die zunächst fehlenden Testziele wurden auf ausdrücklichen Nutzerauftrag angelegt:
+je ein Projekt <code>GASI_TEST</code> im persönlichen FB-8.1-Laborbuch und im Inventar-Space
+<code>8.1_EQUIPMENT</code>, darin die Collections <code>RUNS</code> bzw. <code>INSTRUMENTS</code>. Die beiden
+Zielpfade und der auf sie begrenzte Freigabevermerk werden in der lokalen Ziel-JSON
+geführt. Die Einrichtung verwendet vorhandene Typen und vergibt keine Zugriffsrechte.</p>
+<p>Für den rein fiktiven Test wird ein bestehender gültiger Standortcode als
+<strong>synthetischer Pflichtfeld-Testwert</strong> verwendet. Seine Kennzeichnung in
+<code>synthetic_location</code> und in der Instrumentbeschreibung stellt klar: Dies ist
+keine reale Raumzuordnung. Die Session besitzt Bereichs-Adminrechte, darf aber
+keine globalen Standortwerte ergänzen. Für echte Geräte bleibt ein belegter
+physischer Standort erforderlich; dieser Test legt keine echten Geräte an.</p>
 </div></details><details class="model-section"><summary>7. Umsetzung und Quellen</summary><div class="section-body"><h2 id="7-umsetzung-und-quellen">7. Umsetzung und Quellen<a class="headerlink" href="#7-umsetzung-und-quellen" title="Permanent link">&para;</a></h2>
 <p>Die Notebooks haben einzelne Aufgaben: <strong>01 Modellgrafik erzeugen</strong>, <strong>02 aktuelles Setup prüfen</strong>, <strong>03 CSVs lokal prüfen</strong>, <strong>04 Playground-Bestand lesen</strong>, <strong>05 synthetischen Schreibtest ausführen</strong>. Die Anlage echter Geräte folgt erst nach Bestätigung der aktuellen Zuordnungen und Inventarziele. Der Schreibtest importiert weder echte Geräte noch Messdaten.</p>
 <p><strong>Notebook 00</strong> richtet davor bei Bedarf die zentrale lokale Session ein. Der <a href="pybis_Beispielabgleich.md">Abgleich mit dem bereitgestellten pyBIS-Beispiel</a> bestätigt die technische Grundstruktur und dokumentiert die übernommenen Ergänzungen.</p>
@@ -475,7 +483,7 @@ Notebook 04 und 05. Sie ist unabhängig von <code>.env</code> (Zugang) und <code
 <li><a href="https://bamresearch.github.io/bam-masterdata/howtos/object_references/">BAM Objektverweise</a> und <a href="https://github.com/BAMresearch/bam-masterdata/blob/main/bam_masterdata/datamodel/v0/object_types.py">öffentliche Typdefinitionen</a>. Öffentlicher Quellcode bestätigt kein Deployment im Playground.</li>
 </ul></div></details></section>
 <footer class="source-note">Quelle: <a href="GaSi_Datenmodell.md">GaSi_Datenmodell.md</a> · Neu erzeugen: GaSi_01_Datenmodell_HTML_erzeugen.ipynb → Run All.
-<details><summary>Quellstand und Offline-Ansicht</summary>SHA-256: 9f300c62b7697d03e93349fcde0f65e2fb3f2ee339ba11ad367b3116216fcd63<br>
+<details><summary>Quellstand und Offline-Ansicht</summary>SHA-256: 6bd5642ec55296f4732fc01d0f82414cfb3466eae519899d3935cc3bbcd26d48<br>
 Die Markdown-Datei bleibt die maßgebliche Quelle. Die Ansicht benötigt keine Internetverbindung.</details></footer></div></details></article>
 </main></div><script>
 const article = document.querySelector('article');

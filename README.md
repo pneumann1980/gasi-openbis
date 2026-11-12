@@ -16,6 +16,7 @@ Empfohlene Reihenfolge; jedes Notebook funktioniert unabhängig mit einem frisch
 | [GaSi_02_Aktuelles_Setup_pruefen.ipynb](GaSi_02_Aktuelles_Setup_pruefen.ipynb) | Aktuelle Gerätepositionen und Kanalzuordnungen lokal prüfen | Liest die lokale Setup-Datei; erzeugt einen lokalen Bericht |
 | [GaSi_03_Messdateien_pruefen.ipynb](GaSi_03_Messdateien_pruefen.ipynb) | CSV-Dateien prüfen und eine lokale Vorschau erzeugen | Offline; Originale unverändert; kein Upload |
 | [GaSi_04_Playground_Bestand_lesen.ipynb](GaSi_04_Playground_Bestand_lesen.ipynb) | Sichtbare Bereiche, Typen und Pflichtfelder aus openBIS lesen | Ausschließlich lesend |
+| [GaSi_Playground_Testbereich_anlegen.ipynb](GaSi_Playground_Testbereich_anlegen.ipynb) | Die fehlenden GaSi-Testprojekte und Collections einmalig einrichten | Vorschau; Anlage erst nach bewusster Aktivierung |
 | [GaSi_Playground_Ziele_einrichten.ipynb](GaSi_Playground_Ziele_einrichten.ipynb) | Laborbuch- und Inventarziel zentral konfigurieren | Erstellt nur die fehlende lokale JSON-Vorlage; Speichern per Knopf, kein openBIS-Zugriff |
 | [GaSi_05_Playground_Schreibtest.ipynb](GaSi_05_Playground_Schreibtest.ipynb) | Einen synthetischen Testlauf schreiben und verifizieren | Vorschau und lesende Prüfung; Schreiben standardmäßig deaktiviert |
 
@@ -201,6 +202,22 @@ wählt aber keinen automatisch aus. Notebook 04 speichert den vollständigen
 lesenden Befund einschließlich großer Wertelisten unter
 `.local_playground_test/playground_discovery.json`; diese Datei bleibt ebenfalls lokal.
 
+Fehlen die Test-Collections in einer neuen Instanz, übernimmt
+[GaSi_Playground_Testbereich_anlegen.ipynb](GaSi_Playground_Testbereich_anlegen.ipynb)
+die einmalige Anlage: Projekt `GASI_TEST` im eigenen FB-8.1-Laborbuch und in
+`8.1_EQUIPMENT`, darin `RUNS` bzw. `INSTRUMENTS`. Der Ablauf liest vorhandene
+Testmarker zurück und vervollständigt Teilstände ohne Dubletten. Er ändert keine
+Rollen, globalen Typen oder Wertelisten. Nach erfolgreicher Rückprüfung wird die
+zentrale Ziel-JSON gespeichert. Danach sind 04 und 05 die normalen Arbeitsschritte;
+die Ziele müssen nicht erneut manuell eingerichtet werden.
+
+Für das fiktive Instrument ist ein gültiger Standortcode technisch erforderlich.
+Die Session darf die globale Standort-Werteliste nicht ergänzen. Deshalb wird ein
+bestehender Wert ausschließlich als synthetischer Pflichtfeld-Testwert verwendet:
+`synthetic_location.not_a_physical_assignment=true` und die Beschreibung am Instrument
+kennzeichnen ausdrücklich, dass dies **keine Raumzuordnung** ist. Für echte Geräte
+muss der belegte tatsächliche Standort verwendet werden.
+
 Nach Prüfung der Vorschau in Notebook 05 die letzte Zelle bewusst aktivieren:
 `WRITE_ENABLED = True` und
 `WRITE_CONFIRMATION = "WRITE SYNTHETIC TEST TO BAM PLAYGROUND"`.
@@ -238,11 +255,11 @@ frischen Kernel; externe Netzwerkzugriffe sind dabei gesperrt.
 Der Testclient prüft Wiederholung, Wiederaufnahme nach Teilfehlern und Rückdownload/Hash.
 Original-CSVs werden über Hashes auf Unverändertheit geprüft; Ausgaben werden nicht gespeichert.
 
-Prüfstand 12.11.2026: **58 Tests bestanden**, alle acht GaSi-Notebooks mit frischen Kernels
-geprüft (insgesamt sechzehn Durchläufe einschließlich Projekt-/Workshop-Einrichtung,
+Prüfstand 12.11.2026: **67 Tests bestanden**, alle neun GaSi-Notebooks mit frischen Kernels
+geprüft (insgesamt neunzehn Durchläufe einschließlich Projekt-/Workshop-Einrichtung,
 zentraler Session-Einrichtung und Wiederverwendung, leerer Ablage/fehlender Setup-Datei,
 zentraler Zieleinrichtung mit Erhalt bestehender Angaben, lesender Testclient-Vorschauen
-und aktiviertem synthetischem Schreibtest mit Wiederholung;
+aktivierter Einrichtung mit Wiederholung und aktiviertem synthetischem Schreibtest mit Wiederholung;
 Python 3.14.4 / pyBIS 1.37.5). Die pip-Installation wird im Test simuliert; das Ziel ist
 der aktuelle Kernel mit dem richtigen Requirements-Pfad. Paketimports werden tatsächlich ausgeführt.
 Alle 31 Original-CSVs blieben laut SHA-256 unverändert. Die Grafikprüfung bestätigt
@@ -262,12 +279,26 @@ Die Organisations-Werteliste enthält den bestätigten Code `OE_8.1`; er wurde i
 der lokalen Ziel-JSON ergänzt. `BAM_LOCATION_COMPLETE` ist mit 5.438 Werten lesbar.
 Das optionale Vokabular `MEASUREMENT_QUANTITY` blieb unbestätigt.
 
-**Live weiterhin offen:** konkrete freigegebene Test-Collections für Laborbuch und
-Inventar (Inventar-Collection nicht sichtbar oder noch nicht vorhanden), DSSt-Freigabe,
-Standortcode des synthetischen Instruments, vorhandene Geräteeinträge sowie Schreibrechte
-und Server-Validatoren. Die zentrale Ziel-JSON ist lokal vorbereitet, bleibt ohne
-bestätigte Ziele und Freigabe gesperrt. Der echte synthetische Upload mit Rückdownload
-wurde bewusst noch nicht ausgeführt; der manuelle Schreibschalter bleibt deaktiviert.
+**Live schreibend bestätigt:** Die Test-Collections
+`/8.1_PNEUMANN/GASI_TEST/RUNS` und `/8.1_EQUIPMENT/GASI_TEST/INSTRUMENTS` wurden
+auf ausdrücklichen Nutzerauftrag angelegt und zurückgelesen. Die zentrale Ziel-JSON
+enthält die beiden Pfade, den auf sie begrenzten Freigabevermerk und den als
+synthetischen Pflichtfeld-Testwert gekennzeichneten Standortcode.
+Genau ein Instrument, ein Messlauf, dessen Parent-Beziehung und ein RAW_DATA-Dataset
+wurden live geprüft. Auch die Wiederaufnahme nach absichtlichem Abbruch hinter dem
+Instrument-Speichern und ein zweiter vollständiger Start sind bestätigt: gleiche IDs,
+keine Dubletten, beide CSV-Rückdownloads mit identischem SHA-256.
+[IDs, Browserlinks und vollständiger Testnachweis](docs/GaSi_Playground_Testnachweis.md).
+Die Notebook-Schreibschalter bleiben für Run All deaktiviert.
+Auch die erneute Einrichtung wurde live bestätigt: `created=[]`. Dabei wurde die
+pyBIS-Objektiteration von Katalogen und Property-Assignments durch das Lesen ihrer
+bereits geladenen Tabellen ersetzt; dadurch entfallen unnötige Einzelabfragen
+und der belegte Deepcopy-Fehler bei bestehenden Collections.
+
+**Für echte Geräte weiterhin fachlich zu bestätigen:** tatsächliche Raumzuordnung,
+Geräteidentität, aktueller Einbau, Prüfmittelstatus und vorhandene Inventareinträge.
+Die globale Standort-Werteliste darf mit dieser Session nicht verändert werden;
+der Test verwendet ausschließlich gekennzeichnete synthetische Pflichtfeldwerte.
 Konkrete offene Fragen zum aktuellen Aufbau stehen im lokalen Setup-Bericht;
 die frühere ausführliche Bestandsaufnahme dient nur noch als Quellenablage.
 

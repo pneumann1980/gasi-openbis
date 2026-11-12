@@ -90,7 +90,8 @@ flowchart LR
 
 Diese zweite Grafik zeigt ausschließlich den in Notebook 05 implementierten Test.
 **Sie ist ein Erstellungsplan, kein Nachweis bereits vorhandener Einträge.** Die
-beiden Collections müssen bestehen; der Test legt sie nicht an. Ihre exakten Pfade
+beiden Collections müssen bestehen; Notebook 05 legt sie nicht an. Die einmalige
+Anlage übernimmt `GaSi_Playground_Testbereich_anlegen.ipynb`. Ihre exakten Pfade
 stehen zentral in der lokalen `config/playground_test_target.json` und erscheinen
 vor dem Schreiben in Notebook 05. Die öffentliche Grafik enthält keine lokalen Zielpfade.
 
@@ -116,6 +117,9 @@ werden durch diesen Test **nicht angelegt**. Der allgemeine Modellvorschlag oben
 beschreibt spätere fachliche Zuordnungen. Testinstrument und Testlauf werden über
 ihre stabilen Codes wiedergefunden, das Dataset über seine Zugehörigkeit und den
 stabilen Namen. Dataset-Code/PermID vergibt der Server; sie erscheinen nach dem Test.
+
+Der ausgeführte Live-Test mit IDs, Browserlinks, Wiederaufnahme und Hashvergleich
+ist im [Playground-Testnachweis](GaSi_Playground_Testnachweis.md) dokumentiert.
 
 ## 6. Zuordnung im BAM Data Store
 
@@ -149,12 +153,18 @@ bleibt lokal unter `.local_playground_test/playground_discovery.json`.
 | `CALIBRATION` | Pflicht: `$NAME`, `INSTRUMENT`, `CALIBRATION_DATE`, `CALIBRATION_PROVIDER`, `CALIBRATION_CERTIFICATE_NUMBER`, `ACCREDITATED_CALIBRATION_LAB`. | Gerätebezug läuft über Property `INSTRUMENT`, API-Datentyp `SAMPLE` (Objektverweis); dies ist keine Parent-Beziehung. |
 | `RAW_DATA`, `ATTACHMENT`, `ELN_PREVIEW` | Sichtbar; keine als mandatory markierten Assignments. | Dataset-Typen sind vorhanden. Der Schreibtest verlangt zusätzlich den stabilen Dataset-Namen. |
 
-Ein FB-8.1-Laborbuch-Tutorialprojekt mit drei Collections ist sichtbar. Das
-FB-8.1-Projekt im gemeinsamen Geräteinventar ist sichtbar, eine zugehörige
-Inventar-Collection wurde jedoch nicht zurückgegeben. Ein privater Geräte-Space
-ist sichtbar, ohne zurückgegebenes Projekt. Damit ist noch **kein vollständiges,
-freigegebenes Testzielpaar** bestätigt. Fehlende Collection oder Leserechte,
-Laborbuch-Testziel, DSSt-Freigabe und zulässiger Standortcode bleiben zu klären.
+Die zunächst fehlenden Testziele wurden auf ausdrücklichen Nutzerauftrag angelegt:
+je ein Projekt `GASI_TEST` im persönlichen FB-8.1-Laborbuch und im Inventar-Space
+`8.1_EQUIPMENT`, darin die Collections `RUNS` bzw. `INSTRUMENTS`. Die beiden
+Zielpfade und der auf sie begrenzte Freigabevermerk werden in der lokalen Ziel-JSON
+geführt. Die Einrichtung verwendet vorhandene Typen und vergibt keine Zugriffsrechte.
+
+Für den rein fiktiven Test wird ein bestehender gültiger Standortcode als
+**synthetischer Pflichtfeld-Testwert** verwendet. Seine Kennzeichnung in
+`synthetic_location` und in der Instrumentbeschreibung stellt klar: Dies ist
+keine reale Raumzuordnung. Die Session besitzt Bereichs-Adminrechte, darf aber
+keine globalen Standortwerte ergänzen. Für echte Geräte bleibt ein belegter
+physischer Standort erforderlich; dieser Test legt keine echten Geräte an.
 
 ## 7. Umsetzung und Quellen
 

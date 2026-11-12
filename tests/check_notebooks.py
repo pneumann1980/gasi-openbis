@@ -20,11 +20,12 @@ ROOT = Path(__file__).resolve().parents[1]
 SESSION_NOTEBOOK = "GaSi_00_Session_einrichten.ipynb"
 PROJECT_NOTEBOOK = "GaSi_Projekt_einrichten.ipynb"
 TARGET_NOTEBOOK = "GaSi_Playground_Ziele_einrichten.ipynb"
+PROVISION_NOTEBOOK = "GaSi_Playground_Testbereich_anlegen.ipynb"
 NOTEBOOKS = ("GaSi_01_Datenmodell_HTML_erzeugen.ipynb", "GaSi_02_Aktuelles_Setup_pruefen.ipynb",
              "GaSi_03_Messdateien_pruefen.ipynb", "GaSi_04_Playground_Bestand_lesen.ipynb", "GaSi_05_Playground_Schreibtest.ipynb")
 
 
-def execute(path, cwd, spec_dir, *, fake=False, write=False, repeat=False, enter_token=None, session_file=None, simulate_install=False):
+def execute(path, cwd, spec_dir, *, fake=False, write=False, repeat=False, enter_token=None, session_file=None, simulate_install=False, provision=False):
     nb = nbformat.read(path, as_version=4)
     nbformat.validate(nb)
     # Der Nutzer darf parallel Notebook-Statusausgaben speichern. Für den Test
@@ -81,6 +82,13 @@ fake = FakeClient()
 g.connect_playground = lambda: (fake, "LOCAL FAKE CLIENT; no network")
 g.load_target_config = lambda: (fake.cfg, "LOCAL FAKE CONFIG; not real BAM paths")
 """
+        if path.name == PROVISION_NOTEBOOK:
+            setup += f"""
+from test_playground_provision import ProvisionClient
+fake = ProvisionClient()
+g.connect_playground = lambda: (fake, "LOCAL FAKE CLIENT; no network")
+g.TARGET_CONFIG_PATH = Path({str(spec_dir / 'provision_target.json')!r})
+"""
     nb.cells.insert(0, nbformat.v4.new_code_cell(setup))
     if enter_token is not None:
         for cell in nb.cells:
@@ -91,12 +99,18 @@ g.load_target_config = lambda: (fake.cfg, "LOCAL FAKE CONFIG; not real BAM paths
                     f'def getpass(prompt): return {enter_token!r}')
     if write:
         cell = nb.cells[-1]
-        cell.source = cell.source.replace("WRITE_ENABLED = False", "WRITE_ENABLED = True").replace(
-            'WRITE_CONFIRMATION = ""', 'WRITE_CONFIRMATION = "WRITE SYNTHETIC TEST TO BAM PLAYGROUND"')
+        if provision:
+            cell.source = cell.source.replace("PROVISION_ENABLED = False", "PROVISION_ENABLED = True").replace(
+                'PROVISION_CONFIRMATION = ""', 'PROVISION_CONFIRMATION = "CREATE GASI FB81 PLAYGROUND TEST AREA"')
+        else:
+            cell.source = cell.source.replace("WRITE_ENABLED = False", "WRITE_ENABLED = True").replace(
+                'WRITE_CONFIRMATION = ""', 'WRITE_CONFIRMATION = "WRITE SYNTHETIC TEST TO BAM PLAYGROUND"')
         if repeat:
             nb.cells.append(nbformat.v4.new_code_cell(cell.source))
     if fake:
         assertion = "assert len(fake.created) == 3 and fake.downloads == 2" if write else "assert not fake.created"
+        if path.name == PROVISION_NOTEBOOK:
+            assertion = "assert len(fake.saved) == 4 and not fake.created" if write else "assert not fake.saved and not fake.created"
         nb.cells.append(nbformat.v4.new_code_cell(assertion))
     nb.cells.append(nbformat.v4.new_code_cell("assert not network_attempts"))
     km = AsyncKernelManager(kernel_name="gasi-test", connection_file=str(spec_dir / f"connection_{path.stem}.json"),
@@ -204,6 +218,9 @@ def main(html_only=False):
         check_project_notebook(base, spec.parent)
         credentials = check_session_notebook(base, spec.parent)
         check_target_notebook(base, spec.parent)
+        execute(ROOT / PROVISION_NOTEBOOK, ROOT, spec.parent)
+        execute(ROOT / PROVISION_NOTEBOOK, ROOT, spec.parent, fake=True)
+        execute(ROOT / PROVISION_NOTEBOOK, ROOT, spec.parent, fake=True, write=True, repeat=True, provision=True)
         for path in NOTEBOOKS[1:]:
             execute(ROOT / path, ROOT, spec.parent)
         empty = base / "empty-repo"

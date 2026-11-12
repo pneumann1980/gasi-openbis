@@ -30,10 +30,19 @@ def config():
 
 
 def things(objects):
+    def row(obj):
+        if isinstance(obj, dict):
+            return obj
+        result = vars(obj).copy()
+        for key in ("code", "identifier", "description", "type", "props"):
+            value = getattr(obj, key, None)
+            if value is not None:
+                result[key] = value
+        return result
     # Real pyBIS result container: ensure code never falls back to method-less JSON.
     return Things(None, "sample", response=objects, objects_initializer=lambda response: response,
                   df_initializer=lambda **kwargs: __import__("pandas").DataFrame([
-                      obj if isinstance(obj, dict) else vars(obj) for obj in objects]))
+                      row(obj) for obj in objects]))
 
 
 class FakeEntity:
@@ -132,7 +141,7 @@ class FakeClient:
     def get_projects(self):
         return things([NS(identifier=f"/{v['space']}/{v['project']}") for v in (self.cfg["lab_notebook"], self.cfg["inventory"])])
 
-    def get_experiments(self):
+    def get_experiments(self, props=None):
         return things([self.get_experiment(g.target_path(self.cfg[key])) for key in ("lab_notebook", "inventory")])
 
     def get_experiment(self, path):
@@ -171,6 +180,47 @@ class FakeClient:
 
 
 class PlaygroundTests(unittest.TestCase):
+    def test_property_assignments_use_table_without_deepcopy_of_connected_client(self):
+        fake = FakeClient()
+        result = fake.types["INSTRUMENT"].get_property_assignments()
+        class Assignments:
+            df = g.field(result, "df", result)
+
+            def __iter__(self):
+                raise TypeError("Connected client cannot be deep-copied")
+
+        with patch.object(SampleType, "get_property_assignments", return_value=Assignments()):
+            schema = g.type_details(fake, "sample", "INSTRUMENT")
+        self.assertTrue(schema["schema_confirmed"])
+        self.assertIn("BAM_OE", [a["code"] for a in schema["assignments"] if a["mandatory"]])
+
+    def test_catalogues_use_fetched_tables_without_iterating_entity_endpoints(self):
+        class TablesOnly:
+            def __init__(self, result):
+                self.df = result.df
+
+            def __iter__(self):
+                raise AssertionError("No per-entity requests for metadata")
+
+        fake = FakeClient()
+        for method in ("get_spaces", "get_projects", "get_experiments", "get_sample_types",
+                       "get_dataset_types", "get_experiment_types"):
+            original = getattr(fake, method)
+            setattr(fake, method, lambda original=original, **kwargs: TablesOnly(original(**kwargs)))
+        report = g.discover_playground(fake, fake.cfg)
+        self.assertFalse(report["errors"])
+        self.assertEqual(report["type_catalogues"]["dataset"], ["RAW_DATA"])
+        self.assertEqual(len(report["projects"]), 2)
+        self.assertTrue(report["targets"]["inventory"]["visible"])
+
+    def test_browser_links_use_permanent_ids_on_fixed_playground_host(self):
+        from urllib.parse import parse_qs, urlsplit
+        for family, view in (("object", "showViewSamplePageFromPermId"), ("dataset", "showViewDataSetPageFromPermId")):
+            ref = g.browser_reference(NS(permId="synthetic-id:1"), family)
+            url = urlsplit(ref["url"])
+            self.assertEqual(url.netloc, "playground.datastore.bam.de")
+            self.assertEqual(parse_qs(url.query), {"viewName": [view], "viewData": ["synthetic-id:1"]})
+
     def test_vocabulary_terms_use_fetched_table_without_single_argument_term_lookup(self):
         class TermResults:
             def __init__(self, frame):
