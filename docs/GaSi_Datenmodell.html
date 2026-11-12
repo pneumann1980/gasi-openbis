@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="gasi-view" content="full"><meta name="gasi-model-sha256" content="9f300c62b7697d03e93349fcde0f65e2fb3f2ee339ba11ad367b3116216fcd63">
+<title>GaSi-Datenmodell: aktueller Aufbau und Messlauf</title><style>
+:root { color-scheme: light; --ink:#183448; --muted:#526b7b; --blue:#126b88;
+  --line:#d9e4e9; --paper:#fff; --wash:#f0f5f7; }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; scroll-padding-top:90px; }
+body { margin:0; background:var(--wash); color:var(--ink);
+  font:16px/1.7 system-ui,-apple-system,"Segoe UI",sans-serif; }
+a { color:var(--blue); text-underline-offset:3px; overflow-wrap:anywhere; }
+a:hover { color:#084a60; }
+a:focus-visible,button:focus-visible,input:focus-visible { outline:3px solid #d78627; outline-offset:3px; }
+.toolbar { position:sticky; top:0; z-index:2; display:flex; align-items:center;
+  flex-wrap:wrap; gap:16px; padding:13px 28px; background:#12384b; color:white; }
+.brand { font-weight:750; letter-spacing:.05em; margin-right:auto; }
+.toolbar input { width:min(300px,55vw); border:1px solid #638497; padding:9px 12px;
+  border-radius:6px; font:inherit; background:#fff; color:var(--ink); }
+button { border:1px solid #9cb5c3; border-radius:6px; padding:9px 14px;
+  font:inherit; cursor:pointer; background:#fff; color:var(--ink); }
+.layout { display:grid; grid-template-columns:260px minmax(0,1fr); max-width:1600px; margin:auto; }
+aside { padding:28px 22px; position:sticky; top:76px; align-self:start; max-height:calc(100vh - 82px); overflow:auto; }
+.nav-title { font-size:.78rem; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+.toc ul { list-style:none; margin:10px 0; padding:0; }
+.toc li { margin:9px 0; line-height:1.4; }
+.toc li ul { padding-left:13px; border-left:2px solid var(--line); }
+.toc a { color:var(--muted); text-decoration:none; font-size:.88rem; }
+.toc a:hover { color:var(--blue); text-decoration:underline; }
+main { min-width:0; margin:24px 24px 40px 0; background:var(--paper);
+  border:1px solid var(--line); border-radius:12px; box-shadow:0 8px 26px #18344808; }
+.intro { padding:28px 38px 22px; border-bottom:1px solid var(--line); background:#f8fbfc; border-radius:12px 12px 0 0; }
+.eyebrow { color:var(--blue); font-size:.78rem; font-weight:750; text-transform:uppercase; letter-spacing:.1em; }
+.intro p { margin:8px 0 0; color:var(--muted); max-width:78ch; }
+.legend { display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; }
+.legend span { border:1px solid var(--line); padding:4px 10px; border-radius:20px; font-size:.82rem; background:white; }
+article { padding:8px 38px 36px; }
+h1,h2,h3 { line-height:1.25; color:#12384b; }
+h1 { font-size:clamp(1.8rem,3vw,2.65rem); letter-spacing:-.025em; margin:28px 0; }
+h2 { margin:48px 0 20px; padding-top:24px; border-top:1px solid var(--line); font-size:1.5rem; }
+h3 { margin-top:30px; font-size:1.12rem; }
+.headerlink { margin-left:.25em; font-size:.65em; text-decoration:none; opacity:0; }
+h1:hover .headerlink,h2:hover .headerlink,h3:hover .headerlink,.headerlink:focus { opacity:1; }
+p,li { max-width:95ch; }
+li { margin:7px 0; }
+code { font: .88em/1.5 ui-monospace,Consolas,monospace; padding:2px 5px;
+  background:#edf3f6; border-radius:4px; overflow-wrap:anywhere; }
+pre { overflow:auto; padding:18px; background:#123448; color:#edf8fc; border-radius:8px; }
+pre code { background:transparent; color:inherit; padding:0; white-space:pre; }
+.table-wrap { overflow:auto; border:1px solid var(--line); border-radius:8px; margin:22px 0; }
+table { border-collapse:collapse; width:100%; font-size:.88rem; min-width:720px; }
+th,td { padding:13px 15px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+th { background:#e9f2f6; font-weight:700; }
+tr:last-child td { border-bottom:0; }
+tbody tr:nth-child(even) { background:#f7fafb; }
+td:first-child { font-weight:600; min-width:130px; }
+blockquote { border-left:4px solid #3c8fa4; margin:20px 0; padding:5px 20px; background:#f1f8fa; }
+figure { margin:22px 0; padding:16px; border:1px solid var(--line); border-radius:8px; }
+.diagram { overflow:auto; }
+.diagram svg { display:block; max-width:none; height:auto; }
+figcaption,summary { color:var(--muted); font-size:.85rem; }
+summary { cursor:pointer; margin-top:10px; }
+.diagram-warning { padding:12px; background:#fff4df; }
+footer { border-top:1px solid var(--line); padding:20px 38px; color:var(--muted); font-size:.83rem; overflow-wrap:anywhere; }
+mark { background:#ffe18a; color:#183448; }
+#search-count { font-size:.8rem; }
+.skip { position:absolute; left:-9999px; }
+.skip:focus { left:10px; top:10px; z-index:5; padding:10px; background:white; }
+@media(max-width:950px) { .layout { display:block; } aside { position:static; max-height:240px; padding:18px 22px; }
+  main { margin:0 12px 24px; } article,.intro { padding-left:20px; padding-right:20px; }
+  .toolbar { padding:12px 18px; } }
+@media print { body { background:white; font-size:10pt; } .toolbar,aside,.intro,details,.skip { display:none; }
+  .layout { display:block; } main { border:0; box-shadow:none; margin:0; } article { padding:0; }
+  h2,h3 { break-after:avoid; } tr,figure { break-inside:avoid; } .table-wrap,.diagram { overflow:visible; }
+  table { min-width:0; font-size:8pt; } th,td { padding:6px; } .diagram svg { width:100%; }
+  a { color:inherit; } }
+
+html { scroll-behavior:auto; }
+.toolbar { padding:10px max(22px,calc((100vw - 1320px)/2)); gap:14px; }
+.toolbar input { width:230px; padding:6px 10px; font-size:.88rem; }
+.toolbar button { padding:6px 11px; font-size:.88rem; }
+.toolbar nav { display:flex; gap:18px; margin-right:12px; }
+.toolbar nav a { color:#d3e9f1; text-decoration:none; font-size:.88rem; }
+.layout { display:block; max-width:1360px; padding:0 24px; }
+main { margin:0 0 32px; background:transparent; border:0; box-shadow:none; }
+.hero { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:25px 0 20px; }
+.hero h1 { margin:0 0 6px; font-size:clamp(1.65rem,3vw,2.25rem); }
+.hero p { margin:0; color:var(--muted); font-size:.94rem; }
+.status-pill { flex-shrink:0; color:#825416; background:#fff4dc; border:1px solid #ecd5a8;
+  border-radius:18px; padding:5px 12px; font-size:.8rem; }
+article { padding:0; }
+figure { margin:0; padding:18px 22px 14px; background:white; border-radius:12px; }
+.figure-heading { display:flex; gap:12px; align-items:center; justify-content:space-between; }
+.figure-heading h2 { margin:0; padding:0; border:0; font-size:1.1rem; }
+.graph-controls { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.graph-controls button { padding:5px 10px; font-size:.82rem; }
+.diagram { overflow:auto; margin-top:12px; cursor:default; max-height:calc(100vh - 205px); }
+.diagram svg { display:block; width:100%; max-width:none; height:auto; max-height:calc(100vh - 220px); }
+figcaption { display:flex; flex-wrap:wrap; gap:18px; margin-top:8px; font-size:.78rem; }
+.line-key::before { content:''; display:inline-block; width:24px; border-top:2px solid #47768d;
+  vertical-align:middle; margin-right:6px; }
+.line-key.dataset::before { border-top:2px dashed #ad771e; }
+.line-key.property::before { border-top:2px dotted #7b8691; }
+figure:fullscreen { background:#fff; border:0; border-radius:0; display:flex; flex-direction:column;
+  width:100vw; height:100vh; padding:20px; }
+figure:fullscreen .diagram { flex:1; min-height:0; max-height:none; }
+figure:fullscreen .diagram svg { width:100%; height:100%; max-height:none; object-fit:contain; }
+.levels { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin:18px 0 26px; }
+.level-card { padding:16px 18px; background:#fff; border:1px solid var(--line); border-radius:10px; }
+.level-card h3 { margin:0 0 7px; font-size:1rem; }
+.level-card p { margin:0; font-size:.87rem; line-height:1.55; color:var(--muted); }
+.details-heading { margin:0 0 12px; padding:0; border:0; font-size:1.15rem; }
+details.model-section { border:1px solid var(--line); border-radius:8px; background:white; margin:8px 0; }
+details.model-section > summary { padding:13px 18px; margin:0; color:var(--ink); font-size:.93rem; font-weight:650; }
+details.model-section[open] > summary { border-bottom:1px solid var(--line); }
+.section-body { padding:0 22px 20px; }
+.section-body > h2:first-child { position:absolute; width:1px; height:1px; overflow:hidden; padding:0; margin:0; border:0; }
+.section-body p,.section-body li { font-size:.92rem; }
+.toc { padding:15px 0; }
+.toc ul { columns:2; }
+.toc li { break-inside:avoid; }
+.toc a { color:var(--blue); }
+.source-note { padding:16px 0; border:0; font-size:.8rem; }
+.source-note details { margin-top:8px; }
+.source-note summary { margin:0; }
+.expert-view { margin-top:18px; background:#fff; border:1px solid var(--line); border-radius:10px; }
+.expert-view > summary { margin:0; padding:14px 18px; font-size:.9rem; font-weight:600; }
+.expert-content { padding:0 18px 18px; }
+.detail-search { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:18px 0; }
+.detail-search input { padding:8px 12px; border:1px solid var(--line); border-radius:5px; font:inherit; }
+.technical-diagrams { margin:16px 0; }
+.simple-note { display:block; font-size:.9rem; }
+.hero h1 { font-size:clamp(1.5rem,2.6vw,2.05rem); }
+.diagram-source summary { font-size:.85rem; }
+@media(max-width:850px) { .toolbar { padding:10px 16px; } .toolbar nav { display:none; }
+  .layout { padding:0 14px; } .hero { align-items:flex-start; flex-direction:column; gap:10px; }
+  figure { padding:14px; } .figure-heading { align-items:flex-start; flex-direction:column; }
+  .levels { grid-template-columns:1fr; } .level-card { padding:13px 16px; }
+  .toc ul { columns:1; } .section-body { padding:0 16px 16px; } }
+@media print { .hero { padding:0 0 15px; } .graph-controls,.source-note { display:none; }
+  .layout { padding:0; } figure { padding:10px; } .diagram { overflow:visible; }
+  .diagram { max-height:none; } .diagram svg { width:100% !important; max-height:none !important; } .level-card { padding:10px; }
+  .levels { gap:10px; } .level-card p { font-size:8pt; } }
+</style></head><body>
+<a class="skip" href="#diagram">Zum Datenmodell</a>
+<header class="toolbar"><span class="brand">GaSi · BAM / FB 8.1</span>
+<button id="print" type="button">Drucken</button></header>
+<div class="layout"><main id="model"><div class="hero"><h1>GaSi: aktueller Aufbau und Messung</h1><span class="status-pill" title="Die Zuordnung muss noch fachlich bestätigt werden.">Vorschlag</span></div>
+<article><section id="diagram" aria-label="Modellübersicht"><figure data-graph><div class="figure-heading"><h2>Das gehört zusammen</h2><div class="graph-controls"><button type="button" data-fullscreen>Größer ansehen</button></div></div><div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 650" role="img" aria-label="GaSi-Anlage, Module und Geräte bilden den aktuellen Aufbau. Dieser wird bei einer Messung verwendet."><defs><marker id="setup-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#527b8f"/></marker></defs><g data-node="A"><title>Die gesamte Einrichtung.</title><rect class="node-box" x="24" y="28" width="292" height="68" rx="9" fill="white" stroke="#b9ced9"/><text x="170.0" y="68.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">GaSi-Anlage</text></g><g data-node="M"><title>Gasmischung, Befeuchter und Messkette.</title><rect class="node-box" x="460" y="28" width="280" height="68" rx="9" fill="white" stroke="#b9ced9"/><text x="600.0" y="68.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Module</text></g><g data-node="I"><title>Einzeln identifizierbare Geräte des aktuellen Aufbaus.</title><rect class="node-box" x="908" y="28" width="268" height="68" rx="9" fill="white" stroke="#b9ced9"/><text x="1042.0" y="68.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Geräte</text></g><g data-source="A" data-target="M"><title>umfasst</title><path class="connection" d="M316,62 H460" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#setup-arrow)"/><text x="388" y="49" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#526b7b">umfasst</text></g><g data-source="M" data-target="I"><title>umfasst</title><path class="connection" d="M740,62 H908" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#setup-arrow)"/><text x="824" y="49" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#526b7b">umfasst</text></g><g data-source="I" data-target="S"><title>Position / Kanal</title><path class="connection" d="M1042,96 V146 H170 V202" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#setup-arrow)"/><text x="600" y="133" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#526b7b">Position / Kanal</text></g><rect x="24" y="186" width="292" height="304" rx="12" fill="#eaf3f8"/><rect x="908" y="186" width="268" height="304" rx="12" fill="#fff4df"/><g data-node="S"><title>Die bestätigte Zuordnung von Geräten, Positionen und Kanälen.</title><rect class="node-box" x="36" y="202" width="268" height="60" rx="9" fill="white" stroke="#b9ced9"/><text x="170.0" y="238.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Aktueller Aufbau</text></g><g data-source="S" data-target="R"><title>Parent</title></g><g data-reference="I"><title>Einzeln identifizierbare Geräte des aktuellen Aufbaus.</title><rect class="node-box" x="36" y="272" width="268" height="60" rx="9" fill="white" stroke="#b9ced9"/><text x="170.0" y="308.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Geräte</text></g><g data-source="I" data-target="R"><title>Parent</title></g><g data-node="G"><title>Das Gas für die Messung.</title><rect class="node-box" x="36" y="342" width="268" height="60" rx="9" fill="white" stroke="#b9ced9"/><text x="170.0" y="378.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Prüfgas</text></g><g data-source="G" data-target="R"><title>Parent</title></g><g data-node="D"><title>Das Gerät oder der Sensor, der geprüft wird.</title><rect class="node-box" x="36" y="412" width="268" height="60" rx="9" fill="white" stroke="#b9ced9"/><text x="170.0" y="448.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Prüfling</text></g><g data-source="D" data-target="R"><title>Parent</title></g><g data-node="R"><title>Ein zusammengehöriger Messlauf.</title><rect class="node-box" x="460" y="287" width="280" height="100" rx="9" fill="#12384b" stroke="#b9ced9"/><text x="600.0" y="343.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="white">Messung</text></g><g data-node="CSV"><title>Die unveränderte Messdatei.</title><rect class="node-box" x="920" y="215" width="244" height="68" rx="9" fill="white" stroke="#b9ced9"/><text x="1042.0" y="255.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Messwerte</text></g><g data-source="R" data-target="CSV"><title>Dataset attachment</title></g><g data-node="CFG"><title>Die für diesen Lauf gespeicherten Einstellungen.</title><rect class="node-box" x="920" y="307" width="244" height="68" rx="9" fill="white" stroke="#b9ced9"/><text x="1042.0" y="347.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Einstellungen</text></g><g data-source="R" data-target="CFG"><title>Dataset attachment</title></g><g data-node="RES"><title>Ergebnisse und Bericht zur Messung.</title><rect class="node-box" x="920" y="399" width="244" height="68" rx="9" fill="white" stroke="#b9ced9"/><text x="1042.0" y="439.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Auswertung</text></g><g data-source="R" data-target="RES"><title>Dataset attachment</title></g><path class="connection" d="M316,337 H460" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#setup-arrow)"/><text x="388.0" y="324" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#526b7b">für</text><path class="connection" d="M740,337 H908" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#setup-arrow)"/><text x="824.0" y="324" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#526b7b">speichert</text><g data-node="C"><title>Einzeln identifizierbare Geräte des aktuellen Aufbaus.</title><rect class="node-box" x="24" y="553" width="292" height="60" rx="9" fill="white" stroke="#b9ced9"/><text x="170.0" y="589.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Geräte</text></g><g data-reference="I"><title>Einzeln identifizierbare Geräte des aktuellen Aufbaus.</title><rect class="node-box" x="460" y="553" width="280" height="60" rx="9" fill="white" stroke="#b9ced9"/><text x="600.0" y="589.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Geräte</text></g><g data-source="C" data-target="I"><title>Nachweis für</title><path class="connection" d="M316,583 H460" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#setup-arrow)"/><text x="388" y="570" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#526b7b">Nachweis für</text></g></svg></div><figcaption class="simple-note">Zu einer Messung können mehrere Dateien gehören.</figcaption></figure><details class="relations-view"><summary>openBIS-Beziehungen des Schreibtests ansehen</summary><figure data-graph><div class="figure-heading"><h2>openBIS: Schreibtest</h2><div class="graph-controls"><button type="button" data-fullscreen>Größer ansehen</button></div></div><div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 455" role="img" aria-label="Geplante openBIS-Beziehungen des synthetischen Schreibtests"><defs><marker id="test-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#527b8f"/></marker></defs><g data-source="IC" data-target="TI"><title>enthält Objekt</title><path class="connection" d="M174,88 V180" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#test-arrow)"/><text x="253" y="137" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#526b7b">enthält Objekt</text></g><g data-source="LC" data-target="TR"><title>enthält Objekt</title><path class="connection" d="M600,88 V180" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#test-arrow)"/><text x="679" y="137" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#526b7b">enthält Objekt</text></g><g data-source="LC" data-target="TD"><title>enthält Dataset</title><path class="connection" d="M750,54 H1028 V180" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#test-arrow)"/><text x="889" y="40" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#526b7b">enthält Dataset</text></g><g data-source="TI" data-target="TR"><title>Parent</title><path class="connection" d="M324,225 H450" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#test-arrow)"/><text x="387" y="210" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#526b7b">Parent → Child</text></g><g data-source="TR" data-target="TD"><title>Dataset attachment</title><path class="connection" d="M750,225 H880" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#test-arrow)"/><text x="815" y="210" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#526b7b">Dataset am Lauf</text></g><g data-source="TD" data-target="TF"><title>enthält Datei</title><path class="connection" d="M1028,270 V365" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#test-arrow)"/><text x="1110" y="322" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#526b7b">enthält Datei</text></g><g data-node="IC"><title>Inventar-Collection / konfiguriertes Inventarziel</title><rect class="node-box" x="24" y="20" width="300" height="68" rx="9" fill="white" stroke="#b9ced9"/><text x="174.0" y="49.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">Inventar-Collection</text><text x="174.0" y="69.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">konfiguriertes Inventarziel</text></g><g data-node="LC"><title>Laborbuch-Collection / konfiguriertes Laborbuchziel</title><rect class="node-box" x="450" y="20" width="300" height="68" rx="9" fill="white" stroke="#b9ced9"/><text x="600.0" y="49.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">Laborbuch-Collection</text><text x="600.0" y="69.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">konfiguriertes Laborbuchziel</text></g><g data-node="TI"><title>INSTRUMENT / GASI_TEST_INSTRUMENT_01</title><rect class="node-box" x="24" y="180" width="300" height="90" rx="9" fill="white" stroke="#b9ced9"/><text x="174.0" y="220.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">INSTRUMENT</text><text x="174.0" y="240.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">GASI_TEST_INSTRUMENT_01</text></g><g data-node="TR"><title>EXPERIMENTAL_STEP / GASI_TEST_RUN_01</title><rect class="node-box" x="450" y="180" width="300" height="90" rx="9" fill="#12384b" stroke="#b9ced9"/><text x="600.0" y="220.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="white">EXPERIMENTAL_STEP</text><text x="600.0" y="240.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="white">GASI_TEST_RUN_01</text></g><g data-node="TD"><title>RAW_DATA / GASI_SYNTHETIC_TEST_01</title><rect class="node-box" x="880" y="180" width="296" height="90" rx="9" fill="white" stroke="#b9ced9"/><text x="1028.0" y="220.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">RAW_DATA</text><text x="1028.0" y="240.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">GASI_SYNTHETIC_TEST_01</text></g><g data-node="TF"><title>CSV / gasi_synthetic_test.csv</title><rect class="node-box" x="880" y="365" width="296" height="68" rx="9" fill="white" stroke="#b9ced9"/><text x="1028.0" y="394.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">CSV</text><text x="1028.0" y="414.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">gasi_synthetic_test.csv</text></g></svg></div><figcaption class="simple-note">Erstellungsplan; Collections müssen bereits bestehen. Konkrete Zielpfade: Notebook 05.</figcaption></figure></details></section><details id="details" class="expert-view" open><summary>Mehr wissen: Technik und Quellen</summary><div class="expert-content">
+<div class="detail-search"><label for="search">In den Details suchen</label><input id="search" type="search" placeholder="Suchbegriff …">
+<span id="search-count" role="status" aria-live="polite"></span></div>
+<div class="technical-diagrams"><figure data-graph><div class="figure-heading"><h2>Technische Bezeichnungen</h2><div class="graph-controls"><button type="button" data-zoom="out" aria-label="Grafik verkleinern">−</button><button type="button" data-zoom="fit">Einpassen</button><button type="button" data-zoom="in" aria-label="Grafik vergrößern">+</button><button type="button" data-fullscreen>Vollbild</button></div></div><div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 650" role="img" aria-label="GaSi-Anlage, Module und Geräte bilden den aktuellen Aufbau. Dieser wird bei einer Messung verwendet."><defs><marker id="setup-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#527b8f"/></marker></defs><g data-node="A"><title>Anlage · Inventar</title><rect class="node-box" x="24" y="28" width="292" height="68" rx="9" fill="white" stroke="#b9ced9"/><text x="170.0" y="68.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">GaSi-Anlage</text></g><g data-node="M"><title>Modul · Inventar</title><rect class="node-box" x="460" y="28" width="280" height="68" rx="9" fill="white" stroke="#b9ced9"/><text x="600.0" y="68.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Module</text></g><g data-node="I"><title>INSTRUMENT · Inventar</title><rect class="node-box" x="908" y="28" width="268" height="68" rx="9" fill="white" stroke="#b9ced9"/><text x="1042.0" y="68.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Geräte</text></g><g data-source="A" data-target="M"><title>umfasst</title><path class="connection" d="M316,62 H460" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#setup-arrow)"/><text x="388" y="49" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#526b7b">umfasst</text></g><g data-source="M" data-target="I"><title>umfasst</title><path class="connection" d="M740,62 H908" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#setup-arrow)"/><text x="824" y="49" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#526b7b">umfasst</text></g><g data-source="I" data-target="S"><title>Position / Kanal</title><path class="connection" d="M1042,96 V146 H170 V202" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#setup-arrow)"/><text x="600" y="133" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#526b7b">Position / Kanal</text></g><rect x="24" y="186" width="292" height="304" rx="12" fill="#eaf3f8"/><rect x="908" y="186" width="268" height="304" rx="12" fill="#fff4df"/><g data-node="S"><title>SETUP.TEST · Inventar</title><rect class="node-box" x="36" y="202" width="268" height="60" rx="9" fill="white" stroke="#b9ced9"/><text x="170.0" y="238.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Aktueller Aufbau</text></g><g data-source="S" data-target="R"><title>Parent</title></g><g data-reference="I"><title>INSTRUMENT · Inventar</title><rect class="node-box" x="36" y="272" width="268" height="60" rx="9" fill="white" stroke="#b9ced9"/><text x="170.0" y="308.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Geräte</text></g><g data-source="I" data-target="R"><title>Parent</title></g><g data-node="G"><title>GAS_BOTTLE · FB Inventory</title><rect class="node-box" x="36" y="342" width="268" height="60" rx="9" fill="white" stroke="#b9ced9"/><text x="170.0" y="378.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Prüfgas</text></g><g data-source="G" data-target="R"><title>Parent</title></g><g data-node="D"><title>FB Inventory</title><rect class="node-box" x="36" y="412" width="268" height="60" rx="9" fill="white" stroke="#b9ced9"/><text x="170.0" y="448.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">INSTRUMENT / DUT</text></g><g data-source="D" data-target="R"><title>Parent</title></g><g data-node="R"><title>EXPERIMENTAL_STEP · Lab Notebook</title><rect class="node-box" x="460" y="287" width="280" height="100" rx="9" fill="#12384b" stroke="#b9ced9"/><text x="600.0" y="343.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="white">Messlauf</text></g><g data-node="CSV"><title>RAW_DATA</title><rect class="node-box" x="920" y="215" width="244" height="68" rx="9" fill="white" stroke="#b9ced9"/><text x="1042.0" y="255.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Unveränderte CSV</text></g><g data-source="R" data-target="CSV"><title>Dataset attachment</title></g><g data-node="CFG"><title>ATTACHMENT</title><rect class="node-box" x="920" y="307" width="244" height="68" rx="9" fill="white" stroke="#b9ced9"/><text x="1042.0" y="347.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Lauf-Konfigurationssnapshot</text></g><g data-source="R" data-target="CFG"><title>Dataset attachment</title></g><g data-node="RES"><title>ATTACHMENT</title><rect class="node-box" x="920" y="399" width="244" height="68" rx="9" fill="white" stroke="#b9ced9"/><text x="1042.0" y="439.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Auswertung und Bericht</text></g><g data-source="R" data-target="RES"><title>Dataset attachment</title></g><path class="connection" d="M316,337 H460" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#setup-arrow)"/><text x="388.0" y="324" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#526b7b">für</text><path class="connection" d="M740,337 H908" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#setup-arrow)"/><text x="824.0" y="324" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#526b7b">speichert</text><g data-node="C"><title>CALIBRATION</title><rect class="node-box" x="24" y="553" width="292" height="60" rx="9" fill="white" stroke="#b9ced9"/><text x="170.0" y="589.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Gerätekalibrierung</text></g><g data-reference="I"><title>INSTRUMENT · Inventar</title><rect class="node-box" x="460" y="553" width="280" height="60" rx="9" fill="white" stroke="#b9ced9"/><text x="600.0" y="589.0" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#183448">Geräte</text></g><g data-source="C" data-target="I"><title>Nachweis für</title><path class="connection" d="M316,583 H460" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#setup-arrow)"/><text x="388" y="570" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#526b7b">Nachweis für</text></g></svg></div><figcaption><span class="line-key">Parent-Beziehung</span><span class="line-key dataset">Dateianhang</span><span class="line-key property">OBJECT-Property</span></figcaption></figure><figure data-graph><div class="figure-heading"><h2>openBIS: Schreibtest</h2><div class="graph-controls"><button type="button" data-zoom="out" aria-label="Grafik verkleinern">−</button><button type="button" data-zoom="fit">Einpassen</button><button type="button" data-zoom="in" aria-label="Grafik vergrößern">+</button><button type="button" data-fullscreen>Vollbild</button></div></div><div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 455" role="img" aria-label="Geplante openBIS-Beziehungen des synthetischen Schreibtests"><defs><marker id="test-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#527b8f"/></marker></defs><g data-source="IC" data-target="TI"><title>enthält Objekt</title><path class="connection" d="M174,88 V180" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#test-arrow)"/><text x="253" y="137" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#526b7b">enthält Objekt</text></g><g data-source="LC" data-target="TR"><title>enthält Objekt</title><path class="connection" d="M600,88 V180" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#test-arrow)"/><text x="679" y="137" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#526b7b">enthält Objekt</text></g><g data-source="LC" data-target="TD"><title>enthält Dataset</title><path class="connection" d="M750,54 H1028 V180" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#test-arrow)"/><text x="889" y="40" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#526b7b">enthält Dataset</text></g><g data-source="TI" data-target="TR"><title>Parent</title><path class="connection" d="M324,225 H450" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#test-arrow)"/><text x="387" y="210" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#526b7b">Parent → Child</text></g><g data-source="TR" data-target="TD"><title>Dataset attachment</title><path class="connection" d="M750,225 H880" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#test-arrow)"/><text x="815" y="210" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#526b7b">Dataset am Lauf</text></g><g data-source="TD" data-target="TF"><title>enthält Datei</title><path class="connection" d="M1028,270 V365" fill="none" stroke="#527b8f" stroke-width="2" marker-end="url(#test-arrow)"/><text x="1110" y="322" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#526b7b">enthält Datei</text></g><g data-node="IC"><title>Inventar-Collection / konfiguriertes Inventarziel</title><rect class="node-box" x="24" y="20" width="300" height="68" rx="9" fill="white" stroke="#b9ced9"/><text x="174.0" y="49.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">Inventar-Collection</text><text x="174.0" y="69.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">konfiguriertes Inventarziel</text></g><g data-node="LC"><title>Laborbuch-Collection / konfiguriertes Laborbuchziel</title><rect class="node-box" x="450" y="20" width="300" height="68" rx="9" fill="white" stroke="#b9ced9"/><text x="600.0" y="49.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">Laborbuch-Collection</text><text x="600.0" y="69.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">konfiguriertes Laborbuchziel</text></g><g data-node="TI"><title>INSTRUMENT / GASI_TEST_INSTRUMENT_01</title><rect class="node-box" x="24" y="180" width="300" height="90" rx="9" fill="white" stroke="#b9ced9"/><text x="174.0" y="220.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">INSTRUMENT</text><text x="174.0" y="240.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">GASI_TEST_INSTRUMENT_01</text></g><g data-node="TR"><title>EXPERIMENTAL_STEP / GASI_TEST_RUN_01</title><rect class="node-box" x="450" y="180" width="300" height="90" rx="9" fill="#12384b" stroke="#b9ced9"/><text x="600.0" y="220.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="white">EXPERIMENTAL_STEP</text><text x="600.0" y="240.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="white">GASI_TEST_RUN_01</text></g><g data-node="TD"><title>RAW_DATA / GASI_SYNTHETIC_TEST_01</title><rect class="node-box" x="880" y="180" width="296" height="90" rx="9" fill="white" stroke="#b9ced9"/><text x="1028.0" y="220.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">RAW_DATA</text><text x="1028.0" y="240.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">GASI_SYNTHETIC_TEST_01</text></g><g data-node="TF"><title>CSV / gasi_synthetic_test.csv</title><rect class="node-box" x="880" y="365" width="296" height="68" rx="9" fill="white" stroke="#b9ced9"/><text x="1028.0" y="394.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">CSV</text><text x="1028.0" y="414.0" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#183448">gasi_synthetic_test.csv</text></g></svg></div><figcaption><span class="line-key">Parent-Beziehung</span><span class="line-key dataset">Dateianhang</span><span class="line-key property">OBJECT-Property</span></figcaption></figure></div>
+<section id="levels" class="levels" aria-label="Fachliche Ebenen"><div class="level-card"><h3>Messlauf</h3><p>Fachlich zusammengehörige Aufnahme mit Zweck, Prüfling, Aufbau, Referenzen, Verfahren/Softwarestand und Messplan.</p></div><div class="level-card"><h3>Messstufe</h3><p>Schritt oder Plateau innerhalb eines Laufs.</p></div><div class="level-card"><h3>Messpunkt</h3><p>Zeitlich zugeordneter Snapshot der Kanäle.</p></div></section>
+<section><h2 class="details-heading">Details, Felder und Quellen</h2><details class="model-section"><summary>Ziel und Beleggrenzen</summary><div class="section-body"><h2 id="ziel-und-beleggrenzen">Ziel und Beleggrenzen<a class="headerlink" href="#ziel-und-beleggrenzen" title="Permanent link">&para;</a></h2>
+<p>Das Modell beschreibt <strong>das aktuelle GaSi-Setup</strong> der BAM, FB 8.1. Es ist kein in openBIS registriertes Schema. Frühere Gerätebestände und Umbauhistorien sind nicht Teil dieses Schritts. Ein Messlauf hält fest, welcher Aufbaustand bei seiner Aufnahme verwendet wurde.</p>
+<p>Die Grundlage sind Wiki, Betriebscode, Loggerdateien und lokale Geräteunterlagen. Originalunterlagen, Seriennummern und gerätespezifische Befunde bleiben unter <code>data/datasheets/</code> beziehungsweise in der ignorierten <code>config/gasi_setup.json</code>. Die öffentliche Modellgrafik enthält diese Informationen nicht.</p>
+<p>Die unten genannten Standardtypen wurden am 12.11.2026 lesend im Playground geprüft;
+die fachliche Zuordnung und die konkreten Testziele benötigen weiterhin die Bestätigung
+des Data Store Stewards. Ein sichtbarer Typ bestätigt weder Schreibrechte noch eine
+fachliche Freigabe. Die allgemeinen Anlagen-/Modulbeziehungen bleiben ein Vorschlag.</p>
+</div></details><details class="model-section"><summary>1. Anlage, Module und Geräte</summary><div class="section-body"><h2 id="1-anlage-module-und-gerate">1. Anlage, Module und Geräte<a class="headerlink" href="#1-anlage-module-und-gerate" title="Permanent link">&para;</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Ebene</th>
+<th>Bedeutung für GaSi</th>
+<th>Was festgehalten wird</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Anlage</td>
+<td>Die gesamte Einrichtung</td>
+<td>Name, Standort, Verantwortlichkeit und Übersicht</td>
+</tr>
+<tr>
+<td>Modul</td>
+<td>Zusammengehörige Baugruppe</td>
+<td>Gasmischung, Befeuchter und Messkette</td>
+</tr>
+<tr>
+<td>Gerät</td>
+<td>Eine konkrete, einzeln identifizierbare Einheit</td>
+<td>Hersteller, Modell, Serien-/Inventarkennung, Bereich, Unterlagen und Prüfmittelstatus</td>
+</tr>
+<tr>
+<td>Aktuelles Setup</td>
+<td>Die heutige Zuordnung dieser Geräte</td>
+<td>Position, Aufgabe, Gasweg, Messort, Kanal und Verbindungseinstellungen</td>
+</tr>
+</tbody>
+</table></div>
+<p>Das Gasmischmodul umfasst die Positionen MFC 1–6. Der Befeuchter ergänzt zwei LDP-Regler und die Druckregelung. Die Messkette enthält die tatsächlich eingesetzten Referenzgeräte, Fühler, Prüflinge und die Erfassung. Zusatzmodule werden bei bestätigtem aktuellem Einsatz ergänzt.</p>
+<p><strong>Eine Position ist kein Gerät.</strong> „MFC 1“, „LDP 7“, Busadresse und A5B-Kanal sind Zuordnungen. Seriennummer oder bestätigter Inventareintrag identifizieren das Gerät. Ein USB-Adapter identifiziert nicht automatisch das angeschlossene Messgerät. Ein MFM misst Durchfluss; ein MFC kann zusätzlich regeln.</p>
+<p>Einzeln identifizierbare, austauschbare, wartbare oder kalibrierbare Komponenten erhalten Geräteeinträge. Für passive Bauteile genügt zunächst ein Anlagenplan beziehungsweise eine Stückliste. Vorhandene BAM-Inventareinträge werden wiederverwendet.</p>
+</div></details><details class="model-section"><summary>2. Genau ein aktueller Aufbaustand</summary><div class="section-body"><h2 id="2-genau-ein-aktueller-aufbaustand">2. Genau ein aktueller Aufbaustand<a class="headerlink" href="#2-genau-ein-aktueller-aufbaustand" title="Permanent link">&para;</a></h2>
+<p><code>config/gasi_setup.json</code> beschreibt einen aktuellen Stand. Die Vorlage <code>config/gasi_setup.example.json</code> enthält nur Positionen, keine echten Gerätekennungen. Notebook 02 prüft diesen Stand lokal und erzeugt einen ignorierten HTML-Bericht mit konkreten offenen Angaben.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Geräteangabe</th>
+<th>Regel</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identität und Einbau</td>
+<td>Hersteller, Modell und Kennung belegen; <code>installed_confirmed</code> erst nach Bestätigung der aktuellen Position setzen.</td>
+</tr>
+<tr>
+<td>Bereich und Einheit</td>
+<td>Dokumentierten Bereich vom aktiven Gerätebereich unterscheiden. Widersprüche bleiben offen.</td>
+</tr>
+<tr>
+<td>Gasrollen</td>
+<td>Auslegungsgas/Fluidset, tatsächlich verwendetes Kalibriermedium und Betriebsgas trennen. <code>DEVICE_LIBRARY</code> ist keine Gasidentität.</td>
+</tr>
+<tr>
+<td>Bezugsbedingungen</td>
+<td>Bei Normalvolumenstrom Referenztemperatur und absoluten Referenzdruck führen. Leitungsdruck und Gastemperatur sind andere Größen.</td>
+</tr>
+<tr>
+<td>Prüfmittelstatus</td>
+<td>Individuelle Nachweise mit ihren Bedingungen bewerten. Datenblatt und Kalibrieraufkleber ersetzen keinen Kalibrierschein.</td>
+</tr>
+<tr>
+<td>Kanal und Messort</td>
+<td>Kanal → Geräteposition → tatsächlicher Messort; Unbekanntes nicht als Prüflingssignal oder Gastemperatur ausgeben.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Es wird kein Änderungsjournal und keine Rekonstruktion früherer Umbauten aufgebaut. Für neue Messläufe wird die tatsächlich verwendete Setup-Datei als Snapshot mit SHA-256 gespeichert. So bleibt der Lauf nachvollziehbar, wenn die aktuelle Konfiguration später geändert wird.</p>
+</div></details><details class="model-section"><summary>3. Messlauf, Messstufe und Datei</summary><div class="section-body"><h2 id="3-messlauf-messstufe-und-datei">3. Messlauf, Messstufe und Datei<a class="headerlink" href="#3-messlauf-messstufe-und-datei" title="Permanent link">&para;</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Ebene</th>
+<th>GaSi-Bedeutung</th>
+<th>Ablage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Messlauf</td>
+<td>Fachlich zusammengehörige Aufnahme mit Zweck, Prüfling, Aufbau, Referenzen, Verfahren/Softwarestand und Messplan.</td>
+<td>Ein <code>EXPERIMENTAL_STEP</code> im Laborbuch; eindeutige Laufkennung, Beginn/Ende mit Zeitzone, verantwortliche Person.</td>
+</tr>
+<tr>
+<td>Messstufe</td>
+<td>Schritt oder Plateau innerhalb eines Laufs.</td>
+<td>Messplan/Datensatz mit Stufenkennung, Sollwerten, Dauer und Wiederholung.</td>
+</tr>
+<tr>
+<td>Messpunkt</td>
+<td>Zeitlich zugeordneter Snapshot der Kanäle.</td>
+<td>CSV-Zeile im Dataset; kein Objekt pro Zeile.</td>
+</tr>
+<tr>
+<td>Datei</td>
+<td>Loggerexport, Konfiguration oder Ergebnis.</td>
+<td>Dataset am Lauf; Inhalt und Hash bleiben erhalten.</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Datei ist nicht gleich Messlauf.</strong> Ein Lauf kann mehrere Dateien erzeugen; ein Export kann mehr als eine Aufnahme enthalten. Die lokale Vorschau erfindet weder Laufkennung noch Start-/Stopzeiten oder Setup-Zuordnung. Ein aktuelles Setup beweist nicht, mit welchem Aufbau eine vorhandene Datei erzeugt wurde. Es erscheint in der Vorschau ausschließlich als noch nicht zugewiesener Kontext. Alte Dateien müssen für diesen Schritt nicht rekonstruiert werden.</p>
+</div></details><details class="model-section"><summary>4. Messwerte fachlich richtig einordnen</summary><div class="section-body"><h2 id="4-messwerte-fachlich-richtig-einordnen">4. Messwerte fachlich richtig einordnen<a class="headerlink" href="#4-messwerte-fachlich-richtig-einordnen" title="Permanent link">&para;</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Angabe</th>
+<th>Bedeutung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gasprofil / Stufensoll</td>
+<td>Gewünschte Zusammensetzung oder Feuchte; keine unabhängig gemessene Konzentrationsreferenz.</td>
+</tr>
+<tr>
+<td>MFC Soll/Ist</td>
+<td>Geräte-/Betriebswerte mit Gasumrechnung, Einheit und Bezugsbedingungen.</td>
+</tr>
+<tr>
+<td>MBW-Werte</td>
+<td>Referenzkandidaten; Identität, Status, Messmodus und Messort müssen zum Lauf passen.</td>
+</tr>
+<tr>
+<td>Prüflingssignal</td>
+<td>Nur bei bestätigter Zuordnung von Kanal und Prüfling.</td>
+</tr>
+<tr>
+<td>Temperaturen</td>
+<td>Kammer-Ist, Geräte-/Prozesstemperatur, Messorte und berechnete Größen trennen.</td>
+</tr>
+<tr>
+<td>Unsicherheit</td>
+<td>Spezifikation, Kalibrierung, Umrechnung und Ergebnisunsicherheit unterscheiden; Prozent vom Messwert ist etwas anderes als Prozent vom Endwert.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Der aktuelle Betriebscode interpretiert A5B_CH11 als MGK-Eingang zur Temperaturumrechnung. Andere A5B-Kanäle sind ohne Zuordnung zunächst Rohspannungen. Eine berechnete Sättigungstemperatur ist keine zusätzliche direkt gemessene Temperatur. <code>KLIKA_C</code> bezeichnet Kammer-Ist und nicht automatisch Prüflingstemperatur.</p>
+<p><code>RAW_DATA</code> bedeutet unveränderter Loggerexport; der Export kann bereits softwarekorrigierte Werte enthalten. Korrekturmodell und Auswerteversion sind mitzuführen. Leere Felder, Null, Statusinformationen und Sentinelwerte nicht gleichsetzen. Neue Zeitstempel benötigen UTC oder UTC-Offset; eine lokale Uhr-Rückstellung wird nicht automatisch aufgelöst.</p>
+</div></details><details class="model-section"><summary>5. Grafische Ordnung</summary><div class="section-body"><h2 id="5-grafische-ordnung">5. Grafische Ordnung<a class="headerlink" href="#5-grafische-ordnung" title="Permanent link">&para;</a></h2>
+<p>Die Grafik erklärt die fachliche Ordnung. „umfasst“ und „Position / Kanal“ legen noch keine openBIS-Property fest. Für den aktuellen Aufbau ist <code>SETUP.TEST</code> ein zu prüfender Kandidat; die Setup-Datei bleibt unabhängig davon am Messlauf erhalten.</p>
+<p><a href="#diagram">Beziehungsgrafik oben ansehen</a></p><details class="diagram-source"><summary>Diagrammquelle anzeigen</summary><pre><code>flowchart LR
+    A[Inventar: Anlage / GaSi-Anlage] --&gt;|umfasst| M[Inventar: Modul / Module]
+    M --&gt;|umfasst| I[Inventar: INSTRUMENT / Geräte]
+    I --&gt;|Position / Kanal| S[Inventar: SETUP.TEST / Aktueller Aufbau]
+    S --&gt;|Parent| R[Lab Notebook: EXPERIMENTAL_STEP / Messlauf]
+    I --&gt;|Parent| R
+    G[FB Inventory: GAS_BOTTLE / Prüfgas] --&gt;|Parent| R
+    D[FB Inventory: INSTRUMENT / DUT] --&gt;|Parent| R
+    R --&gt;|Dataset attachment| CSV[RAW_DATA / unveränderte CSV]
+    R --&gt;|Dataset attachment| CFG[ATTACHMENT / Lauf-Konfigurationssnapshot]
+    R --&gt;|Dataset attachment| RES[ATTACHMENT / Auswertung und Bericht]
+    C[CALIBRATION / Gerätekalibrierung] --&gt;|OBJECT property INSTRUMENT| I
+</code></pre></details>
+<h3 id="konkrete-openbis-beziehungen-des-schreibtests">Konkrete openBIS-Beziehungen des Schreibtests<a class="headerlink" href="#konkrete-openbis-beziehungen-des-schreibtests" title="Permanent link">&para;</a></h3>
+<p>Diese zweite Grafik zeigt ausschließlich den in Notebook 05 implementierten Test.
+<strong>Sie ist ein Erstellungsplan, kein Nachweis bereits vorhandener Einträge.</strong> Die
+beiden Collections müssen bestehen; der Test legt sie nicht an. Ihre exakten Pfade
+stehen zentral in der lokalen <code>config/playground_test_target.json</code> und erscheinen
+vor dem Schreiben in Notebook 05. Die öffentliche Grafik enthält keine lokalen Zielpfade.</p>
+<p><a href="#diagram">Beziehungsgrafik oben ansehen</a></p><details class="diagram-source"><summary>Diagrammquelle anzeigen</summary><pre><code>flowchart LR
+    IC[Inventar-Collection / konfiguriertes Inventarziel] --&gt;|enthält Objekt| TI[INSTRUMENT / GASI_TEST_INSTRUMENT_01]
+    LC[Laborbuch-Collection / konfiguriertes Laborbuchziel] --&gt;|enthält Objekt| TR[EXPERIMENTAL_STEP / GASI_TEST_RUN_01]
+    LC --&gt;|enthält Dataset| TD[RAW_DATA / GASI_SYNTHETIC_TEST_01]
+    TI --&gt;|Parent| TR
+    TR --&gt;|Dataset attachment| TD
+    TD --&gt;|enthält Datei| TF[CSV / gasi_synthetic_test.csv]
+</code></pre></details>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Verbindung</th>
+<th>Konkret in pyBIS</th>
+<th>Bedeutung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Collection → Instrument bzw. Messlauf</td>
+<td><code>new_sample(experiment=collection_path, ...)</code></td>
+<td>Ablagezuordnung; keine Parent-Beziehung zwischen Collection und Objekt.</td>
+</tr>
+<tr>
+<td>Instrument → Messlauf</td>
+<td><code>parents=[instrument.identifier]</code>; Reparatur über <code>add_parents(...)</code> und <code>save()</code></td>
+<td>Instrument ist <strong>Parent</strong>, Messlauf ist <strong>Child</strong>. Rückprüfung über <code>run.get_parents()</code>.</td>
+</tr>
+<tr>
+<td>Messlauf → Dataset</td>
+<td><code>new_dataset(sample=run.identifier, experiment=lab_collection_path, ...)</code></td>
+<td>Dataset gehört zum Messlauf und zur Laborbuch-Collection; es ist kein Child-Objekt. Rückprüfung über <code>run.get_datasets()</code>.</td>
+</tr>
+<tr>
+<td>Dataset → CSV</td>
+<td><code>files=[synthetic_csv_path]</code></td>
+<td>Die Datei liegt im Dataset; Rückdownload und SHA-256 prüfen ihren Inhalt.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Anlage, Module, Setup, Prüfgas, Prüfling, Kalibrierobjekte und zusätzliche Anhänge
+werden durch diesen Test <strong>nicht angelegt</strong>. Der allgemeine Modellvorschlag oben
+beschreibt spätere fachliche Zuordnungen. Testinstrument und Testlauf werden über
+ihre stabilen Codes wiedergefunden, das Dataset über seine Zugehörigkeit und den
+stabilen Namen. Dataset-Code/PermID vergibt der Server; sie erscheinen nach dem Test.</p>
+</div></details><details class="model-section"><summary>6. Zuordnung im BAM Data Store</summary><div class="section-body"><h2 id="6-zuordnung-im-bam-data-store">6. Zuordnung im BAM Data Store<a class="headerlink" href="#6-zuordnung-im-bam-data-store" title="Permanent link">&para;</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Inhalt</th>
+<th>Kandidat / Ort</th>
+<th>In der Instanz zu prüfen</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Anlage, Module und Geräte</td>
+<td>Passender Inventartyp; <code>INSTRUMENT</code> oder <code>TESTING_EQUIPMENT</code> für Geräte</td>
+<td>Zielbereich, Pflichtfelder, vorhandene Einträge und Zugehörigkeitsbeziehung</td>
+</tr>
+<tr>
+<td>Aktueller Aufbau</td>
+<td><code>SETUP.TEST</code>, falls geeignet; sonst vereinbarte Zuordnung plus Setup-Datei</td>
+<td>Typ, Objektverweise und Positionen</td>
+</tr>
+<tr>
+<td>Messlauf</td>
+<td><code>EXPERIMENTAL_STEP</code> in einer Laborbuch-Collection</td>
+<td>Zielpfad, Namen-/Zeitfelder, Zweck, Verantwortlichkeit und Ressourcen</td>
+</tr>
+<tr>
+<td>Gas / Referenzmaterial</td>
+<td><code>GAS_BOTTLE</code> oder geeigneter Materialtyp</td>
+<td>Flasche/Charge, zertifizierter Wert, Bedingungen und Nachweis</td>
+</tr>
+<tr>
+<td>Gerätekalibrierung</td>
+<td><code>CALIBRATION</code> mit Gerätebezug</td>
+<td>Pflichtfelder, Zertifikatsnummer und Geltungsbereich</td>
+</tr>
+<tr>
+<td>Dateien</td>
+<td><code>RAW_DATA</code> und <code>ATTACHMENT</code> am Lauf</td>
+<td>Dataset-Typen und Rechte</td>
+</tr>
+</tbody>
+</table></div>
+<p>Ressourcen sind gemäß BAM-Laborbuchkonvention Parents des Messlaufs; Dateien sind Datasets am Lauf und keine Child-Objekte. Fachliche Zugehörigkeit im Inventar wird davon unterschieden. Nur tatsächlich beteiligte Geräte werden dem Lauf zugeordnet.</p>
+<p>Ein Dataset kann mehrere zugehörige Dateien enthalten. <code>RAW_DATA</code>, <code>ATTACHMENT</code> und das optional zu prüfende <code>ELN_PREVIEW</code> sind Dataset-Typen; CSV, PNG und ZIP sind Dateiformate. Anzeigenamen (<code>$name</code>) werden von stabilen Codes und Identifiern unterschieden.</p>
+<p>Geräteunterlagen gehören zum Gerät, Kalibrierscheine zum Gerät beziehungsweise Kalibrierobjekt. Beim Lauf werden die verwendeten Nachweise referenziert. Zielpfade folgen <code>Space → Project → Collection → Object → Dataset</code>; exakte Codes werden aus der Instanz übernommen.</p>
+<h3 id="lesender-instanzabgleich-vom-12112026">Lesender Instanzabgleich vom 12.11.2026<a class="headerlink" href="#lesender-instanzabgleich-vom-12112026" title="Permanent link">&para;</a></h3>
+<p>Fundstelle: Property-Assignments, Typkataloge und sichtbare Collections der
+BAM-Playground-API, abgefragt durch <code>discover_playground</code>; der vollständige Befund
+bleibt lokal unter <code>.local_playground_test/playground_discovery.json</code>.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Typ</th>
+<th>Lesend bestätigter Stand</th>
+<th>Folgerung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>INSTRUMENT</code></td>
+<td>Pflicht: <code>$NAME</code>, <code>MANUFACTURER</code>, <code>BAM_OE</code>, <code>BAM_LOCATION_COMPLETE</code>; <code>SERIAL_NUMBER</code> ist optional.</td>
+<td>Stabile Geräteidentität fachlich trotzdem verlangen; Organisations- und Standortcodes aus Wertelisten übernehmen.</td>
+</tr>
+<tr>
+<td><code>TESTING_EQUIPMENT</code></td>
+<td>Nicht im sichtbaren Typkatalog.</td>
+<td>Für den derzeitigen Test <code>INSTRUMENT</code> verwenden; keinen Ersatztyp anlegen.</td>
+</tr>
+<tr>
+<td><code>EXPERIMENTAL_STEP</code></td>
+<td><code>$NAME</code>, <code>START_DATE</code>, <code>END_DATE</code> und Beschreibungsfelder vorhanden; keine als mandatory markierten Assignments.</td>
+<td>Der Test verlangt einen Namen als stabilen Testmarker; fachlich bleiben Zeitbezug, Zweck und Zuordnung erforderlich.</td>
+</tr>
+<tr>
+<td><code>SETUP.TEST</code></td>
+<td>Name, Aufbauart, Beschreibung, Beginn/Ende und Notizen vorhanden; keine spezifischen Geräte-, Positions- oder Kanalproperties.</td>
+<td>Eine vollständige GaSi-Gerätezuordnung ist damit noch nicht abgebildet. Setup-Datei mitführen; zusätzliche Beziehungen/Properties mit DSSt klären.</td>
+</tr>
+<tr>
+<td><code>CALIBRATION</code></td>
+<td>Pflicht: <code>$NAME</code>, <code>INSTRUMENT</code>, <code>CALIBRATION_DATE</code>, <code>CALIBRATION_PROVIDER</code>, <code>CALIBRATION_CERTIFICATE_NUMBER</code>, <code>ACCREDITATED_CALIBRATION_LAB</code>.</td>
+<td>Gerätebezug läuft über Property <code>INSTRUMENT</code>, API-Datentyp <code>SAMPLE</code> (Objektverweis); dies ist keine Parent-Beziehung.</td>
+</tr>
+<tr>
+<td><code>RAW_DATA</code>, <code>ATTACHMENT</code>, <code>ELN_PREVIEW</code></td>
+<td>Sichtbar; keine als mandatory markierten Assignments.</td>
+<td>Dataset-Typen sind vorhanden. Der Schreibtest verlangt zusätzlich den stabilen Dataset-Namen.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Ein FB-8.1-Laborbuch-Tutorialprojekt mit drei Collections ist sichtbar. Das
+FB-8.1-Projekt im gemeinsamen Geräteinventar ist sichtbar, eine zugehörige
+Inventar-Collection wurde jedoch nicht zurückgegeben. Ein privater Geräte-Space
+ist sichtbar, ohne zurückgegebenes Projekt. Damit ist noch <strong>kein vollständiges,
+freigegebenes Testzielpaar</strong> bestätigt. Fehlende Collection oder Leserechte,
+Laborbuch-Testziel, DSSt-Freigabe und zulässiger Standortcode bleiben zu klären.</p>
+</div></details><details class="model-section"><summary>7. Umsetzung und Quellen</summary><div class="section-body"><h2 id="7-umsetzung-und-quellen">7. Umsetzung und Quellen<a class="headerlink" href="#7-umsetzung-und-quellen" title="Permanent link">&para;</a></h2>
+<p>Die Notebooks haben einzelne Aufgaben: <strong>01 Modellgrafik erzeugen</strong>, <strong>02 aktuelles Setup prüfen</strong>, <strong>03 CSVs lokal prüfen</strong>, <strong>04 Playground-Bestand lesen</strong>, <strong>05 synthetischen Schreibtest ausführen</strong>. Die Anlage echter Geräte folgt erst nach Bestätigung der aktuellen Zuordnungen und Inventarziele. Der Schreibtest importiert weder echte Geräte noch Messdaten.</p>
+<p><strong>Notebook 00</strong> richtet davor bei Bedarf die zentrale lokale Session ein. Der <a href="pybis_Beispielabgleich.md">Abgleich mit dem bereitgestellten pyBIS-Beispiel</a> bestätigt die technische Grundstruktur und dokumentiert die übernommenen Ergänzungen.</p>
+<p><code>GaSi_Playground_Ziele_einrichten.ipynb</code> pflegt die zentrale lokale Ziel-JSON für
+Notebook 04 und 05. Sie ist unabhängig von <code>.env</code> (Zugang) und <code>config/gasi_setup.json</code>
+(echter Geräteaufbau). Pfade und Freigaben werden nicht aus Gerätenamen abgeleitet.</p>
+<ul>
+<li><a href="../data/wiki/home.txt">Lokale Wiki-Kopie</a>: Anlagenaufbau und Geräteübersicht.</li>
+<li><a href="../data/paper/tg5c00105_si_001.pdf">Paper-SI</a>: ein publizierter Aufbau bestätigt keine aktuelle Geräteidentität.</li>
+<li>Betriebscode-Projekt: <code>logger/measurement_logger.py</code>, <code>communication/a5b.py</code>, <code>communication/keller.py</code>, <code>gui/main_window.py</code>, <code>config/gas_flow_config.json</code> und <code>docs/GASI_Handbuch.html</code>; ausschließlich lesend verwendet.</li>
+<li>Gerätebelege und konkrete Restfragen: lokale Setup-Konfiguration und <code>data/datasheets/</code>, außerhalb von Git.</li>
+<li><a href="https://bamresearch.github.io/openBIS-data-store-tutorials/represent-data-research-data/">BAM Forschungsdaten</a>, <a href="https://bamresearch.github.io/openBIS-data-store-tutorials/lab-notebook/">Laborbuch</a>, <a href="https://bamresearch.github.io/openBIS-data-store-tutorials/inventory-data-stewards/">Inventar</a>, <a href="https://bamresearch.github.io/openBIS-data-store-tutorials/connect-data/">Verknüpfungen</a>.</li>
+<li><a href="https://bamresearch.github.io/bam-masterdata/howtos/object_references/">BAM Objektverweise</a> und <a href="https://github.com/BAMresearch/bam-masterdata/blob/main/bam_masterdata/datamodel/v0/object_types.py">öffentliche Typdefinitionen</a>. Öffentlicher Quellcode bestätigt kein Deployment im Playground.</li>
+</ul></div></details></section>
+<footer class="source-note">Quelle: <a href="GaSi_Datenmodell.md">GaSi_Datenmodell.md</a> · Neu erzeugen: GaSi_01_Datenmodell_HTML_erzeugen.ipynb → Run All.
+<details><summary>Quellstand und Offline-Ansicht</summary>SHA-256: 9f300c62b7697d03e93349fcde0f65e2fb3f2ee339ba11ad367b3116216fcd63<br>
+Die Markdown-Datei bleibt die maßgebliche Quelle. Die Ansicht benötigt keine Internetverbindung.</details></footer></div></details></article>
+</main></div><script>
+const article = document.querySelector('article');
+const query = document.getElementById('search');
+const counter = document.getElementById('search-count');
+let timer;
+query?.addEventListener('input', () => {
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    article.querySelectorAll('mark').forEach(mark => mark.replaceWith(document.createTextNode(mark.textContent)));
+    article.normalize();
+    const term = query.value.trim();
+    counter.textContent = '';
+    if (!term) return;
+    const walker = document.createTreeWalker(article, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        return node.parentElement.closest('svg,script,style') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    let count = 0;
+    for (const node of nodes) {
+      const value = node.nodeValue;
+      const lower = value.toLocaleLowerCase('de');
+      const needle = term.toLocaleLowerCase('de');
+      let offset = 0, at = lower.indexOf(needle);
+      if (at < 0) continue;
+      const fragment = document.createDocumentFragment();
+      while (at >= 0) {
+        fragment.append(document.createTextNode(value.slice(offset, at)));
+        const mark = document.createElement('mark');
+        mark.textContent = value.slice(at, at + term.length);
+        fragment.append(mark);
+        count++;
+        offset = at + term.length;
+        at = lower.indexOf(needle, offset);
+      }
+      fragment.append(document.createTextNode(value.slice(offset)));
+      node.replaceWith(fragment);
+    }
+    counter.textContent = count + ' Treffer';
+    const first = article.querySelector('mark');
+    if (first) { openParents(first); first.scrollIntoView({block:'center'}); }
+  }, 180);
+});
+document.getElementById('print').addEventListener('click', () => window.print());
+function openParents(element) {
+  let parent = element.parentElement;
+  while (parent) { if (parent.tagName === 'DETAILS') parent.open = true; parent = parent.parentElement; }
+}
+document.querySelectorAll('a[href^="#"]').forEach(link => link.addEventListener('click', event => {
+  const target = document.getElementById(decodeURIComponent(link.hash.slice(1)));
+  if (target) { event.preventDefault(); openParents(target); target.scrollIntoView({block:'start'}); }
+}));
+document.querySelectorAll('figure[data-graph]').forEach(figure => {
+  const svg = figure.querySelector('svg');
+  const viewport = figure.querySelector('.diagram');
+  let scale = 1;
+  figure.querySelectorAll('[data-zoom]').forEach(button => button.addEventListener('click', () => {
+    scale = button.dataset.zoom === 'fit' ? 1 : Math.max(.5, Math.min(3, scale + (button.dataset.zoom === 'in' ? .25 : -.25)));
+    svg.style.width = (scale * 100) + '%';
+    svg.style.height = 'auto';
+    svg.style.maxHeight = scale === 1 ? '' : 'none';
+    viewport.style.cursor = scale > 1 ? 'grab' : 'default';
+    if (scale === 1) { viewport.scrollLeft = 0; viewport.scrollTop = 0; }
+  }));
+  figure.querySelector('[data-fullscreen]').addEventListener('click', async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await figure.requestFullscreen();
+    } catch (_) { figure.querySelector('[data-fullscreen]').textContent = 'Bitte Browser maximieren'; }
+  });
+  document.addEventListener('fullscreenchange', () => {
+    scale = 1; svg.style.width = '100%'; svg.style.height = ''; svg.style.maxHeight = '';
+    figure.querySelector('[data-fullscreen]').textContent = document.fullscreenElement === figure ? 'Zurück' : 'Größer ansehen';
+    viewport.scrollLeft = 0; viewport.scrollTop = 0;
+  });
+  let drag = null;
+  viewport.addEventListener('pointerdown', event => {
+    if (event.button !== 0 || scale <= 1) return;
+    drag = {x:event.clientX, y:event.clientY, left:viewport.scrollLeft, top:viewport.scrollTop};
+    viewport.setPointerCapture(event.pointerId);
+    viewport.style.cursor = 'grabbing';
+    event.preventDefault();
+  });
+  viewport.addEventListener('pointermove', event => {
+    if (!drag) return;
+    viewport.scrollLeft = drag.left - event.clientX + drag.x;
+    viewport.scrollTop = drag.top - event.clientY + drag.y;
+  });
+  const stopDrag = () => { drag = null; viewport.style.cursor = scale > 1 ? 'grab' : 'default'; };
+  viewport.addEventListener('pointerup', stopDrag);
+  viewport.addEventListener('pointercancel', stopDrag);
+});
+</script></body></html>

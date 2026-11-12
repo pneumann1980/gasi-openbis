@@ -16,6 +16,7 @@ Empfohlene Reihenfolge; jedes Notebook funktioniert unabhängig mit einem frisch
 | [GaSi_02_Aktuelles_Setup_pruefen.ipynb](GaSi_02_Aktuelles_Setup_pruefen.ipynb) | Aktuelle Gerätepositionen und Kanalzuordnungen lokal prüfen | Liest die lokale Setup-Datei; erzeugt einen lokalen Bericht |
 | [GaSi_03_Messdateien_pruefen.ipynb](GaSi_03_Messdateien_pruefen.ipynb) | CSV-Dateien prüfen und eine lokale Vorschau erzeugen | Offline; Originale unverändert; kein Upload |
 | [GaSi_04_Playground_Bestand_lesen.ipynb](GaSi_04_Playground_Bestand_lesen.ipynb) | Sichtbare Bereiche, Typen und Pflichtfelder aus openBIS lesen | Ausschließlich lesend |
+| [GaSi_Playground_Ziele_einrichten.ipynb](GaSi_Playground_Ziele_einrichten.ipynb) | Laborbuch- und Inventarziel zentral konfigurieren | Erstellt nur die fehlende lokale JSON-Vorlage; Speichern per Knopf, kein openBIS-Zugriff |
 | [GaSi_05_Playground_Schreibtest.ipynb](GaSi_05_Playground_Schreibtest.ipynb) | Einen synthetischen Testlauf schreiben und verifizieren | Vorschau und lesende Prüfung; Schreiben standardmäßig deaktiviert |
 
 Die bisherigen Dateinamen wurden ersetzt:
@@ -70,6 +71,10 @@ Quelle: [docs/GaSi_Datenmodell.md](docs/GaSi_Datenmodell.md).
 Notebook 01 erzeugt und verlinkt ausdrücklich
 [docs/GaSi_Datenmodell_einfach.html](docs/GaSi_Datenmodell_einfach.html).
 Die Grafik zeigt Anlage → Module → Geräte sowie den aktuellen Aufbau, Messung und Dateien.
+Unter **openBIS-Beziehungen des Schreibtests ansehen** erscheint der konkrete
+Erstellungsplan: Collection-Zuordnung, Instrument als Parent des Messlaufs,
+Dataset am Messlauf und CSV im Dataset. Er ist von der vorgeschlagenen fachlichen
+Ordnung getrennt. Die Grafik behauptet keine bereits angelegten Einträge.
 Technische Details bleiben separat in [docs/GaSi_Datenmodell.html](docs/GaSi_Datenmodell.html).
 
 Nach einer Modelländerung Notebook 01 erneut ausführen. Der Generator wird auch beim
@@ -166,7 +171,16 @@ Notebook 04 liest Bereiche/Projekte/Collections sowie `EXPERIMENTAL_STEP`,
 und `ATTACHMENT` sowie optional `ELN_PREVIEW` einschließlich lesbarer Pflichtfelder und Wertelisten.
 Sichtbarkeit, fachliche Eignung und Schreibrechte sind getrennte Fragen.
 
-Für Notebook 05 die Zielvorlage lokal kopieren und mit bestätigten Instanzangaben füllen:
+**Zentrale Zielkonfiguration:** [GaSi_Playground_Ziele_einrichten.ipynb](GaSi_Playground_Ziele_einrichten.ipynb)
+nach der Bestandsaufnahme in Notebook 04 öffnen und **Run All** ausführen.
+Das Notebook legt die fehlende lokale Vorlage an, übernimmt vorhandene Angaben
+und zeigt einen Editor mit genau zwei Collection-Pfaden. **Ziele lokal speichern**
+schreibt die gemeinsame Datei `config/playground_test_target.json`.
+Notebook 04, Notebook 05 und der Schreibtest lesen stets diese Datei im Repository,
+auch bei einem abweichenden Arbeitsverzeichnis. Ihr absoluter Pfad wird ausgegeben.
+
+Die Datei kann alternativ direkt in VS Code bearbeitet werden. Manuelles Kopieren
+ist mit dem Einrichtungsnotebook nicht mehr nötig; nach einem Clone bleibt möglich:
 
 ```powershell
 Copy-Item config/playground_test_target.example.json config/playground_test_target.json
@@ -174,8 +188,18 @@ Copy-Item config/playground_test_target.example.json config/playground_test_targ
 
 `lab_notebook` und `inventory` benötigen exakte bestehende Space-/Project-/Collection-Codes.
 `approved_test_scope` dokumentiert die DSSt-Freigabe des FB-8.1-Testbereichs.
+Der Editor setzt diesen Status nicht automatisch. Bei bestätigter Freigabe werden
+genau die eingetragenen Collections als erlaubte Ziele gespeichert. Sichtbarkeit
+und eine lokale Konfiguration ersetzen keine serverseitigen Schreibrechte.
 Nur tatsächlich zugewiesene Properties und alle echten Pflichtfelder verwenden.
 Die Vorlage behauptet keine BAM-Zielpfade. Stabile Testkennungen beibehalten.
+Die Ziel-JSON enthält keine Credentials und ist von Git ausgeschlossen. `.env`
+ist ausschließlich die zentrale Session-Ablage; `config/gasi_setup.json` beschreibt
+den echten Geräteaufbau. Diese drei Dateien haben unterschiedliche Aufgaben.
+Der Editor bietet FB-8.1-Pfadkandidaten aus der letzten Bestandsaufnahme an,
+wählt aber keinen automatisch aus. Notebook 04 speichert den vollständigen
+lesenden Befund einschließlich großer Wertelisten unter
+`.local_playground_test/playground_discovery.json`; diese Datei bleibt ebenfalls lokal.
 
 Nach Prüfung der Vorschau in Notebook 05 die letzte Zelle bewusst aktivieren:
 `WRITE_ENABLED = True` und
@@ -191,6 +215,9 @@ IDs und Pfade werden nach dem Test angezeigt.
 
 Echte Geräte und Messdaten werden von diesem Test nicht importiert.
 Vor Git-Übernahme Notebook-Ausgaben löschen und Schreibschalter/Phrase zurücksetzen.
+Alte Session-Parameter wurden aus den bereits versionierten Wiki-Links im aktuellen
+Stand entfernt; die Originaldateien bleiben lokal gesichert. Frühere Git-Commits
+wurden dabei nicht umgeschrieben.
 
 Der bereitgestellte pyBIS-Workshop wurde ausschließlich lesend abgeglichen.
 [Ergebnisse und übernommene Ergänzungen](docs/pybis_Beispielabgleich.md) dokumentieren
@@ -211,18 +238,36 @@ frischen Kernel; externe Netzwerkzugriffe sind dabei gesperrt.
 Der Testclient prüft Wiederholung, Wiederaufnahme nach Teilfehlern und Rückdownload/Hash.
 Original-CSVs werden über Hashes auf Unverändertheit geprüft; Ausgaben werden nicht gespeichert.
 
-Prüfstand 12.11.2026: **52 Tests bestanden**, alle sieben GaSi-Notebooks mit frischen Kernels
-geprüft (insgesamt vierzehn Durchläufe einschließlich Projekt-/Workshop-Einrichtung,
+Prüfstand 12.11.2026: **58 Tests bestanden**, alle acht GaSi-Notebooks mit frischen Kernels
+geprüft (insgesamt sechzehn Durchläufe einschließlich Projekt-/Workshop-Einrichtung,
 zentraler Session-Einrichtung und Wiederverwendung, leerer Ablage/fehlender Setup-Datei,
-lesender Testclient-Vorschauen und aktiviertem synthetischem Schreibtest mit Wiederholung;
+zentraler Zieleinrichtung mit Erhalt bestehender Angaben, lesender Testclient-Vorschauen
+und aktiviertem synthetischem Schreibtest mit Wiederholung;
 Python 3.14.4 / pyBIS 1.37.5). Die pip-Installation wird im Test simuliert; das Ziel ist
 der aktuelle Kernel mit dem richtigen Requirements-Pfad. Paketimports werden tatsächlich ausgeführt.
 Alle 31 Original-CSVs blieben laut SHA-256 unverändert. Die Grafikprüfung bestätigt
 getrennte Boxen und Linien ohne Kreuzungen durch Boxen oder andere Linien.
 
-**Live weiterhin offen:** tatsächliche Inventar-/Laborbuchziele, bereitgestellte Typen,
-Pflichtfelder/Wertelisten, bestehende Geräteeinträge, Rechte und Server-Validatoren.
-Ein echter synthetischer Upload mit Rückdownload wurde hier mangels Token nicht bestätigt.
+**Live lesend bestätigt (12.11.2026):** Zugang zum BAM-Playground; FB-8.1-Spaces
+und ein Laborbuch-Tutorialprojekt mit drei Collections; das Projekt
+`/BAM_EQUIPMENT/8.1_EQUIPMENT_OPEN`, jedoch keine zurückgegebene zugehörige Collection.
+`EXPERIMENTAL_STEP`, `INSTRUMENT`, `SETUP.TEST`, `CALIBRATION`, `RAW_DATA`, `ATTACHMENT`
+und `ELN_PREVIEW` sind mit Property-Assignments lesbar. `TESTING_EQUIPMENT` ist nicht
+im sichtbaren Typkatalog. `INSTRUMENT` benötigt `$NAME`, `MANUFACTURER`, `BAM_OE`
+und `BAM_LOCATION_COMPLETE`. Die tatsächlichen Pflichtfelder und offenen
+Zuordnungen stehen zusätzlich im [Datenmodell](docs/GaSi_Datenmodell.md).
+Beim Live-Abgleich wurde die Wertelistenabfrage auf die bereits geladene pyBIS-Tabelle
+umgestellt: der Iterator von `Things` konnte die zweistellige `get_term`-API nicht aufrufen.
+Die Organisations-Werteliste enthält den bestätigten Code `OE_8.1`; er wurde in
+der lokalen Ziel-JSON ergänzt. `BAM_LOCATION_COMPLETE` ist mit 5.438 Werten lesbar.
+Das optionale Vokabular `MEASUREMENT_QUANTITY` blieb unbestätigt.
+
+**Live weiterhin offen:** konkrete freigegebene Test-Collections für Laborbuch und
+Inventar (Inventar-Collection nicht sichtbar oder noch nicht vorhanden), DSSt-Freigabe,
+Standortcode des synthetischen Instruments, vorhandene Geräteeinträge sowie Schreibrechte
+und Server-Validatoren. Die zentrale Ziel-JSON ist lokal vorbereitet, bleibt ohne
+bestätigte Ziele und Freigabe gesperrt. Der echte synthetische Upload mit Rückdownload
+wurde bewusst noch nicht ausgeführt; der manuelle Schreibschalter bleibt deaktiviert.
 Konkrete offene Fragen zum aktuellen Aufbau stehen im lokalen Setup-Bericht;
 die frühere ausführliche Bestandsaufnahme dient nur noch als Quellenablage.
 

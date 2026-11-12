@@ -184,7 +184,7 @@ Das Gassystem bildet den untersten Einschub des Geräteturmes. Im Gassystem werd
 <td>MBW Calibration AG</td>
 <td>
 
-[PM-26-00707](https://hub.bam.de/apex/r/bam_hub_workspace/f_103106107107200990333500400/arbeitsbereich-pr%C3%BCfmittelverwaltung1?session=7835426289697)
+[PM-26-00707](https://hub.bam.de/apex/r/bam_hub_workspace/f_103106107107200990333500400/arbeitsbereich-pr%C3%BCfmittelverwaltung1)
 </td>
 </tr>
 <tr>

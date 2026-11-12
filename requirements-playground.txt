@@ -1,0 +1,2 @@
+pybis>=1.31,<2
+ipykernel>=6,<8

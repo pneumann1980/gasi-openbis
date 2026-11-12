@@ -1,0 +1,39 @@
+{
+  "lab_notebook": {
+    "space": "",
+    "project": "",
+    "collection": ""
+  },
+  "inventory": {
+    "space": "",
+    "project": "",
+    "collection": ""
+  },
+  "approved_test_scope": {
+    "lab_notebook_path_prefix": "",
+    "inventory_path_prefix": "",
+    "steward_approved": false,
+    "approval_reference": ""
+  },
+  "instrument": {
+    "type": "INSTRUMENT",
+    "code": "GASI_TEST_INSTRUMENT_01",
+    "name": "GaSi synthetic integration-test instrument",
+    "properties": {
+      "MANUFACTURER": "Synthetic test fixture; not a physical device",
+      "SERIAL_NUMBER": "SYNTHETIC-NOT-A-REAL-DEVICE",
+      "BAM_OE": "",
+      "BAM_LOCATION_COMPLETE": ""
+    }
+  },
+  "run_properties": {
+    "name": "GaSi synthetic Playground integration test",
+    "EXPERIMENTAL_STEP.EXPERIMENTAL_DESCRIPTION": "Synthetic test only; contains no real GaSi measurements."
+  },
+  "run_code": "GASI_TEST_RUN_01",
+  "dataset_type": "RAW_DATA",
+  "dataset_name": "GASI_SYNTHETIC_TEST_01",
+  "dataset_properties": {
+    "name": "GASI_SYNTHETIC_TEST_01"
+  }
+}

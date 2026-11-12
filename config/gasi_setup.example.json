@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "scope": "current_only",
+  "setup_id": "GASI_CURRENT",
+  "name": "GaSi – aktueller Aufbau",
+  "verified_on": null,
+  "modules": {
+    "mixing": "Gasmischung",
+    "humidification": "Befeuchter",
+    "measurement": "Messkette"
+  },
+  "devices": [
+    {"position": "MFC1", "module": "mixing", "kind": "mfc", "quantity": "normal_volume_flow"},
+    {"position": "MFC2", "module": "mixing", "kind": "mfc", "quantity": "normal_volume_flow"},
+    {"position": "MFC3", "module": "mixing", "kind": "mfc", "quantity": "normal_volume_flow"},
+    {"position": "MFC4", "module": "mixing", "kind": "mfc", "quantity": "normal_volume_flow"},
+    {"position": "MFC5", "module": "mixing", "kind": "mfc", "quantity": "normal_volume_flow"},
+    {"position": "MFC6", "module": "mixing", "kind": "mfc", "quantity": "normal_volume_flow"},
+    {"position": "LDP7", "module": "humidification", "kind": "mfc", "quantity": "normal_volume_flow"},
+    {"position": "LDP8", "module": "humidification", "kind": "mfc", "quantity": "normal_volume_flow"},
+    {"position": "ELP9", "module": "humidification", "kind": "pressure_controller", "quantity": "absolute_pressure"}
+  ],
+  "channels": []
+}

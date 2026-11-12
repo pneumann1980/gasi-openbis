@@ -6,7 +6,10 @@ Das Modell beschreibt **das aktuelle GaSi-Setup** der BAM, FB 8.1. Es ist kein i
 
 Die Grundlage sind Wiki, Betriebscode, Loggerdateien und lokale Geräteunterlagen. Originalunterlagen, Seriennummern und gerätespezifische Befunde bleiben unter `data/datasheets/` beziehungsweise in der ignorierten `config/gasi_setup.json`. Die öffentliche Modellgrafik enthält diese Informationen nicht.
 
-openBIS-Typen und Beziehungen sind Kandidaten, bis Notebook 04 sie in der Instanz gelesen und der Data Store Steward die Zuordnung bestätigt hat. Ein sichtbarer Typ bestätigt weder Schreibrechte noch eine fachliche Freigabe.
+Die unten genannten Standardtypen wurden am 12.11.2026 lesend im Playground geprüft;
+die fachliche Zuordnung und die konkreten Testziele benötigen weiterhin die Bestätigung
+des Data Store Stewards. Ein sichtbarer Typ bestätigt weder Schreibrechte noch eine
+fachliche Freigabe. Die allgemeinen Anlagen-/Modulbeziehungen bleiben ein Vorschlag.
 
 ## 1. Anlage, Module und Geräte
 
@@ -83,6 +86,37 @@ flowchart LR
     C[CALIBRATION / Gerätekalibrierung] -->|OBJECT property INSTRUMENT| I
 ```
 
+### Konkrete openBIS-Beziehungen des Schreibtests
+
+Diese zweite Grafik zeigt ausschließlich den in Notebook 05 implementierten Test.
+**Sie ist ein Erstellungsplan, kein Nachweis bereits vorhandener Einträge.** Die
+beiden Collections müssen bestehen; der Test legt sie nicht an. Ihre exakten Pfade
+stehen zentral in der lokalen `config/playground_test_target.json` und erscheinen
+vor dem Schreiben in Notebook 05. Die öffentliche Grafik enthält keine lokalen Zielpfade.
+
+```mermaid
+flowchart LR
+    IC[Inventar-Collection / konfiguriertes Inventarziel] -->|enthält Objekt| TI[INSTRUMENT / GASI_TEST_INSTRUMENT_01]
+    LC[Laborbuch-Collection / konfiguriertes Laborbuchziel] -->|enthält Objekt| TR[EXPERIMENTAL_STEP / GASI_TEST_RUN_01]
+    LC -->|enthält Dataset| TD[RAW_DATA / GASI_SYNTHETIC_TEST_01]
+    TI -->|Parent| TR
+    TR -->|Dataset attachment| TD
+    TD -->|enthält Datei| TF[CSV / gasi_synthetic_test.csv]
+```
+
+| Verbindung | Konkret in pyBIS | Bedeutung |
+|---|---|---|
+| Collection → Instrument bzw. Messlauf | `new_sample(experiment=collection_path, ...)` | Ablagezuordnung; keine Parent-Beziehung zwischen Collection und Objekt. |
+| Instrument → Messlauf | `parents=[instrument.identifier]`; Reparatur über `add_parents(...)` und `save()` | Instrument ist **Parent**, Messlauf ist **Child**. Rückprüfung über `run.get_parents()`. |
+| Messlauf → Dataset | `new_dataset(sample=run.identifier, experiment=lab_collection_path, ...)` | Dataset gehört zum Messlauf und zur Laborbuch-Collection; es ist kein Child-Objekt. Rückprüfung über `run.get_datasets()`. |
+| Dataset → CSV | `files=[synthetic_csv_path]` | Die Datei liegt im Dataset; Rückdownload und SHA-256 prüfen ihren Inhalt. |
+
+Anlage, Module, Setup, Prüfgas, Prüfling, Kalibrierobjekte und zusätzliche Anhänge
+werden durch diesen Test **nicht angelegt**. Der allgemeine Modellvorschlag oben
+beschreibt spätere fachliche Zuordnungen. Testinstrument und Testlauf werden über
+ihre stabilen Codes wiedergefunden, das Dataset über seine Zugehörigkeit und den
+stabilen Namen. Dataset-Code/PermID vergibt der Server; sie erscheinen nach dem Test.
+
 ## 6. Zuordnung im BAM Data Store
 
 | Inhalt | Kandidat / Ort | In der Instanz zu prüfen |
@@ -100,11 +134,37 @@ Ein Dataset kann mehrere zugehörige Dateien enthalten. `RAW_DATA`, `ATTACHMENT`
 
 Geräteunterlagen gehören zum Gerät, Kalibrierscheine zum Gerät beziehungsweise Kalibrierobjekt. Beim Lauf werden die verwendeten Nachweise referenziert. Zielpfade folgen `Space → Project → Collection → Object → Dataset`; exakte Codes werden aus der Instanz übernommen.
 
+### Lesender Instanzabgleich vom 12.11.2026
+
+Fundstelle: Property-Assignments, Typkataloge und sichtbare Collections der
+BAM-Playground-API, abgefragt durch `discover_playground`; der vollständige Befund
+bleibt lokal unter `.local_playground_test/playground_discovery.json`.
+
+| Typ | Lesend bestätigter Stand | Folgerung |
+|---|---|---|
+| `INSTRUMENT` | Pflicht: `$NAME`, `MANUFACTURER`, `BAM_OE`, `BAM_LOCATION_COMPLETE`; `SERIAL_NUMBER` ist optional. | Stabile Geräteidentität fachlich trotzdem verlangen; Organisations- und Standortcodes aus Wertelisten übernehmen. |
+| `TESTING_EQUIPMENT` | Nicht im sichtbaren Typkatalog. | Für den derzeitigen Test `INSTRUMENT` verwenden; keinen Ersatztyp anlegen. |
+| `EXPERIMENTAL_STEP` | `$NAME`, `START_DATE`, `END_DATE` und Beschreibungsfelder vorhanden; keine als mandatory markierten Assignments. | Der Test verlangt einen Namen als stabilen Testmarker; fachlich bleiben Zeitbezug, Zweck und Zuordnung erforderlich. |
+| `SETUP.TEST` | Name, Aufbauart, Beschreibung, Beginn/Ende und Notizen vorhanden; keine spezifischen Geräte-, Positions- oder Kanalproperties. | Eine vollständige GaSi-Gerätezuordnung ist damit noch nicht abgebildet. Setup-Datei mitführen; zusätzliche Beziehungen/Properties mit DSSt klären. |
+| `CALIBRATION` | Pflicht: `$NAME`, `INSTRUMENT`, `CALIBRATION_DATE`, `CALIBRATION_PROVIDER`, `CALIBRATION_CERTIFICATE_NUMBER`, `ACCREDITATED_CALIBRATION_LAB`. | Gerätebezug läuft über Property `INSTRUMENT`, API-Datentyp `SAMPLE` (Objektverweis); dies ist keine Parent-Beziehung. |
+| `RAW_DATA`, `ATTACHMENT`, `ELN_PREVIEW` | Sichtbar; keine als mandatory markierten Assignments. | Dataset-Typen sind vorhanden. Der Schreibtest verlangt zusätzlich den stabilen Dataset-Namen. |
+
+Ein FB-8.1-Laborbuch-Tutorialprojekt mit drei Collections ist sichtbar. Das
+FB-8.1-Projekt im gemeinsamen Geräteinventar ist sichtbar, eine zugehörige
+Inventar-Collection wurde jedoch nicht zurückgegeben. Ein privater Geräte-Space
+ist sichtbar, ohne zurückgegebenes Projekt. Damit ist noch **kein vollständiges,
+freigegebenes Testzielpaar** bestätigt. Fehlende Collection oder Leserechte,
+Laborbuch-Testziel, DSSt-Freigabe und zulässiger Standortcode bleiben zu klären.
+
 ## 7. Umsetzung und Quellen
 
 Die Notebooks haben einzelne Aufgaben: **01 Modellgrafik erzeugen**, **02 aktuelles Setup prüfen**, **03 CSVs lokal prüfen**, **04 Playground-Bestand lesen**, **05 synthetischen Schreibtest ausführen**. Die Anlage echter Geräte folgt erst nach Bestätigung der aktuellen Zuordnungen und Inventarziele. Der Schreibtest importiert weder echte Geräte noch Messdaten.
 
 **Notebook 00** richtet davor bei Bedarf die zentrale lokale Session ein. Der [Abgleich mit dem bereitgestellten pyBIS-Beispiel](pybis_Beispielabgleich.md) bestätigt die technische Grundstruktur und dokumentiert die übernommenen Ergänzungen.
+
+`GaSi_Playground_Ziele_einrichten.ipynb` pflegt die zentrale lokale Ziel-JSON für
+Notebook 04 und 05. Sie ist unabhängig von `.env` (Zugang) und `config/gasi_setup.json`
+(echter Geräteaufbau). Pfade und Freigaben werden nicht aus Gerätenamen abgeleitet.
 
 - [Lokale Wiki-Kopie](../data/wiki/home.txt): Anlagenaufbau und Geräteübersicht.
 - [Paper-SI](../data/paper/tg5c00105_si_001.pdf): ein publizierter Aufbau bestätigt keine aktuelle Geräteidentität.

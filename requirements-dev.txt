@@ -1,0 +1,4 @@
+-r requirements-playground.txt
+-r requirements-docs.txt
+nbclient>=0.10,<1
+nbformat>=5.10,<6
