@@ -2,3 +2,15 @@
 !/data/datasheets/.gitkeep
 /data/measurements/*
 !/data/measurements/.gitkeep
+
+# Local Playground credentials and target configuration
+.env
+.env.*
+!.env.example
+/config/playground_test_target.json
+/config/gasi_setup.json
+/.local_playground_test/
+__pycache__/
+*.py[cod]
+/.venv/
+/.ipynb_checkpoints/
