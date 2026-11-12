@@ -28,6 +28,27 @@ Einzeln identifizierbare, austauschbare, wartbare oder kalibrierbare Komponenten
 
 ## 2. Genau ein aktueller Aufbaustand
 
+### Geräteidentität, Anlagen-Inventarnummer und openBIS-Identifier
+
+Eine Anlagen-Inventarnummer kann zur Gesamtanlage, zu einer Baugruppe oder zu einem
+einzelnen Gerät gehören. Gleiche Modelltexte oder Bereiche belegen deshalb keine
+Zuordnung zu einer konkreten Seriennummer. Inventarnummern bleiben zunächst Kandidaten;
+eine bestätigte Zuordnung benötigt einen separaten Beleg.
+
+Notebook 06 prüft Hersteller, Modell und Seriennummer gegen die angegebenen lokalen
+Dokumentseiten beziehungsweise gegen eine Sichtprüfung des Typenschilds mit Dateihash.
+Notebook 07 registriert eindeutig belegte Identitäten oder verwendet vorhandene
+`INSTRUMENT`-Einträge wieder. Es bestätigt dadurch weder aktuellen Einbau noch
+Kalibriergültigkeit. Gerätecodes beruhen auf Hersteller und Seriennummer, unabhängig
+von Position und Modellkorrekturen.
+
+Der eigene Playground-Bereich für diese Geräte ist `/8.1_EQUIPMENT/GASI/INSTRUMENTS`.
+Sein tatsächlicher Standort wird unter `gasi_inventory.location` in der lokalen
+Ziel-JSON belegt; der synthetische Test-Platzhalter eignet sich nicht für echte Geräte.
+Einzelne Anlagen-Inventarnummern, einschließlich führender Nullen und Unternummer,
+bleiben getrennt vom `openbis_identifier`. Die API-Properties `INVENTORY_NO` und
+`INVENTORY_NO_ADD` sind Integer-Felder und werden nur bei bestätigter Zuordnung gefüllt.
+
 `config/gasi_setup.json` beschreibt einen aktuellen Stand. Die Vorlage `config/gasi_setup.example.json` enthält nur Positionen, keine echten Gerätekennungen. Notebook 02 prüft diesen Stand lokal und erzeugt einen ignorierten HTML-Bericht mit konkreten offenen Angaben.
 
 | Geräteangabe | Regel |

@@ -83,6 +83,20 @@ class ProvisionClient(FakeClient):
 
 
 class ProvisionTests(unittest.TestCase):
+    def test_reprovisioning_preserves_separate_real_inventory_configuration(self):
+        import json
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "target.json"
+            current = deepcopy(self.cfg)
+            real = dict(target=dict(space="8.1_EQUIPMENT", project="GASI", collection="INSTRUMENTS"),
+                        location=dict(code="REAL-PLACE", confirmed=True, evidence="USER ROOM CONFIRMATION"))
+            current["gasi_inventory"] = real
+            path.write_text(json.dumps(current), encoding="utf-8")
+            with patch.object(g, "connect_playground", return_value=(self.client, "FAKE")):
+                result, _ = p.provision_playground(self.cfg, p.CONFIRMATION, path)
+            self.assertIsNotNone(result)
+            self.assertEqual(json.loads(path.read_text())["gasi_inventory"], real)
+
     def setUp(self):
         self.client = ProvisionClient()
         self.cfg = self.client.cfg

@@ -21,11 +21,12 @@ SESSION_NOTEBOOK = "GaSi_00_Session_einrichten.ipynb"
 PROJECT_NOTEBOOK = "GaSi_Projekt_einrichten.ipynb"
 TARGET_NOTEBOOK = "GaSi_Playground_Ziele_einrichten.ipynb"
 PROVISION_NOTEBOOK = "GaSi_Playground_Testbereich_anlegen.ipynb"
+INVENTORY_NOTEBOOKS = ("GaSi_06_Geraetezuordnung_pruefen.ipynb", "GaSi_07_Geraeteinventar_anlegen.ipynb")
 NOTEBOOKS = ("GaSi_01_Datenmodell_HTML_erzeugen.ipynb", "GaSi_02_Aktuelles_Setup_pruefen.ipynb",
              "GaSi_03_Messdateien_pruefen.ipynb", "GaSi_04_Playground_Bestand_lesen.ipynb", "GaSi_05_Playground_Schreibtest.ipynb")
 
 
-def execute(path, cwd, spec_dir, *, fake=False, write=False, repeat=False, enter_token=None, session_file=None, simulate_install=False, provision=False):
+def execute(path, cwd, spec_dir, *, fake=False, write=False, repeat=False, enter_token=None, session_file=None, simulate_install=False, provision=False, inventory=False):
     nb = nbformat.read(path, as_version=4)
     nbformat.validate(nb)
     # Der Nutzer darf parallel Notebook-Statusausgaben speichern. Für den Test
@@ -89,6 +90,17 @@ fake = ProvisionClient()
 g.connect_playground = lambda: (fake, "LOCAL FAKE CLIENT; no network")
 g.TARGET_CONFIG_PATH = Path({str(spec_dir / 'provision_target.json')!r})
 """
+        if path.name == INVENTORY_NOTEBOOKS[1]:
+            setup += """
+from test_inventory import InventoryClient
+import gasi_inventory_openbis as inventory_module
+fake = InventoryClient()
+inventory_settings = inventory_module.default_settings()
+inventory_settings["authorization"]["reference"] = "EXPLICIT FAKE NOTEBOOK AUTHORIZATION"
+inventory_settings["location"] = dict(code="TEST_EXISTING_LOCATION", confirmed=True, evidence="Synthetic room fixture")
+inventory_module.load_inventory_settings = lambda: (inventory_settings, "LOCAL FAKE INVENTORY SETTINGS")
+g.connect_playground = lambda: (fake, "LOCAL FAKE CLIENT; no network")
+"""
     nb.cells.insert(0, nbformat.v4.new_code_cell(setup))
     if enter_token is not None:
         for cell in nb.cells:
@@ -99,7 +111,10 @@ g.TARGET_CONFIG_PATH = Path({str(spec_dir / 'provision_target.json')!r})
                     f'def getpass(prompt): return {enter_token!r}')
     if write:
         cell = nb.cells[-1]
-        if provision:
+        if inventory:
+            cell.source = cell.source.replace("REGISTER_ENABLED = False", "REGISTER_ENABLED = True").replace(
+                'REGISTER_CONFIRMATION = ""', 'REGISTER_CONFIRMATION = "REGISTER DOCUMENTED GASI DEVICE IDENTITIES ON PLAYGROUND"')
+        elif provision:
             cell.source = cell.source.replace("PROVISION_ENABLED = False", "PROVISION_ENABLED = True").replace(
                 'PROVISION_CONFIRMATION = ""', 'PROVISION_CONFIRMATION = "CREATE GASI FB81 PLAYGROUND TEST AREA"')
         else:
@@ -111,6 +126,8 @@ g.TARGET_CONFIG_PATH = Path({str(spec_dir / 'provision_target.json')!r})
         assertion = "assert len(fake.created) == 3 and fake.downloads == 2" if write else "assert not fake.created"
         if path.name == PROVISION_NOTEBOOK:
             assertion = "assert len(fake.saved) == 4 and not fake.created" if write else "assert not fake.saved and not fake.created"
+        if path.name == INVENTORY_NOTEBOOKS[1]:
+            assertion = "assert len(fake.created) == 1 and len(fake.saved) == 2" if write else "assert not fake.created and not fake.saved"
         nb.cells.append(nbformat.v4.new_code_cell(assertion))
     nb.cells.append(nbformat.v4.new_code_cell("assert not network_attempts"))
     km = AsyncKernelManager(kernel_name="gasi-test", connection_file=str(spec_dir / f"connection_{path.stem}.json"),
@@ -122,7 +139,7 @@ g.TARGET_CONFIG_PATH = Path({str(spec_dir / 'provision_target.json')!r})
         client.execute(env=env)
         for cell in nb.cells:
             assert "FAKE_SECRET_FOR_NOTEBOOK" not in json.dumps(cell.get("outputs", []))
-            if path.name in NOTEBOOKS[1:3] and (cwd / "config/gasi_setup.json").is_file():
+            if path.name in (*NOTEBOOKS[1:3], *INVENTORY_NOTEBOOKS) and (cwd / "config/gasi_setup.json").is_file():
                 setup = json.loads((cwd / "config/gasi_setup.json").read_text(encoding="utf-8"))
                 for device in setup["devices"]:
                     serial = device.get("serial_number")
@@ -200,8 +217,33 @@ def check_target_notebook(base, spec_dir):
     print("PASS target notebook: local template only, existing file preserved, no network or openBIS writes")
 
 
-def main(html_only=False):
-    originals = {} if html_only else {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in (ROOT / "data/measurements").glob("*.csv")}
+def check_inventory_notebooks(base, spec_dir):
+    sys.path.insert(0, str(ROOT))
+    sys.path.insert(0, str(ROOT / "tests"))
+    from test_inventory import fixture
+    isolated = base / "inventory-repo"
+    fixture(isolated)
+    for name in ("gasi_session.py", "gasi_openbis_playground.py", "gasi_inventory.py", "gasi_inventory_openbis.py",
+                 "gasi_playground_targets.py", "gasi_playground_provision.py", "gasi_local_measurements.py", "gasi_setup.py"):
+        shutil.copy(ROOT / name, isolated)
+    shutil.copy(ROOT / "config/playground_test_target.example.json", isolated / "config")
+    source = isolated / "data/datasheets/test_Inventar.csv"
+    digest = hashlib.sha256(source.read_bytes()).hexdigest()
+    execute(ROOT / INVENTORY_NOTEBOOKS[0], isolated, spec_dir)
+    execute(ROOT / INVENTORY_NOTEBOOKS[1], isolated, spec_dir)
+    execute(ROOT / INVENTORY_NOTEBOOKS[1], isolated, spec_dir, fake=True)
+    execute(ROOT / INVENTORY_NOTEBOOKS[1], isolated, spec_dir, fake=True, write=True, repeat=True, inventory=True)
+    empty = base / "inventory-empty"
+    empty.mkdir()
+    for name in ("gasi_session.py", "gasi_inventory.py"):
+        shutil.copy(ROOT / name, empty)
+    execute(ROOT / INVENTORY_NOTEBOOKS[0], empty, spec_dir)
+    assert hashlib.sha256(source.read_bytes()).hexdigest() == digest
+    print("PASS inventory notebooks: offline identity check, empty folder, read-only preview, metadata registration/retry, asset source unchanged")
+
+
+def main(html_only=False, inventory_only=False):
+    originals = {} if html_only or inventory_only else {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in (ROOT / "data/measurements").glob("*.csv")}
     runtime = ROOT / ".local_playground_test"
     runtime.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="gasi-notebooks-", dir=runtime) as temp:
@@ -215,9 +257,13 @@ def main(html_only=False):
         if html_only:
             check_html_notebook(base, spec.parent)
             return
+        if inventory_only:
+            check_inventory_notebooks(base, spec.parent)
+            return
         check_project_notebook(base, spec.parent)
         credentials = check_session_notebook(base, spec.parent)
         check_target_notebook(base, spec.parent)
+        check_inventory_notebooks(base, spec.parent)
         execute(ROOT / PROVISION_NOTEBOOK, ROOT, spec.parent)
         execute(ROOT / PROVISION_NOTEBOOK, ROOT, spec.parent, fake=True)
         execute(ROOT / PROVISION_NOTEBOOK, ROOT, spec.parent, fake=True, write=True, repeat=True, provision=True)
@@ -240,5 +286,8 @@ def main(html_only=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--html-only", action="store_true", help="Nur das eigenständige HTML-Notebook prüfen")
-    main(html_only=parser.parse_args().html_only)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--html-only", action="store_true", help="Nur das eigenständige HTML-Notebook prüfen")
+    group.add_argument("--inventory-only", action="store_true", help="Nur Gerätevorbereitung und -registrierung mit frischen Kernels prüfen")
+    args = parser.parse_args()
+    main(html_only=args.html_only, inventory_only=args.inventory_only)

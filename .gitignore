@@ -9,6 +9,8 @@
 !.env.example
 /config/playground_test_target.json
 /config/.playground-target-*.tmp
+/config/.gasi-setup-*.tmp
+/config/.gasi-target-*.tmp
 /config/gasi_setup.json
 /.local_playground_test/
 __pycache__/

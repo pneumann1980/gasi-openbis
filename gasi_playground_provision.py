@@ -16,10 +16,15 @@ COLLECTIONS = {
     "inventory": ("INSTRUMENTS", "GaSi TEST: synthetic instruments", "INSTRUMENT"),
 }
 CONFIRMATION = "CREATE GASI FB81 PLAYGROUND TEST AREA"
+TEST_CONFIG_KEYS = {
+    "lab_notebook", "inventory", "approved_test_scope", "instrument", "run_properties",
+    "run_code", "dataset_type", "dataset_name", "dataset_properties", "synthetic_location",
+}
 
 
 def proposed_config(lab_space, approval_reference="", location_code="", location_label=""):
-    cfg = json.loads(g.TARGET_TEMPLATE_PATH.read_text(encoding="utf-8"))
+    cfg = {key: value for key, value in json.loads(g.TARGET_TEMPLATE_PATH.read_text(encoding="utf-8")).items()
+           if key in TEST_CONFIG_KEYS}
     for key, space in (("lab_notebook", lab_space), ("inventory", "8.1_EQUIPMENT")):
         cfg[key] = dict(space=space, project=PROJECT_CODE, collection=COLLECTIONS[key][0])
     cfg["instrument"]["properties"].update(BAM_OE="OE_8.1", BAM_LOCATION_COMPLETE=location_code)
@@ -133,7 +138,10 @@ def provision_playground(config, confirmation="", config_path=None):
     try:
         with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
             result = ensure_test_area(client, config, confirmation)
-            save_target_config(result["config"], config_path)
+            current, _ = g.load_target_config() if config_path is None else g.load_target_config(config_path)
+            merged = deepcopy(current) if current is not None else {}
+            merged.update({key: value for key, value in result["config"].items() if key in TEST_CONFIG_KEYS})
+            save_target_config(merged, config_path)
         return result, "FB-8.1-Testbereich zurückgelesen und zentrale Ziel-JSON gespeichert."
     except g.CheckFailed as exc:
         return None, str(exc)

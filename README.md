@@ -4,7 +4,7 @@ Das Projekt beschreibt den **aktuellen GaSi-Aufbau** der BAM, FB 8.1. Anlage, Mo
 einzelne Geräte und ihre Verwendung bei einer Messung sind getrennt. Es wird keine
 Umbauhistorie aufgebaut. Die Geräteunterlagen und alle echten Messdaten bleiben lokal.
 
-## Projekt einrichten, Session und fünf Arbeitsaufgaben
+## Projekt einrichten, Session und Arbeitsnotebooks
 
 Empfohlene Reihenfolge; jedes Notebook funktioniert unabhängig mit einem frischen Kernel.
 
@@ -19,6 +19,8 @@ Empfohlene Reihenfolge; jedes Notebook funktioniert unabhängig mit einem frisch
 | [GaSi_Playground_Testbereich_anlegen.ipynb](GaSi_Playground_Testbereich_anlegen.ipynb) | Die fehlenden GaSi-Testprojekte und Collections einmalig einrichten | Vorschau; Anlage erst nach bewusster Aktivierung |
 | [GaSi_Playground_Ziele_einrichten.ipynb](GaSi_Playground_Ziele_einrichten.ipynb) | Laborbuch- und Inventarziel zentral konfigurieren | Erstellt nur die fehlende lokale JSON-Vorlage; Speichern per Knopf, kein openBIS-Zugriff |
 | [GaSi_05_Playground_Schreibtest.ipynb](GaSi_05_Playground_Schreibtest.ipynb) | Einen synthetischen Testlauf schreiben und verifizieren | Vorschau und lesende Prüfung; Schreiben standardmäßig deaktiviert |
+| [GaSi_06_Geraetezuordnung_pruefen.ipynb](GaSi_06_Geraetezuordnung_pruefen.ipynb) | Gerätebelege und Anlagen-Inventarnummern lokal abgleichen | Offline; erzeugt ausschließlich lokale Berichte |
+| [GaSi_07_Geraeteinventar_anlegen.ipynb](GaSi_07_Geraeteinventar_anlegen.ipynb) | Belegte Geräteidentitäten im eigenen GaSi-Inventar registrieren | Vorschau und lesender Dublettenabgleich; Schreiben deaktiviert |
 
 Die bisherigen Dateinamen wurden ersetzt:
 
@@ -120,6 +122,63 @@ Bei einem neuen Messlauf soll eine Kopie der tatsächlich verwendeten Setup-Date
 mit Hash zum Lauf gehören. Es werden keine früheren Umbauten nachgepflegt.
 Die CSV-Vorschau weist vorhandene Dateien dem aktuellen Stand **nicht automatisch zu**.
 
+## Geräteidentitäten und Inventarnummern zusammenführen
+
+Notebook 06 liest das aktuelle Setup, die referenzierten Gerätebelege und die lokale
+`*Inventar.csv`. Bei mehreren Inventarquellen wird `inventory_source` in der ignorierten
+`config/gasi_setup.json` ausdrücklich gesetzt. Es werden ausschließlich die Geräte des
+aktuellen Setup-Entwurfs geprüft, keine vollständigen Anlagenlisten oder Altbestände importiert.
+
+Der lokale Bericht `data/datasheets/_auswertung/GaSi_Geraetezuordnung.html` zeigt pro
+Position Hersteller, Modell, Seriennummer, Beleg, Inventarkandidaten und offene Angaben.
+Ein Modell- oder Bereichstreffer weist eine Anlagen-Inventarnummer noch keinem
+bestimmten Gerät zu. Bestätigte Zuordnungen werden separat als `inventory_assignment`
+mit `confirmed`, vollständiger `number` und `evidence` geführt. Die Originalnummer bleibt
+als Text erhalten. Für openBIS werden Haupt- und Unternummer gegebenenfalls in die
+Integer-Properties `INVENTORY_NO` und `INVENTORY_NO_ADD` aufgeteilt; führende Nullen
+bleiben in der lokalen Referenz und den Metadaten-Notizen erhalten. Unbestätigte Nummern
+werden nicht in diese Properties übernommen. Preise werden nicht übernommen.
+
+Notebook 07 prüft die belegten Identitäten gegen sichtbare `INSTRUMENT`-Einträge.
+Hersteller und Seriennummer identifizieren das Gerät unabhängig von Position und
+Modellkorrekturen. Eindeutige Bestände werden wiederverwendet; abweichende Modelle,
+mehrdeutige Seriennummern oder unlesbare gespeicherte Verweise bleiben gesperrt.
+Eine dokumentierte Identität benötigt noch keine bestätigte Einbauposition oder
+Kalibriergültigkeit. Diese Statuswerte werden durch die Registrierung nicht verändert.
+
+**Das zentrale Ziel steht in derselben lokalen Ziel-JSON** unter `gasi_inventory`:
+
+```json
+{
+  "target": {"space": "8.1_EQUIPMENT", "project": "GASI", "collection": "INSTRUMENTS"},
+  "location": {"code": "", "confirmed": false, "evidence": ""},
+  "authorization": {"kind": "user_instruction", "reference": ""}
+}
+```
+
+`authorization.reference` dokumentiert den Arbeitsauftrag und behauptet keine formelle
+BAM-Freigabe. `location` benötigt den **tatsächlichen** Standort, einen gültigen
+`BAM_LOCATION_COMPLETE`-Code und einen Beleg. Angaben aus Postanschriften oder
+Wareneingangshinweisen werden nicht als Gerätestandort verwendet. Die synthetische
+Testkonfiguration liefert keinen Ersatzwert. Die beiden Zielabschnitte bleiben beim
+Speichern jeweils erhalten.
+
+Nach Prüfung des Berichts in Notebook 07 `REGISTER_ENABLED = True` und
+`REGISTER_CONFIRMATION = "REGISTER DOCUMENTED GASI DEVICE IDENTITIES ON PLAYGROUND"`
+setzen und ausschließlich diese Zelle ausführen. Host, Ziel, Belege, Hashes, Typen,
+Pflichtfelder und Wertelisten werden erneut geprüft. Es werden nur Gerätemetadaten
+geschrieben; keine Messdaten oder Originalbelege hochgeladen. Neue Einträge werden
+zurückgelesen, ihre IDs in `openbis_identifier`/`openbis_perm_id` der lokalen Setup-Datei
+gespeichert. Teilfehler und Wiederholungen verwenden dieselbe Geräteidentität.
+
+Lokaler Stand: 17 Positionen, zehn belegte Hersteller-/Modell-/Seriennummernidentitäten,
+keine bestätigten Anlagen-Inventarnummern. Sieben Identitäten benötigen weitere Belege.
+**Live bestätigt:** Der eigene Bereich `/8.1_EQUIPMENT/GASI/INSTRUMENTS` wurde angelegt
+und zurückgelesen. Unter 112 sichtbaren Instrumenten gab es für die zehn belegten
+Seriennummern keine Treffer. **Echte Geräte noch nicht registriert:** Der tatsächliche
+GaSi-Standort mit Gebäude und Raum ist noch offen. Der vollständige Schreibablauf
+einschließlich Wiederholung und Wiederaufnahme ist mit einem Testclient geprüft.
+
 ## Ablage und Messdateiprüfung
 
 - Geräteunterlagen und lokale Geräteberichte: `data/datasheets/`, von Git ausgeschlossen.
@@ -188,7 +247,10 @@ Copy-Item config/playground_test_target.example.json config/playground_test_targ
 ```
 
 `lab_notebook` und `inventory` benötigen exakte bestehende Space-/Project-/Collection-Codes.
-`approved_test_scope` dokumentiert die DSSt-Freigabe des FB-8.1-Testbereichs.
+`approved_test_scope` dokumentiert den lokalen Auftrag bzw. Freigabevermerk für den synthetischen Testbereich.
+Die historische Bezeichnung `steward_approved` ersetzt keine formelle BAM-Freigabe
+und keine serverseitige Rolle. Der hier verwendete Vermerk bezieht sich auf den
+ausdrücklichen Nutzerauftrag in dieser Sitzung.
 Der Editor setzt diesen Status nicht automatisch. Bei bestätigter Freigabe werden
 genau die eingetragenen Collections als erlaubte Ziele gespeichert. Sichtbarkeit
 und eine lokale Konfiguration ersetzen keine serverseitigen Schreibrechte.
@@ -255,15 +317,21 @@ frischen Kernel; externe Netzwerkzugriffe sind dabei gesperrt.
 Der Testclient prüft Wiederholung, Wiederaufnahme nach Teilfehlern und Rückdownload/Hash.
 Original-CSVs werden über Hashes auf Unverändertheit geprüft; Ausgaben werden nicht gespeichert.
 
-Prüfstand 12.11.2026: **67 Tests bestanden**, alle neun GaSi-Notebooks mit frischen Kernels
-geprüft (insgesamt neunzehn Durchläufe einschließlich Projekt-/Workshop-Einrichtung,
+Prüfstand 12.11.2026: **84 Tests bestanden**, alle elf GaSi-Notebooks mit frischen Kernels
+geprüft (insgesamt vierundzwanzig Durchläufe einschließlich Projekt-/Workshop-Einrichtung,
 zentraler Session-Einrichtung und Wiederverwendung, leerer Ablage/fehlender Setup-Datei,
 zentraler Zieleinrichtung mit Erhalt bestehender Angaben, lesender Testclient-Vorschauen
-aktivierter Einrichtung mit Wiederholung und aktiviertem synthetischem Schreibtest mit Wiederholung;
+aktivierter Einrichtung mit Wiederholung, aktiviertem synthetischem Schreibtest mit Wiederholung,
+lokaler Gerätezuordnung und isolierter Geräte-Registrierung mit Wiederholung;
 Python 3.14.4 / pyBIS 1.37.5). Die pip-Installation wird im Test simuliert; das Ziel ist
 der aktuelle Kernel mit dem richtigen Requirements-Pfad. Paketimports werden tatsächlich ausgeführt.
 Alle 31 Original-CSVs blieben laut SHA-256 unverändert. Die Grafikprüfung bestätigt
 getrennte Boxen und Linien ohne Kreuzungen durch Boxen oder andere Linien.
+Zusätzlich blieben die fünf verwendeten Gerätebelege und die Inventar-CSV laut ihren
+vorhandenen Hashes unverändert. Die Geräte-Prüfungen decken mehrdeutige Inventarnummern,
+führende Nullen, Belegseiten und Dateihashes, unveränderte Einbau-/Prüfmittelstatus,
+Dubletten, Wiederaufnahme nach gespeichertem Teilstand und die Sperre bei fehlendem
+tatsächlichem Standort ab. Synthetische und echte Zielabschnitte überschreiben einander nicht.
 
 **Live lesend bestätigt (12.11.2026):** Zugang zum BAM-Playground; FB-8.1-Spaces
 und ein Laborbuch-Tutorialprojekt mit drei Collections; das Projekt

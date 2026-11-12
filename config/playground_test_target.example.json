@@ -35,5 +35,21 @@
   "dataset_name": "GASI_SYNTHETIC_TEST_01",
   "dataset_properties": {
     "name": "GASI_SYNTHETIC_TEST_01"
+  },
+  "gasi_inventory": {
+    "target": {
+      "space": "8.1_EQUIPMENT",
+      "project": "GASI",
+      "collection": "INSTRUMENTS"
+    },
+    "location": {
+      "code": "",
+      "confirmed": false,
+      "evidence": ""
+    },
+    "authorization": {
+      "kind": "user_instruction",
+      "reference": ""
+    }
   }
 }
