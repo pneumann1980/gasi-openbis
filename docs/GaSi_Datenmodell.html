@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="gasi-view" content="full"><meta name="gasi-model-sha256" content="a0622a7d4c15afadae38ecf6bfef54b9f13b0d288b302a59a8a2d6199961e792">
+<meta name="gasi-view" content="full"><meta name="gasi-model-sha256" content="e2cf6817fd8d530c7d2f962f44e276fa0db97820543ee21e9246b73b6a97625a">
 <title>GaSi-Datenmodell: aktueller Aufbau und Messlauf</title><style>
 :root { color-scheme: light; --ink:#183448; --muted:#526b7b; --blue:#126b88;
   --line:#d9e4e9; --paper:#fff; --wash:#f0f5f7; }
@@ -207,6 +207,9 @@ von Position und Modellkorrekturen.</p>
 <p>Der eigene Playground-Bereich für diese Geräte ist <code>/8.1_EQUIPMENT/GASI/INSTRUMENTS</code>.
 Sein tatsächlicher Standort wird unter <code>gasi_inventory.location</code> in der lokalen
 Ziel-JSON belegt; der synthetische Test-Platzhalter eignet sich nicht für echte Geräte.
+Eine gegenüber dem kontrollierten Raum genauere Nutzerangabe bleibt vollständig
+in <code>NOTES.location</code> und im lokalen Bericht erhalten. Gemeldeter Standort und
+Granularität der Wertelistenzuordnung werden dabei getrennt dokumentiert.
 Einzelne Anlagen-Inventarnummern, einschließlich führender Nullen und Unternummer,
 bleiben getrennt vom <code>openbis_identifier</code>. Die API-Properties <code>INVENTORY_NO</code> und
 <code>INVENTORY_NO_ADD</code> sind Integer-Felder und werden nur bei bestätigter Zuordnung gefüllt.</p>
@@ -500,7 +503,7 @@ Notebook 04 und 05. Sie ist unabhängig von <code>.env</code> (Zugang) und <code
 <li><a href="https://bamresearch.github.io/bam-masterdata/howtos/object_references/">BAM Objektverweise</a> und <a href="https://github.com/BAMresearch/bam-masterdata/blob/main/bam_masterdata/datamodel/v0/object_types.py">öffentliche Typdefinitionen</a>. Öffentlicher Quellcode bestätigt kein Deployment im Playground.</li>
 </ul></div></details></section>
 <footer class="source-note">Quelle: <a href="GaSi_Datenmodell.md">GaSi_Datenmodell.md</a> · Neu erzeugen: GaSi_01_Datenmodell_HTML_erzeugen.ipynb → Run All.
-<details><summary>Quellstand und Offline-Ansicht</summary>SHA-256: a0622a7d4c15afadae38ecf6bfef54b9f13b0d288b302a59a8a2d6199961e792<br>
+<details><summary>Quellstand und Offline-Ansicht</summary>SHA-256: e2cf6817fd8d530c7d2f962f44e276fa0db97820543ee21e9246b73b6a97625a<br>
 Die Markdown-Datei bleibt die maßgebliche Quelle. Die Ansicht benötigt keine Internetverbindung.</details></footer></div></details></article>
 </main></div><script>
 const article = document.querySelector('article');

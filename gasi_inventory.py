@@ -8,6 +8,7 @@ import json
 import re
 import unicodedata
 from pathlib import Path
+from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parent
 REPORT_DIRECTORY = ROOT / "data/datasheets/_auswertung"
@@ -168,6 +169,9 @@ def build_assignment_report(root=ROOT):
                    calibration_status=device.get("calibration_status", "not_assessed"),
                    open_issues=list(device.get("open_issues", [])), asset_candidates=asset_candidates(device, register),
                    inventory_number=None, openbis_identifier=device.get("openbis_identifier"))
+        if row["openbis_identifier"]:
+            row["openbis"] = dict(identifier=row["openbis_identifier"], permId=device.get("openbis_perm_id"),
+                                  url=device.get("openbis_url"))
         assignment = device.get("inventory_assignment", {})
         if assignment.get("confirmed") is True:
             number = assignment.get("number")
@@ -221,11 +225,21 @@ def write_assignment_report(report, directory=REPORT_DIRECTORY):
         proof = "<br>".join(escape(Path(e["file"]).name) + (f' · S. {e["page"]}' if e.get("page") else "") for e in row["evidence"] if e["verified"]) or "offen"
         remote = row.get("openbis", {})
         link = remote.get("url")
+        if link:
+            parsed = urlsplit(link)
+            if parsed.scheme != "https" or parsed.netloc != "playground.datastore.bam.de":
+                link = None
         identifier = remote.get("identifier") or row.get("openbis_identifier") or "noch nicht angelegt"
         remote_html = f'<a href="{escape(link, quote=True)}">{escape(identifier)}</a>' if link else escape(identifier)
         body.append(f'<tr><td>{escape(row["position"])}</td><td>{escape(text(row["manufacturer"]))}<br>{escape(text(row["model"]))}<br><b>{escape(text(row["serial_number"])) or "Seriennummer offen"}</b></td><td>{assets}</td><td>{proof}</td><td>{status}</td><td>{remote_html}</td></tr>')
     document = '<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GaSi Gerätezuordnung</title><style>body{font:16px/1.5 system-ui,sans-serif;color:#183448;max-width:1450px;margin:24px auto;padding:0 18px}h1{font-size:1.8rem}.note{background:#fff5dc;padding:12px}.table{overflow:auto}table{border-collapse:collapse;width:100%;font-size:.87rem}td,th{border:1px solid #ccd9df;padding:10px;text-align:left;vertical-align:top}th{background:#eef5f7}summary{cursor:pointer}td{overflow-wrap:anywhere}details p{max-width:55ch}a{color:#126b88}</style><h1>GaSi: Geräte zuordnen</h1><p class="note">Nur lokal. Ein Modelltreffer bestätigt keine Inventarnummer. Ein Gerätebeleg bestätigt keinen aktuellen Einbau und keine Kalibriergültigkeit.</p>'
     document += f'<p>{len(report["rows"])} Positionen · {sum(r["identity_verified"] for r in report["rows"])} belegte Identitäten · {report.get("register_rows", 0)} Einträge in der Inventarquelle</p>'
+    if report.get("location"):
+        location = report["location"]
+        document += '<p><b>Gemeldeter Standort:</b> ' + escape(text(location.get("reported_text")) or "noch nicht bestätigt")
+        document += '<br><b>BAM-Wert:</b> ' + escape(text(location.get("label")) or text(location.get("code")) or "offen") + '</p>'
+        if location.get("mapping_note"):
+            document += '<p class="note">' + escape(location["mapping_note"]) + '</p>'
     document += '<div class="table"><table><tr><th>Position</th><th>Gerät / Seriennummer</th><th>Anlagen-Inventarnummer</th><th>Beleg</th><th>Prüfstand</th><th>openBIS</th></tr>' + "".join(body) + "</table></div></html>"
     html_path.write_text(document, encoding="utf-8")
     return html_path

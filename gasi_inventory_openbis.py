@@ -108,7 +108,8 @@ def device_properties(row, settings):
     notes = dict(scope="Documented GaSi device identity; current installation and calibration status are not confirmed.",
                  evidence=[dict(file=Path(e["file"]).name, sha256=e["sha256"], page=e.get("page"))
                            for e in row["evidence"] if e["verified"]],
-                 inventory_reference=row["inventory_number"], open_issues=row["open_issues"])
+                 inventory_reference=row["inventory_number"], open_issues=row["open_issues"],
+                 location=deepcopy(settings["location"]))
     values = {"name": f'{row["manufacturer"]} {row["model"]} · SN {row["serial_number"]}',
               "MANUFACTURER": row["manufacturer"], "DEVICE_MODEL_NAME": row["model"],
               "SERIAL_NUMBER": row["serial_number"], "BAM_OE": "OE_8.1",
@@ -125,6 +126,7 @@ def prepare_plan(report, settings, state):
     check_settings(settings)
     result = deepcopy(report)
     result["target"] = deepcopy(settings["target"])
+    result["location"] = deepcopy(settings.get("location", {}))
     result["location_issue"] = location_issue(settings, state)
     schema = state["report"]["object_types"].get("INSTRUMENT", {})
     for row in result["rows"]:
@@ -214,7 +216,9 @@ def persist_identifiers(report, root=ROOT):
         devices = [d for d in current["devices"] if d["position"] == row["position"]]
         if len(devices) != 1 or identity_key(devices[0]) != row["identity_key"]:
             raise g.CheckFailed("Lokale Geräteidentität wurde während der Registrierung geändert; Zuordnung nicht überschrieben.")
-        for key, value in (("openbis_identifier", row["openbis"]["identifier"]), ("openbis_perm_id", row["openbis"].get("permId"))):
+        for key, value in (("openbis_identifier", row["openbis"]["identifier"]),
+                           ("openbis_perm_id", row["openbis"].get("permId")),
+                           ("openbis_url", row["openbis"].get("url"))):
             if value and devices[0].get(key) != value:
                 devices[0][key] = value
                 updated = True

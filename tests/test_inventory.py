@@ -197,6 +197,19 @@ class InventoryTests(unittest.TestCase):
         self.assertEqual(row["properties"]["INVENTORY_NO_ADD"], 2)
         self.assertIn("000123/0002", row["properties"]["NOTES"])
 
+    def test_precise_user_location_is_preserved_beyond_broader_controlled_room(self):
+        self.settings["location"].update(
+            reported_text="SYNTHETIC SITE, house TEST, room 01 A", label="SYNTHETIC/TEST/01",
+            precision="broader_controlled_room", mapping_note="Room suffix A is kept as additional detail.")
+        row = self.register()["rows"][0]
+        notes = json.loads(row["properties"]["NOTES"])
+        self.assertEqual(notes["location"]["reported_text"], "SYNTHETIC SITE, house TEST, room 01 A")
+        self.assertEqual(notes["location"]["precision"], "broader_controlled_room")
+        path = local.write_assignment_report(self.register(), self.root / "report")
+        html = path.read_text(encoding="utf-8")
+        self.assertIn("room 01 A", html)
+        self.assertIn("Room suffix A", html)
+
     def test_existing_model_conflict_never_creates_a_second_device(self):
         first = self.register()["rows"][0]
         key = first["openbis"]["identifier"]
@@ -233,9 +246,11 @@ class InventoryTests(unittest.TestCase):
         before = source.read_bytes()
         report = self.report()
         report["rows"][0]["open_issues"].append("<script>PRIVATE-ONLY</script>")
+        report["rows"][0]["openbis"] = dict(identifier="FAKE-ID", url="javascript:alert(1)")
         path = local.write_assignment_report(report, self.root / "report")
         self.assertIn("&lt;script&gt;", path.read_text(encoding="utf-8"))
         self.assertNotIn("<script>", path.read_text(encoding="utf-8"))
+        self.assertNotIn("javascript:", path.read_text(encoding="utf-8"))
         output = io.StringIO()
         with patch("sys.stdout", output):
             local.show_assignment_summary(report)

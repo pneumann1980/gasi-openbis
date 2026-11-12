@@ -4,6 +4,34 @@ Das Projekt beschreibt den **aktuellen GaSi-Aufbau** der BAM, FB 8.1. Anlage, Mo
 einzelne Geräte und ihre Verwendung bei einer Messung sind getrennt. Es wird keine
 Umbauhistorie aufgebaut. Die Geräteunterlagen und alle echten Messdaten bleiben lokal.
 
+## Kürzester Weg zum ersten Erfolg
+
+Projektumgebung und GaSi-Zielbereiche sind in dieser Arbeitskopie bereits eingerichtet.
+Die Notebooks jeweils mit dem Projekt-Kernel und **Restart Kernel → Run All** starten:
+
+1. **`GaSi_00_Session_einrichten.ipynb`** – Session-Token eintragen oder erneuern.
+   Bei bereits gespeichertem gültigem Token kann dieser Schritt entfallen.
+2. **`GaSi_06_Geraetezuordnung_pruefen.ipynb`** – lokalen Gerätebericht öffnen.
+   Erwartung: 17 Positionen, zehn belegte Identitäten, sieben offene Identitäten.
+   Bereits gespeicherte openBIS-IDs und Browserlinks stehen im Bericht.
+3. **`GaSi_07_Geraeteinventar_anlegen.ipynb`** – Bestand lesen und Vorschau prüfen.
+   Nach erfolgreicher Erstregistrierung zeigt `reuse: 10` die zehn vorhandenen Geräte.
+   Der Link zum lokalen HTML-Bericht führt zu ihren Browserlinks.
+
+**Das ist der erste sichtbare Erfolg:** Die zehn belegten Geräte sind in der Collection
+`/8.1_EQUIPMENT/GASI/INSTRUMENTS` wiederzufinden. Für einen bewussten erneuten
+Schreibnachweis in Notebook 07 die letzte Zelle mit `REGISTER_ENABLED = True` und
+der dort angegebenen Bestätigungsphrase ausführen. Erwartung bei Wiederholung:
+**0 neu angelegt, 10 wiederverwendet**.
+
+Für den vollständigen technischen Uploadtest danach optional
+**`GaSi_05_Playground_Schreibtest.ipynb`** öffnen. Run All bleibt eine Vorschau;
+die bewusst aktivierte Schreibzelle verwendet einen separaten synthetischen
+Testmesslauf mit Testinstrument und CSV und bestätigt den Rückdownload per SHA-256.
+Die Einrichtungsnotebooks für Projekt und Testbereiche sind nur bei einer neuen
+Arbeitskopie bzw. fehlender Einrichtung nötig. Notebook 04 dient der ausführlichen
+Bestandsdiagnose, 01 der Modellgrafik, 02 der Setup-Prüfung und 03 den lokalen Messdateien.
+
 ## Projekt einrichten, Session und Arbeitsnotebooks
 
 Empfohlene Reihenfolge; jedes Notebook funktioniert unabhängig mit einem frischen Kernel.
@@ -173,11 +201,31 @@ gespeichert. Teilfehler und Wiederholungen verwenden dieselbe Geräteidentität.
 
 Lokaler Stand: 17 Positionen, zehn belegte Hersteller-/Modell-/Seriennummernidentitäten,
 keine bestätigten Anlagen-Inventarnummern. Sieben Identitäten benötigen weitere Belege.
-**Live bestätigt:** Der eigene Bereich `/8.1_EQUIPMENT/GASI/INSTRUMENTS` wurde angelegt
-und zurückgelesen. Unter 112 sichtbaren Instrumenten gab es für die zehn belegten
-Seriennummern keine Treffer. **Echte Geräte noch nicht registriert:** Der tatsächliche
-GaSi-Standort mit Gebäude und Raum ist noch offen. Der vollständige Schreibablauf
-einschließlich Wiederholung und Wiederaufnahme ist mit einem Testclient geprüft.
+**Live-Prüfung:** Der eigene Bereich `/8.1_EQUIPMENT/GASI/INSTRUMENTS` ist angelegt.
+Die zehn belegten Identitäten sind am bestätigten Standort registriert und
+zurückgelesen; sieben unvollständige Identitäten bleiben offen. Unbestätigte
+Anlagen-Inventarnummern, Einbaupositionen und Kalibrierstatus werden nicht als
+bestätigt übernommen. Die genaue Standortangabe bleibt in der privaten Ziel-JSON.
+Falls die BAM-Werteliste nur einen übergeordneten Raum enthält, bleiben der
+vollständige gemeldete Raumzusatz und die Zuordnungsgenauigkeit zusätzlich in
+`NOTES.location` und im lokalen HTML-Bericht erhalten.
+Die erneute Live-Registrierung bestätigte **0 neue und 10 wiederverwendete Geräte**.
+Alle zehn Einträge wurden anschließend einzeln auf Identität, Standortdetails und
+fehlende Beleg-/Messdatei-Datasets kontrolliert. Lokale Einbau- und Kalibrierstatus
+blieben unverändert; offene Anlagen-Inventarnummern wurden nicht eingetragen.
+
+## Fachlich nächster Schritt
+
+Die Geräteidentitäten stehen nun bereit. Als Nächstes wird der **tatsächlich
+verwendete Aufbau** bestätigt: welches Gerät an welcher Position arbeitet,
+welche Kanäle und Messorte dazugehören und welche offenen Bereichs-/Skalierungsfragen
+noch relevant sind. Dafür dienen der lokale Bericht und Notebook 02. Die Registrierung
+setzt `installed_confirmed` oder den Kalibrierstatus nicht automatisch auf bestätigt.
+
+Danach kann ein erster GaSi-Messlauf die tatsächlich beteiligten Geräte als Parents
+referenzieren und die verwendete Setup-Datei als Snapshot mit Hash erhalten.
+Die noch offenen Geräteidentitäten und Anlagen-Inventarnummern werden gezielt
+ergänzt; Originalmessdaten bleiben bis zu einem gesondert geprüften Import lokal.
 
 ## Ablage und Messdateiprüfung
 
@@ -317,8 +365,8 @@ frischen Kernel; externe Netzwerkzugriffe sind dabei gesperrt.
 Der Testclient prüft Wiederholung, Wiederaufnahme nach Teilfehlern und Rückdownload/Hash.
 Original-CSVs werden über Hashes auf Unverändertheit geprüft; Ausgaben werden nicht gespeichert.
 
-Prüfstand 12.11.2026: **84 Tests bestanden**, alle elf GaSi-Notebooks mit frischen Kernels
-geprüft (insgesamt vierundzwanzig Durchläufe einschließlich Projekt-/Workshop-Einrichtung,
+Prüfstand 12.11.2026: **85 Tests bestanden**, alle elf GaSi-Notebooks mit frischen Kernels
+geprüft (insgesamt vierundzwanzig lokale Durchläufe einschließlich Projekt-/Workshop-Einrichtung,
 zentraler Session-Einrichtung und Wiederverwendung, leerer Ablage/fehlender Setup-Datei,
 zentraler Zieleinrichtung mit Erhalt bestehender Angaben, lesender Testclient-Vorschauen
 aktivierter Einrichtung mit Wiederholung, aktiviertem synthetischem Schreibtest mit Wiederholung,
@@ -332,6 +380,12 @@ vorhandenen Hashes unverändert. Die Geräte-Prüfungen decken mehrdeutige Inven
 führende Nullen, Belegseiten und Dateihashes, unveränderte Einbau-/Prüfmittelstatus,
 Dubletten, Wiederaufnahme nach gespeichertem Teilstand und die Sperre bei fehlendem
 tatsächlichem Standort ab. Synthetische und echte Zielabschnitte überschreiben einander nicht.
+Zusätzlich wurden 06 und 07 mit frischen Kernels und den tatsächlichen lokalen Daten
+ausgeführt: 06 mit gesperrtem Netzwerk, 07 gegen den Playground mit gesperrten
+Anlagefunktionen. Der erste Erfolgsweg zeigt zehn gespeicherte Browserlinks bzw.
+zehn vorhandene Geräte. Der separate synthetische Schreibtest wurde anschließend
+ebenfalls live wiederholt: dieselben drei IDs, bestätigter Parent und identischer
+CSV-Hash nach Rückdownload.
 
 **Live lesend bestätigt (12.11.2026):** Zugang zum BAM-Playground; FB-8.1-Spaces
 und ein Laborbuch-Tutorialprojekt mit drei Collections; das Projekt

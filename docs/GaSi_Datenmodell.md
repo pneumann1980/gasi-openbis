@@ -45,6 +45,9 @@ von Position und Modellkorrekturen.
 Der eigene Playground-Bereich für diese Geräte ist `/8.1_EQUIPMENT/GASI/INSTRUMENTS`.
 Sein tatsächlicher Standort wird unter `gasi_inventory.location` in der lokalen
 Ziel-JSON belegt; der synthetische Test-Platzhalter eignet sich nicht für echte Geräte.
+Eine gegenüber dem kontrollierten Raum genauere Nutzerangabe bleibt vollständig
+in `NOTES.location` und im lokalen Bericht erhalten. Gemeldeter Standort und
+Granularität der Wertelistenzuordnung werden dabei getrennt dokumentiert.
 Einzelne Anlagen-Inventarnummern, einschließlich führender Nullen und Unternummer,
 bleiben getrennt vom `openbis_identifier`. Die API-Properties `INVENTORY_NO` und
 `INVENTORY_NO_ADD` sind Integer-Felder und werden nur bei bestätigter Zuordnung gefüllt.
