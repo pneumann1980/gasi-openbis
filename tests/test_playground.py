@@ -23,7 +23,7 @@ def config():
     cfg = json.loads(Path("config/playground_test_target.example.json").read_text(encoding="utf-8"))
     cfg["lab_notebook"] = dict(space="FB81_LAB", project="TEST", collection="RUNS")
     cfg["inventory"] = dict(space="FB81_INVENTORY", project="TEST", collection="INSTRUMENTS")
-    cfg["approved_test_scope"] = dict(steward_approved=True, approval_reference="LOCAL FAKE ONLY",
+    cfg["test_scope"] = dict(steward_approved=True, approval_reference="LOCAL FAKE ONLY",
         lab_notebook_path_prefix="/FB81_LAB/TEST", inventory_path_prefix="/FB81_INVENTORY/TEST")
     cfg["instrument"]["properties"].update(BAM_OE="8.1", BAM_LOCATION_COMPLETE="SYNTHETIC")
     return cfg
@@ -361,8 +361,8 @@ class PlaygroundTests(unittest.TestCase):
             report[key] = value
             cases.append((report, self.client.cfg))
         for mutate in (
-            lambda c: c["approved_test_scope"].update(steward_approved=False),
-            lambda c: c["approved_test_scope"].update(lab_notebook_path_prefix="/FB81_LAB/TE"),
+            lambda c: c["lab_notebook"].update(space=""),
+            lambda c: c["test_scope"].update(lab_notebook_path_prefix="/FB81_LAB/TE"),
             lambda c: c["instrument"]["properties"].update(BAM_OE="INVALID"),
             lambda c: c["instrument"]["properties"].update(BAM_OE=""),
             lambda c: c["instrument"]["properties"].update(UNKNOWN="bad"),
@@ -381,7 +381,7 @@ class PlaygroundTests(unittest.TestCase):
         self.assertFalse(self.client.created)
 
     def test_write_entrypoint_rechecks_and_uses_adapter(self):
-        with patch.object(g, "load_target_config", return_value=(self.client.cfg, "local")), \
+        with patch("gasi_session.writes_enabled", return_value=True), patch.object(g, "load_target_config", return_value=(self.client.cfg, "local")), \
              patch.object(g, "connect_playground", return_value=(self.client, "connected")):
             result, message = g.write_playground_test()
             self.assertIsNotNone(result, message)

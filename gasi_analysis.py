@@ -12,7 +12,6 @@ import tempfile
 import gasi_openbis_playground as ob
 import gasi_run as runs
 
-PHRASE="UPLOAD GASI ANALYSIS TO PLAYGROUND"
 ROOT=runs.ROOT
 
 
@@ -276,8 +275,9 @@ def ensure_analysis(client,bundle,targets_config):
             "native_dataset_parents_verified":native}
 
 
-def upload_analysis(*,enabled=False,confirmation="",expected_manifest_sha=None,root=ROOT):
-    if not enabled or confirmation!=PHRASE:return None,"Vorschau: keine Auswertung geschrieben."
+def upload_analysis(*,expected_manifest_sha=None,root=ROOT):
+    from gasi_session import writes_enabled
+    if not writes_enabled():return None,"Vorschau: keine Auswertung geschrieben."
     try:
         root=Path(root).resolve()
         config=runs.load_run(root/"config/gasi_analysis.json")

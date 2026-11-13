@@ -300,7 +300,7 @@ flowchart LR
 
 Die Kästen für Geräte und Gasquellen fassen mehrere mögliche Objekte zusammen.
 Jedes tatsächlich verwendete Objekt wird einzeln verknüpft. Die Grafik zeigt
-das Zielmodell; Notebook 05 testet bislang nur Instrument → Messlauf samt Dataset.
+das Zielmodell; die einmalige Einrichtung testet Instrument → Messlauf samt Dataset synthetisch.
 
 <details markdown="1">
 <summary>Verbindungsregeln und Mehrfachverwendung anzeigen</summary>
@@ -337,11 +337,11 @@ erzeugen. Beim ersten echten Lauf werden die verwendeten Geräte verbunden.
 | DUT pauschal als INSTRUMENT | Vorhandenes Geräteobjekt wiederverwenden oder Typ entsprechend Prüflingsart prüfen. | BAM-Anleitung: **2.2 Define Entity Types**; Katalogbefund `TEST_OBJECT` / `SAMPLE`. |
 | Anlage, Module und Setup als zwingende neue Objekte | Zunächst Gliederung/Snapshot; eigene Objekte erst bei belegtem Nutzen und geeigneten Properties. | BAM-Anleitung: **Simplify your diagram**, **2.3 Reuse Existing BAM Object Types**; `SETUP.TEST`-Assignments. |
 | Echte Laborbuchablage | Gemeinsam nutzbaren Space und Projektverantwortung auswählen; Vorschlags-Collections bestätigen. | Testbereich ist persönlich, nicht automatisch das Forschungsziel. |
-| Prüfling, Gasflaschen, SOP und Software | Konkrete Identitäten/Versionen, vorhandene Einträge, Pflichtfelder und Rechte prüfen. Typkatalog reicht nicht. | Lokaler Playground-Befund; Notebook 04. |
-| Aktueller Einbau und Kanalplan | Vor Ort bestätigen, welches Gerät an welcher Position bzw. welchem Messort betrieben wird. Sieben Identitäten bleiben offen. | Lokaler Gerätebericht; Notebook 02/06. |
+| Prüfling, Gasflaschen, SOP und Software | Konkrete Identitäten/Versionen, vorhandene Einträge, Pflichtfelder und Rechte prüfen. Typkatalog reicht nicht. | Lokaler Playground-Befund; lesende Bestandsprüfung der Einrichtung. |
+| Aktueller Einbau und Kanalplan | Vor Ort bestätigen, welches Gerät an welcher Position bzw. welchem Messort betrieben wird. Sieben Identitäten bleiben offen. | Lokaler Gerätebericht; Geräteabgleich der einmaligen Einrichtung. |
 | Erster echter Lauf | Laufgrenze, Zeitbasis, Messplan, zulässige Eingabewerte und Auswerteziel gemeinsam festlegen. Einbauenachweis und Referenzstatus sind laufbezogen zu bestätigen. | Detailliertes Modell: Messlauf und Messwerte. |
 | Parser | Erst nach verbindlicher Lauf-/Datei-/Kanalzuordnung spezifizieren; kein bereits vorhandener GaSi-Parser aus dem Katalog ableitbar. | BAM-Parserseite verlinkt Beispiele und eine ETL-Anleitung; sie liefert keine GaSi-Feldzuordnung. |
-| Forschungsupload | Notebook 08 erfasst die Messung; Notebook 09 ergänzt später unabhängig Auswertungen mit echten Server-Eingabezeigern. Sensor und Ressourcen müssen existieren; fehlende Identitäten werden nicht erfunden. | [Uploadvertrag und offene Voraussetzungen](GaSi_Forschungsupload.md). |
+| Forschungsupload | Das Messdaten-Notebook erfasst die Messung; das optionale Auswertungsnotebook ergänzt später unabhängig Auswertungen mit echten Server-Eingabezeigern. Sensor und Ressourcen müssen existieren; fehlende Identitäten werden nicht erfunden. | [Uploadvertrag und offene Voraussetzungen](GaSi_Forschungsupload.md). |
 
 **Stand:** Konzeptabgleich am 13.11.2026, offline gegen lokale Nachweise.
 Der aktuelle lesende Zugang ist erfolgreich; die zusätzlichen Schemata sind

@@ -195,16 +195,22 @@ class HtmlModelTests(unittest.TestCase):
         import gasi_model_html
         from unittest.mock import Mock
 
-        notebook = nbformat.read(SOURCE.parents[1] / "GaSi_01_Datenmodell_HTML_erzeugen.ipynb", as_version=4)
+        import gasi_workflow
+        notebook = nbformat.read(SOURCE.parents[1] / "GaSi_02_Einmalig_einrichten.ipynb", as_version=4)
         with tempfile.TemporaryDirectory(dir=Path.cwd()) as temp:
-            source = Path(temp) / "Model.md"
+            docs = Path(temp) / "docs"
+            docs.mkdir()
+            source = docs / "GaSi_Datenmodell.md"
             source.write_text("# Current model\n\nCurrent content.", encoding="utf-8")
-            namespace = {"Path": Path, "model_source": source, "display": Mock(), "FileLink": Mock()}
+            namespace = {}
             stale = Mock(side_effect=AssertionError("Cached generator must not be called"))
-            with patch.object(gasi_model_html, "generate_simple_html", stale), redirect_stdout(io.StringIO()):
+            generate = gasi_workflow.generate_model
+            with patch.object(gasi_model_html, "generate_simple_html", stale), \
+                 patch.object(gasi_workflow, "generate_model", side_effect=lambda: generate(Path(temp))), \
+                 redirect_stdout(io.StringIO()):
                 exec(notebook.cells[-1].source, namespace)
             stale.assert_not_called()
-            self.assertTrue(source.with_name("Model_einfach.html").is_file())
+            self.assertTrue(source.with_name("GaSi_Datenmodell_einfach.html").is_file())
 
     def test_unsupported_mermaid_remains_visible_instead_of_a_wrong_graph(self):
         html = render_html("# Model\n\n```mermaid\nsequenceDiagram\nA->>B: New syntax\n```\n")

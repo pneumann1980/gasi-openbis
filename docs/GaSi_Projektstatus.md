@@ -1,12 +1,34 @@
 # Projektstatus GaSi: Erfassung und spätere Auswertung
 
+## Vereinfachte Bedienung
+
+Im Hauptordner bleiben drei Arbeitsnotebooks: **Session starten**, **Einmalig
+einrichten** und **Messdaten hochladen**. **Prüfling verwalten** ist separat.
+Die optionale spätere Auswertung liegt im Unterordner `notebooks/`.
+Einrichtung, Zielkonfiguration, Geräteinventar und synthetischer Schreibtest sind
+zusammengeführt. Alle Modell-HTMLs und vier Konzept-SVGs werden weiterhin über
+eine separat ausführbare Offline-Zelle der Einrichtung erzeugt.
+
+**Ein Schalter:** `SCHREIBEN = False/True` ausschließlich im Session-Notebook.
+Der lokale Modus in `.env` wird von jedem Arbeitsaufruf neu gelesen; er gilt auch
+über Kernel-Neustarts bis zur nächsten Änderung in der Session. Es gibt keine
+Confirmation-Strings oder weiteren lokalen Schreibfreigaben. Fachliche Belege,
+Pflichtfelder, Zielgrenzen und serverseitige Rechte bleiben erforderlich.
+
+**Bestanden:** 117 Unit-Tests, alle fünf verbleibenden Notebooks in 14 frischen
+Kernels mit gesperrtem Netzwerk. Paketinstallation simuliert, echte Paketimports;
+Schreiben nur gegen synthetische Testclients. Einrichtung, Prüfling und Upload
+einschließlich Wiederholung geprüft. 31 Original-CSVs unverändert.
+Die neue gebündelte Einrichtung wurde in diesem Schritt nicht live schreibend
+ausgeführt. Die folgenden Live-Befunde stammen aus dem vorherigen lesenden Abgleich.
+
 ## Ergebnis dieses Auftrags
 
-Messung und Auswertung sind unabhängig nutzbar. Notebook 08 braucht weder
+Messung und Auswertung sind unabhängig nutzbar. Das Messdaten-Notebook braucht weder
 Auswertungskennung noch Ergebnisse/Auswertungsziel. Der Plan liegt standardmäßig
 am Lauf; eine eigenständige Vorbereitung benötigt Freigabe-/Wiederverwendungsgrund
-oder eine vorhandene Objekt-ID. Notebook 09 wertet später eine oder mehrere
-registrierte Messungen aus.
+oder eine vorhandene Objekt-ID. Das optionale Auswertungsnotebook ergänzt später Ergebnisse zu einer oder mehreren
+registrierten Messungen.
 
 Der aktuelle Stand ist **für einen eindeutig zugeordneten Pilotlauf lokal geprüft,
 aber noch nicht als Forschungsupload in der Instanz abgenommen**.
@@ -95,8 +117,8 @@ von Rezept-Sollwerten getrennt.
 
 ## Prüfungen und Bedienfolge
 
-**Bestanden:** 109 Tests sowie alle 13 GaSi-Notebooks in frischen Kernels
-(30 lokale Durchläufe einschließlich Workshop-Einrichtung). Alle
+Der vorherige Stand war mit 109 Tests / 13 Notebooks geprüft. Die aktuellen
+Zahlen der Vereinfachung stehen oben. Alle
 Notebook-Schreibaufrufe liefen ausschließlich gegen Testclients. Die 31
 Original-CSVs blieben laut SHA-256 unverändert.
 
@@ -104,12 +126,16 @@ Lokal: unabhängige Messung ohne Vorbereitung/Auswertung, optional neue/benutzte
 Vorbereitung, spätere Auswertung in frischem Kontext, mehrere Dateien und mehrere
 Messungen, Dubletten-/Shared-File-Sperre, Wiederholung, gespeicherte Teilfehler,
 exakte Rückverfolgung Ergebnis → Manifest → Serverdataset → Originalbereich.
-Schreiben ist in beiden Notebooks standardmäßig ausgeschaltet.
+Schreiben wird ausschließlich in der Session eingestellt; Standard ist False.
+Frühere Confirmation-Strings und lokale Freigabeschalter sind entfernt.
 
-**Bedienfolge:** 00 Session bei Bedarf → 04 aktuellen Bestand lesen →
-02/06 Aufbau/Identitäten prüfen → 03 Originale validieren → 08 Messung erfassen.
-**Später unabhängig:** 09 Auswertung ergänzen. 01 erzeugt aktuelle Projektgrafiken.
-07 wird nur für noch fehlende belegte Geräteidentitäten benötigt.
+**Bedienfolge:** `GaSi_01_Session_starten.ipynb` →
+`GaSi_02_Einmalig_einrichten.ipynb` (einmalig) →
+`GaSi_03_Messdaten_hochladen.ipynb` (je Lauf).
+`GaSi_Pruefling_verwalten.ipynb` wird bei neuem Sensor benötigt.
+Später unabhängig: `notebooks/GaSi_Auswertung_hochladen.ipynb`.
+Die Einrichtung enthält eine separat mit frischem Kernel ausführbare Offline-Zelle
+für alle Modell-HTMLs, Tabellen und vier Konzept-SVGs.
 
 Der [Browser-Abnahmetest](GaSi_Forschungsupload.md#suche-und-browser-abnahme)
 führt vom Sensor und der Laborbuchsuche zum Messlauf und von der Auswertung bis
@@ -119,8 +145,8 @@ zur exakten unveränderten Eingabe.
 
 - [gasi_run.py](../gasi_run.py), [gasi_analysis.py](../gasi_analysis.py): getrennte Abläufe, bedarfsabhängige Ziele,
   Server-Quellmanifest und präzise Auswerteprovenienz.
-- [Notebook 08](../GaSi_08_Forschungsablauf_hochladen.ipynb),
-  [Notebook 09](../GaSi_09_Auswertung_hochladen.ipynb),
+- [Messdaten-Notebook](../GaSi_03_Messdaten_hochladen.ipynb),
+  [Auswertung](../notebooks/GaSi_Auswertung_hochladen.ipynb),
   [Laufvorlage](../config/gasi_run.example.json),
   [Auswertungsvorlage](../config/gasi_analysis.example.json) und
   [zentrale Zielvorlage](../config/playground_test_target.example.json).
@@ -128,5 +154,6 @@ zur exakten unveränderten Eingabe.
 - Tests für getrennte Abläufe, Herkunft, Auswahl, Teilfehler, Originalschutz und frische Kernels.
 
 Lokale Gerätebelege, Credentials, Lauf-/Auswertungskonfigurationen und echte
-Mess-/Ergebnisdateien bleiben außerhalb von Git. Vorhandene lokale Notebook-Zustände
-des Nutzers bleiben erhalten.
+Mess-/Ergebnisdateien bleiben außerhalb von Git. Vorhandene lokale Notebook-Zustände des Nutzers sind bytegleich unter
+`.local_playground_test/notebooks_vor_vereinfachung_*/` gesichert; die alten
+Einzelnotebooks sind aus dem Hauptordner entfernt.

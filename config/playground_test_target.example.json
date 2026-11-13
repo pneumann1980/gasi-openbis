@@ -9,12 +9,6 @@
     "project": "",
     "collection": ""
   },
-  "approved_test_scope": {
-    "lab_notebook_path_prefix": "",
-    "inventory_path_prefix": "",
-    "steward_approved": false,
-    "approval_reference": ""
-  },
   "instrument": {
     "type": "INSTRUMENT",
     "code": "GASI_TEST_INSTRUMENT_01",
@@ -38,17 +32,28 @@
   },
   "gasi_workflow": {
     "host": "https://playground.datastore.bam.de",
-    "native_dataset_parents": {"confirmed": false, "evidence": ""},
-    "approved_scope": {
-      "approved": false,
-      "reference": "",
-      "lab_path_prefix": ""
+    "native_dataset_parents": {
+      "confirmed": false,
+      "evidence": ""
     },
     "targets": {
-      "preparation": {"space": "", "project": "", "collection": ""},
-      "measurement": {"space": "", "project": "", "collection": ""},
-      "analysis": {"space": "", "project": "", "collection": ""}
-    }
+      "preparation": {
+        "space": "",
+        "project": "",
+        "collection": ""
+      },
+      "measurement": {
+        "space": "",
+        "project": "",
+        "collection": ""
+      },
+      "analysis": {
+        "space": "",
+        "project": "",
+        "collection": ""
+      }
+    },
+    "lab_project": ""
   },
   "gasi_inventory": {
     "target": {
@@ -60,10 +65,17 @@
       "code": "",
       "confirmed": false,
       "evidence": ""
-    },
-    "authorization": {
-      "kind": "user_instruction",
-      "reference": ""
+    }
+  },
+  "test_scope": {
+    "lab_notebook_path_prefix": "",
+    "inventory_path_prefix": ""
+  },
+  "gasi_dut": {
+    "target": {
+      "space": "8.1_EQUIPMENT",
+      "project": "GASI",
+      "collection": "PRUEFLINGE"
     }
   }
 }

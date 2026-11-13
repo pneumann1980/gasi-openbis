@@ -13,7 +13,6 @@ from gasi_inventory import ROOT, build_assignment_report, identity_key, manufact
 
 MARKER = "GASI_DEVICE_INVENTORY_V1"
 COLLECTION_NAME = "GaSi: dokumentierte Geräte"
-CONFIRMATION = "REGISTER DOCUMENTED GASI DEVICE IDENTITIES ON PLAYGROUND"
 PROPERTIES = ["$NAME", "MANUFACTURER", "DEVICE_MODEL_NAME", "SERIAL_NUMBER", "INVENTORY_NO",
               "INVENTORY_NO_ADD", "BAM_OE", "BAM_LOCATION_COMPLETE", "DESCRIPTION", "NOTES"]
 
@@ -21,7 +20,7 @@ PROPERTIES = ["$NAME", "MANUFACTURER", "DEVICE_MODEL_NAME", "SERIAL_NUMBER", "IN
 def default_settings():
     return dict(target=dict(space="8.1_EQUIPMENT", project="GASI", collection="INSTRUMENTS"),
                 location=dict(code="", confirmed=False, evidence=""),
-                authorization=dict(kind="user_instruction", reference=""))
+                )
 
 
 def load_inventory_settings(path=None):
@@ -60,9 +59,6 @@ def save_inventory_settings(settings, path=None):
 def check_settings(settings):
     if settings.get("target") != default_settings()["target"]:
         raise g.CheckFailed("Geräteanlage ist auf /8.1_EQUIPMENT/GASI/INSTRUMENTS begrenzt.")
-    authorization = settings.get("authorization", {})
-    if authorization.get("kind") != "user_instruction" or not text(authorization.get("reference")):
-        raise g.CheckFailed("Ausdrücklicher Arbeitsauftrag für das GaSi-Geräteinventar fehlt.")
     return g.target_path(settings["target"])
 
 
@@ -256,7 +252,7 @@ def ensure_devices(client, report, settings, state, root=ROOT):
 
 def inspect_inventory(root=ROOT):
     report = build_assignment_report(root)
-    settings, message = load_inventory_settings()
+    settings, message = load_inventory_settings(Path(root) / "config/playground_test_target.json")
     if not report["available"]:
         return report, settings, report["message"]
     client, connection = g.connect_playground()
@@ -272,13 +268,14 @@ def inspect_inventory(root=ROOT):
         return report, settings, "Inventarprüfung unvollständig; Verbindung, Typen und Rechte prüfen. Serverdetails unterdrückt."
 
 
-def register_inventory(confirmation="", root=ROOT):
-    if confirmation != CONFIRMATION:
+def register_inventory(root=ROOT):
+    from gasi_session import writes_enabled
+    if not writes_enabled():
         return None, "Geräteregistrierung deaktiviert. Nur Vorschau."
     report = build_assignment_report(root)
     if not report["available"]:
         return None, report["message"]
-    settings, message = load_inventory_settings()
+    settings, message = load_inventory_settings(Path(root) / "config/playground_test_target.json")
     client, message = g.connect_playground()
     if client is None:
         return None, message

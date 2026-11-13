@@ -79,7 +79,6 @@ class InventoryTests(unittest.TestCase):
         self.setup = fixture(self.root)
         self.client = InventoryClient()
         self.settings = remote.default_settings()
-        self.settings["authorization"]["reference"] = "EXPLICIT SYNTHETIC FIXTURE AUTHORIZATION"
         self.settings["location"] = dict(code="TEST_EXISTING_LOCATION", confirmed=True, evidence="Synthetic room fixture")
 
     def write_setup(self):
@@ -161,9 +160,9 @@ class InventoryTests(unittest.TestCase):
         self.assertFalse(self.client.saved)
         self.assertEqual((self.root / "config/gasi_setup.json").read_bytes(), before)
         self.assertNotIn("registered_at", result)
-        with patch.object(remote, "load_inventory_settings", return_value=(self.settings, "FAKE")), \
+        with patch("gasi_session.writes_enabled", return_value=True), patch.object(remote, "load_inventory_settings", return_value=(self.settings, "FAKE")),  \
                 patch.object(g, "connect_playground", return_value=(self.client, "FAKE")):
-            _, message = remote.register_inventory(remote.CONFIRMATION, self.root)
+            _, message = remote.register_inventory(root=self.root)
         self.assertIn("Keine Geräte angelegt", message)
         self.assertIn("Standort", message)
 

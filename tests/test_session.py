@@ -11,6 +11,32 @@ import gasi_session as s
 
 
 class SessionTests(unittest.TestCase):
+    def test_one_switch_is_persistent_and_reread_across_kernel_contexts(self):
+        self.assertFalse(s.writes_enabled())
+        s.save_playground_token("SYNTHETIC_TOKEN_ONLY")
+        self.assertIn("True", s.start_session(True))
+        self.assertTrue(s.writes_enabled())
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("fresh_gasi_session", s.__file__)
+        fresh = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(fresh)
+        fresh.SESSION_FILE = self.path
+        self.assertTrue(fresh.writes_enabled())
+        fresh.start_session(False)
+        self.assertFalse(s.writes_enabled())
+        self.assertEqual(s.session_value(s.TOKEN_ENV), "SYNTHETIC_TOKEN_ONLY")
+
+    def test_environment_or_invalid_file_cannot_enable_writes(self):
+        with patch.dict(os.environ, {s.WRITE_KEY: "true"}):
+            self.assertFalse(s.writes_enabled())
+            for value in ("yes", "1", "True please", ""):
+                self.path.write_text(s.WRITE_KEY + "=" + value + "\n", encoding="utf-8")
+                self.assertFalse(s.writes_enabled())
+            self.path.write_text(s.WRITE_KEY + "=true\ninvalid private text\n", encoding="utf-8")
+            self.assertFalse(s.writes_enabled())
+        with self.assertRaises(s.SessionConfigError):
+            s.start_session("True")
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
@@ -25,7 +51,7 @@ class SessionTests(unittest.TestCase):
 
     def test_missing_credentials_provide_notebook_hint_without_creating_a_file(self):
         self.assertEqual(s.session_value(s.TOKEN_ENV), "")
-        self.assertIn("GaSi_00_Session_einrichten.ipynb", s.session_status())
+        self.assertIn("GaSi_01_Session_starten.ipynb", s.session_status())
         self.assertFalse(self.path.exists())
 
     def test_save_and_reload_preserves_other_session_values(self):

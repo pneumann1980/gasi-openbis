@@ -707,7 +707,7 @@ def render_html(source: str, source_name: str = "GaSi_Datenmodell.md", *, detail
 <div class="technical-diagrams">{''.join(technical_diagrams)}</div>
 <section id="levels" class="levels" aria-label="Fachliche Ebenen">{_level_cards(source)}</section>
 <section><h2 class="details-heading">Details, Felder und Quellen</h2>{sections}</section>
-<footer class="source-note">Quelle: <a href="{escape(source_name, quote=True)}">{escape(source_name)}</a> · Neu erzeugen: GaSi_01_Datenmodell_HTML_erzeugen.ipynb → Run All.
+<footer class="source-note">Quelle: <a href="{escape(source_name, quote=True)}">{escape(source_name)}</a> · Neu erzeugen: GaSi_02_Einmalig_einrichten.ipynb (Zelle Datenmodell und HTML) → Run All.
 <details><summary>Quellstand und Offline-Ansicht</summary>SHA-256: {digest}<br>
 Die Markdown-Datei bleibt die maßgebliche Quelle. Die Ansicht benötigt keine Internetverbindung.</details></footer></div></details>'''
     if details_href is not None:

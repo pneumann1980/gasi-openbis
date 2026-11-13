@@ -287,7 +287,7 @@ def inspect_measurements(measurement_dir: str | Path, preview_path: str | Path, 
             "measurement": {"object_type":"EXPERIMENTAL_STEP","activity":"gas/temperature/humidity exposure with simultaneous acquisition",
                             "dut_identifier":None,"dut_type":None,"raw_file_binding_confirmed":False},
             "analysis": {"object_type":"EXPERIMENTAL_STEP","parent":"measurement","deferred":True,
-                         "entrypoint":"GaSi_09_Auswertung_hochladen.ipynb","outputs":["evaluated data","code","report"]},
+                         "entrypoint":"notebooks/GaSi_Auswertung_hochladen.ipynb","outputs":["evaluated data","code","report"]},
             "exposure_conditions": {
                 "gas":"nominal recipe; composition, unit and dry/wet basis required",
                 "temperature":"setpoint and location required; KLIKA_C is chamber actual, not confirmed DUT temperature",

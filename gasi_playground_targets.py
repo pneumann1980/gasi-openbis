@@ -9,7 +9,7 @@ import gasi_openbis_playground as playground
 
 
 def initialize_target_config(path=None):
-    """Create the unapproved template once; never replace an existing local file."""
+    """Create the local template once; never replace an existing local file."""
     path = Path(path) if path is not None else playground.TARGET_CONFIG_PATH
     if not path.exists():
         template = playground.TARGET_TEMPLATE_PATH.read_text(encoding="utf-8")
@@ -25,7 +25,7 @@ def initialize_target_config(path=None):
 def collection_codes(path):
     parts = path.strip().split("/")
     if len(parts) != 4 or parts[0] != "":
-        raise playground.CheckFailed("Collection als /SPACE/PROJECT/COLLECTION eingeben; Codes aus Notebook 04 übernehmen.")
+        raise playground.CheckFailed("Collection als /SPACE/PROJECT/COLLECTION eingeben; vorhandene openBIS-Codes verwenden.")
     group = dict(zip(("space", "project", "collection"), parts[1:]))
     playground.target_path(group)
     return group
@@ -38,9 +38,6 @@ def save_target_config(config, path=None):
         raise playground.CheckFailed("Zielkonfiguration muss ein JSON-Objekt sein.")
     for key in ("lab_notebook", "inventory"):
         playground.target_path(config.get(key, {}))
-    scope = config.get("approved_test_scope", {})
-    if scope.get("steward_approved") is True and not str(scope.get("approval_reference", "")).strip():
-        raise playground.CheckFailed("Für eine bestätigte Freigabe die DSSt-Freigabereferenz eintragen.")
     text = json.dumps(config, ensure_ascii=False, indent=2) + "\n"
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = None
@@ -85,7 +82,7 @@ def show_target_editor(path=None):
                         choices["inventory"].append(collection_path)
                     elif not any(word in collection_path for word in ("ELN_SETTINGS", "PUBLICATIONS", "MATERIALS", "METHODS", "STORAGE")):
                         choices["lab_notebook"].append(collection_path)
-            print("Pfadvorschläge stammen aus dem letzten lokalen Lesebefund; keine automatische Zielwahl oder Freigabe.")
+            print("Pfadvorschläge stammen aus dem letzten lokalen Lesebefund; explizite Zielwahl erforderlich.")
             if not choices["inventory"]:
                 print("Keine FB-8.1-Inventar-Collection im letzten Befund. Exakten Zielpfad bzw. Leserechte mit DSSt klären.")
     except (OSError, ValueError, KeyError, TypeError, AttributeError):
@@ -94,10 +91,6 @@ def show_target_editor(path=None):
         description="Laborbuch-Collection", layout=layout, style=style, ensure_option=False)
     inventory = widgets.Combobox(value=current_path("inventory"), options=choices["inventory"],
         description="Inventar-Collection", layout=layout, style=style, ensure_option=False)
-    scope = config.get("approved_test_scope", {})
-    approved = widgets.Checkbox(value=scope.get("steward_approved") is True,
-        description="DSSt hat diese Ziele als FB-8.1-Testbereich freigegeben", indent=False, layout=layout)
-    reference = widgets.Text(value=scope.get("approval_reference", ""), description="Freigabereferenz", layout=layout, style=style)
     properties = widgets.Textarea(value=json.dumps({k: config.get(k) for k in (
         "instrument", "run_properties", "dataset_properties")}, ensure_ascii=False, indent=2),
         layout=widgets.Layout(width="100%", height="300px"))
@@ -120,17 +113,16 @@ def show_target_editor(path=None):
                 if not isinstance(fields, dict) or set(fields) != {"instrument", "run_properties", "dataset_properties"}:
                     raise playground.CheckFailed("Erweiterte Angaben müssen instrument, run_properties und dataset_properties enthalten.")
                 updated.update(fields)
-                updated["approved_test_scope"] = dict(
-                    steward_approved=approved.value, approval_reference=reference.value.strip(),
+                updated["test_scope"] = dict(
                     lab_notebook_path_prefix=playground.target_path(updated["lab_notebook"]),
                     inventory_path_prefix=playground.target_path(updated["inventory"]))
                 saved = save_target_config(updated, path)
-                print(f"Gespeichert: {saved.as_posix()}. Notebook 04/05 erneut ausführen; keine openBIS-Einträge angelegt.")
+                print(f"Gespeichert: {saved.as_posix()}. Einrichtung erneut ausführen; keine openBIS-Einträge angelegt.")
             except playground.CheckFailed as exc:
                 print(str(exc))
             except (ValueError, TypeError, AttributeError, OSError):
                 print("Nicht gespeichert. Pfade, JSON-Struktur und lokalen Dateizugriff prüfen.")
     button.on_click(save)
-    editor = widgets.VBox([lab, inventory, approved, reference, advanced, button, output])
+    editor = widgets.VBox([lab, inventory, advanced, button, output])
     display(editor)
     return editor

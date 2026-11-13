@@ -14,6 +14,7 @@
 /config/gasi_setup.json
 /config/gasi_run.json
 /config/gasi_analysis.json
+/config/gasi_pruefling.json
 /data/results/*
 !/data/results/.gitkeep
 /.local_playground_test/

@@ -9,6 +9,7 @@ import tempfile
 
 SESSION_FILE = Path(__file__).resolve().parent / ".env"
 TOKEN_ENV = "OPENBIS_PLAYGROUND_TOKEN"
+WRITE_KEY = "GASI_OPENBIS_WRITE"
 _KEY = re.compile(r"(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=")
 
 
@@ -66,7 +67,7 @@ def session_status():
     """Geeignet zum Anzeigen im Notebook: nur Herkunft/Status, niemals Werte."""
     try:
         if not session_value(TOKEN_ENV).strip():
-            return ("Kein Zugang: OPENBIS_PLAYGROUND_TOKEN fehlt. GaSi_00_Session_einrichten.ipynb "
+            return ("Kein Zugang: OPENBIS_PLAYGROUND_TOKEN fehlt. GaSi_01_Session_starten.ipynb "
                     "ausführen oder den Wert in der lokalen .env eintragen.")
         source = "Umgebungsvariable" if os.environ.get(TOKEN_ENV, "").strip() else "lokale .env"
         return f"Sessionwert aus {source} verfügbar; Gültigkeit wird erst bei der Verbindung geprüft."
@@ -83,13 +84,19 @@ def save_playground_token(token, path=None):
         return "Leere Eingabe: vorhandene Sessiondatei unverändert."
     if any(c.isspace() or ord(c) < 32 or ord(c) == 127 for c in token):
         raise SessionConfigError("Token enthält Leer-/Steuerzeichen; erneut eingeben.")
+    _save_value(TOKEN_ENV, token, path)
+    return "Token in der lokalen .env gespeichert. Keine Ausgabe des Wertes; keine Verbindung aufgebaut."
+
+
+def _save_value(key, value, path=None):
+    """Atomically replace one local value and retain all other session settings."""
     path = Path(path) if path is not None else SESSION_FILE
     text = _read(path)
     _values(text)  # Bei ungültiger vorhandener Datei nichts überschreiben.
     lines = text.splitlines()
-    replacement = TOKEN_ENV + "=" + json.dumps(token, ensure_ascii=True)
+    replacement = key + "=" + json.dumps(value, ensure_ascii=True)
     index = next((i for i, line in enumerate(lines)
-                  if (m := _KEY.match(line.strip())) and m[1] == TOKEN_ENV), None)
+                  if (m := _KEY.match(line.strip())) and m[1] == key), None)
     if index is None:
         lines.append(replacement)
     else:
@@ -110,4 +117,47 @@ def save_playground_token(token, path=None):
                 temporary.unlink()
             except OSError:
                 pass  # Eventueller Rest bleibt unter dem ignorierten .env.*-Muster.
-    return "Token in der lokalen .env gespeichert. Keine Ausgabe des Wertes; keine Verbindung aufgebaut."
+
+
+def writes_enabled():
+    """One shared switch, read afresh from .env; stale kernel/env values cannot enable writes."""
+    try:
+        return _values(_read(SESSION_FILE)).get(WRITE_KEY, "").lower() == "true"
+    except SessionConfigError:
+        return False
+
+
+def start_session(write_enabled=False):
+    if type(write_enabled) is not bool:
+        raise SessionConfigError("SCHREIBEN muss True oder False sein.")
+    _save_value(WRITE_KEY, "true" if write_enabled else "false")
+    return mode_status() + "\n" + session_status()
+
+
+def mode_status():
+    if writes_enabled():
+        return "SCHREIBEN = True: Ausgeführte Arbeitsnotebooks schreiben in den BAM-Playground."
+    return "SCHREIBEN = False: Vorschau; keine Änderungen in openBIS."
+
+
+def show_token_button():
+    """getpass is invoked only on an explicit click; Run All never waits for input."""
+    from getpass import getpass
+    import ipywidgets as widgets
+    from IPython.display import display
+    button = widgets.Button(description="Token eingeben / erneuern", layout=widgets.Layout(width="240px"))
+    output = widgets.Output()
+    def save(_):
+        with output:
+            output.clear_output()
+            try:
+                token = getpass("Playground Session Token: ").strip()
+                print(save_playground_token(token))
+                if token:
+                    os.environ.pop(TOKEN_ENV, None)  # This kernel must not keep an older token.
+                del token
+            except (SessionConfigError, EOFError, KeyboardInterrupt):
+                print("Token nicht geändert; verdeckte Eingabe und lokale .env prüfen.")
+    button.on_click(save)
+    display(widgets.VBox([button, output]))
+    return button

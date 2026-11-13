@@ -12,11 +12,11 @@ from pybis.entity_type import SampleType, DataSetType
 import gasi_openbis_playground as ob
 import gasi_run as runmod
 try:
-    from tests.test_local_measurements import fixture
-    from tests.test_playground import FakeClient, things
-except ModuleNotFoundError:
     from test_local_measurements import fixture
     from test_playground import FakeClient, things
+except ModuleNotFoundError:
+    from tests.test_local_measurements import fixture
+    from tests.test_playground import FakeClient, things
 
 
 def configuration():
@@ -94,10 +94,8 @@ class ResearchWorkflowTests(unittest.TestCase):
         self.run=run_fixture(self.root)
 
     def test_default_upload_does_not_connect_or_prepare_real_data(self):
-        with patch.object(ob,"connect_playground",side_effect=AssertionError("No connection")):
+        with patch("gasi_session.writes_enabled", return_value=False), patch.object(ob,"connect_playground",side_effect=AssertionError("No connection")):
             self.assertIsNone(runmod.upload_workflow()[0])
-            self.assertIsNone(runmod.upload_workflow(enabled=True,confirmation="wrong")[0])
-            self.assertIsNone(runmod.upload_workflow(enabled=True,confirmation=runmod.PHRASE)[0])
 
     def test_scientific_requirements_block_invented_sensor_signal_conditions_and_ambiguous_times(self):
         for change in (

@@ -19,7 +19,7 @@ def cell(path, tag):
 
 class ProjectSetupTests(unittest.TestCase):
     def test_venv_without_conda_or_expected_name_is_accepted_in_both_notebooks(self):
-        for path in (ROOT / "GaSi_Projekt_einrichten.ipynb", ROOT / "example/pybis_workshop_exercises.ipynb"):
+        for path in (ROOT / "GaSi_02_Einmalig_einrichten.ipynb", ROOT / "example/pybis_workshop_exercises.ipynb"):
             for python_version in ((3, 10, 0), (3, 14, 4)):
                 with patch.object(sys, "version_info", python_version), \
                      patch.object(sys, "prefix", str(ROOT / "ordinary_python")), redirect_stdout(io.StringIO()):
@@ -38,7 +38,7 @@ class ProjectSetupTests(unittest.TestCase):
             with patch.object(Path, "cwd", return_value=nested), \
                  patch.object(subprocess, "run", return_value=subprocess.CompletedProcess([], 0)) as run, \
                  redirect_stdout(io.StringIO()):
-                exec(cell(ROOT / "GaSi_Projekt_einrichten.ipynb", "install-requirements"), {})
+                exec(cell(ROOT / "GaSi_02_Einmalig_einrichten.ipynb", "install-requirements"), {})
             run.assert_called_once_with(
                 [sys.executable, "-m", "pip", "install", "-r", str(root / "requirements-dev.txt")], check=True)
 
@@ -46,7 +46,7 @@ class ProjectSetupTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             with patch.object(Path, "cwd", return_value=Path(temp)), patch.object(subprocess, "run") as run:
                 with self.assertRaises(RuntimeError):
-                    exec(cell(ROOT / "GaSi_Projekt_einrichten.ipynb", "install-requirements"), {})
+                    exec(cell(ROOT / "GaSi_02_Einmalig_einrichten.ipynb", "install-requirements"), {})
             run.assert_not_called()
 
 

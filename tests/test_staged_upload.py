@@ -9,11 +9,11 @@ import gasi_run as r
 import gasi_analysis as a
 import gasi_openbis_playground as ob
 try:
-    from tests.test_research_workflow import WorkflowClient,run_fixture,configuration
-    from tests.test_playground import FakeEntity,things
-except ModuleNotFoundError:
     from test_research_workflow import WorkflowClient,run_fixture,configuration
     from test_playground import FakeEntity,things
+except ModuleNotFoundError:
+    from tests.test_research_workflow import WorkflowClient,run_fixture,configuration
+    from tests.test_playground import FakeEntity,things
 
 
 class Dataset(FakeEntity):
@@ -185,5 +185,5 @@ class StagedUploadTests(unittest.TestCase):
 
     def test_defaults_never_connect(self):
         from unittest.mock import patch
-        with patch.object(ob,"connect_playground",side_effect=AssertionError("no network")):
+        with patch("gasi_session.writes_enabled", return_value=False), patch.object(ob,"connect_playground",side_effect=AssertionError("no network")):
             self.assertIsNone(a.upload_analysis()[0])

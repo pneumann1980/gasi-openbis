@@ -22,7 +22,7 @@ PLAYGROUND_HOST = "https://playground.datastore.bam.de"
 REPOSITORY_ROOT = Path(__file__).resolve().parent
 TARGET_CONFIG_PATH = REPOSITORY_ROOT / "config" / "playground_test_target.json"
 TARGET_TEMPLATE_PATH = TARGET_CONFIG_PATH.with_name("playground_test_target.example.json")
-TARGET_SETUP_NOTEBOOK = "GaSi_Playground_Ziele_einrichten.ipynb"
+TARGET_SETUP_NOTEBOOK = "GaSi_02_Einmalig_einrichten.ipynb"
 DISCOVERY_REPORT_PATH = REPOSITORY_ROOT / ".local_playground_test" / "playground_discovery.json"
 TEST_INSTRUMENT_CODE = "GASI_TEST_INSTRUMENT_01"
 TEST_RUN_CODE = "GASI_TEST_RUN_01"
@@ -269,12 +269,8 @@ def show_discovery(report, config=None):
         print(f"- {key}: {details.get('path', '(nicht konfiguriert oder nicht lesbar)')}; sichtbar={details['visible']}")
     for error in report["errors"]:
         print("Offen: " + error)
-    scope = (config or {}).get("approved_test_scope", {})
-    if scope.get("steward_approved") is True and scope.get("approval_reference"):
-        print("Lokale Freigabereferenz für die ausdrücklich konfigurierten Testziele liegt vor.")
-    else:
-        print("Offen: Laborbuch-/Inventarziele und Freigabe für den FB-8.1-Testbereich dokumentieren.")
-    print("Sichtbarkeit und lokale Freigabe bestätigen keine Schreibrechte; "
+    print("Der Schreibmodus wird ausschließlich in GaSi_01_Session_starten.ipynb gesetzt.")
+    print("Sichtbarkeit bestätigt keine Schreibrechte; "
           "Server-Validatoren werden erst beim tatsächlichen Schreiben geprüft.")
 
 
@@ -309,16 +305,14 @@ def validate_target(report, config, *, require_existing_targets=True):
     if not isinstance(config, dict):
         raise CheckFailed("Lokale Zielkonfiguration fehlt.")
     cfg = deepcopy(config)
-    scope = cfg.get("approved_test_scope", {})
-    if scope.get("steward_approved") is not True or not str(scope.get("approval_reference", "")).strip():
-        raise CheckFailed("FB-8.1-Testbereich mit DSSt abstimmen und Freigabereferenz lokal eintragen.")
+    scope = cfg.get("test_scope", cfg.get("approved_test_scope", {}))
     for key in ("lab_notebook", "inventory"):
         path = target_path(cfg.get(key, {}))
-        prefix = scope.get(f"{key}_path_prefix", "")
+        prefix = scope.get(f"{key}_path_prefix") or path
         if not isinstance(prefix, str) or not re.fullmatch(r"/[A-Z0-9_.-]+/[A-Z0-9_.-]+(?:/[A-Z0-9_.-]+)?", prefix):
-            raise CheckFailed(f"{key}: freigegebener Projekt-/Collection-Präfix fehlt.")
+            raise CheckFailed(f"{key}: gültiger Projekt-/Collection-Präfix fehlt.")
         if not (path == prefix or path.startswith(prefix + "/")):
-            raise CheckFailed(f"{key}: Ziel liegt außerhalb des freigegebenen Testbereichs.")
+            raise CheckFailed(f"{key}: Ziel liegt außerhalb des konfigurierten Testbereichs.")
         target = report.get("targets", {}).get(key, {})
         if require_existing_targets and (not target.get("visible") or target.get("path") != path):
             raise CheckFailed(f"{key}: exakter Collection-Pfad nicht bestätigt.")
@@ -367,9 +361,9 @@ def show_plan(config):
     if config:
         if config.get("synthetic_location", {}).get("not_a_physical_assignment") is True:
             print("Standortcode: technischer Test-Platzhalter; keine reale Raumzuordnung.")
-        print("Geplante Typen, Properties und Freigabereferenz (lokale Konfiguration ohne Zugangsdaten):")
+        print("Geplante Typen und Properties (lokale Konfiguration ohne Zugangsdaten):")
         print(json.dumps({key: config.get(key) for key in (
-            "instrument", "run_properties", "dataset_type", "dataset_properties", "approved_test_scope", "synthetic_location"
+            "instrument", "run_properties", "dataset_type", "dataset_properties", "test_scope", "synthetic_location"
         )}, ensure_ascii=False, indent=2))
 
 
@@ -488,6 +482,9 @@ def ensure_synthetic_test(gateway, config, file_path):
 
 def write_playground_test():
     """Only called from the deliberately enabled cell. Reload and recheck everything."""
+    from gasi_session import writes_enabled
+    if not writes_enabled():
+        return None, "Vorschau: synthetischer Test würde Instrument, Messlauf, Parent und CSV prüfen; nichts geschrieben."
     config, message = load_target_config()
     if config is None:
         return None, message

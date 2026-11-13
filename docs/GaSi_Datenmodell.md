@@ -42,9 +42,9 @@ einzelnen Gerät gehören. Gleiche Modelltexte oder Bereiche belegen deshalb kei
 Zuordnung zu einer konkreten Seriennummer. Inventarnummern bleiben zunächst Kandidaten;
 eine bestätigte Zuordnung benötigt einen separaten Beleg.
 
-Notebook 06 prüft Hersteller, Modell und Seriennummer gegen die angegebenen lokalen
+Die einmalige Einrichtung prüft Hersteller, Modell und Seriennummer gegen die angegebenen lokalen
 Dokumentseiten beziehungsweise gegen eine Sichtprüfung des Typenschilds mit Dateihash.
-Notebook 07 registriert eindeutig belegte Identitäten oder verwendet vorhandene
+Die einmalige Einrichtung registriert eindeutig belegte Identitäten oder verwendet vorhandene
 `INSTRUMENT`-Einträge wieder. Es bestätigt dadurch weder aktuellen Einbau noch
 Kalibriergültigkeit. Gerätecodes beruhen auf Hersteller und Seriennummer, unabhängig
 von Position und Modellkorrekturen.
@@ -59,7 +59,7 @@ Einzelne Anlagen-Inventarnummern, einschließlich führender Nullen und Unternum
 bleiben getrennt vom `openbis_identifier`. Die API-Properties `INVENTORY_NO` und
 `INVENTORY_NO_ADD` sind Integer-Felder und werden nur bei bestätigter Zuordnung gefüllt.
 
-`config/gasi_setup.json` beschreibt einen aktuellen Stand. Die Vorlage `config/gasi_setup.example.json` enthält nur Positionen, keine echten Gerätekennungen. Notebook 02 prüft diesen Stand lokal und erzeugt einen ignorierten HTML-Bericht mit konkreten offenen Angaben.
+`config/gasi_setup.json` beschreibt einen aktuellen Stand. Die Vorlage `config/gasi_setup.example.json` enthält nur Positionen, keine echten Gerätekennungen. Die einmalige Einrichtung gleicht diesen Stand mit den lokalen Belegen ab und erzeugt einen ignorierten Gerätebericht mit konkreten offenen Angaben.
 
 | Geräteangabe | Regel |
 |---|---|
@@ -92,7 +92,7 @@ Eine unabhängig freigegebene oder laufübergreifend wiederverwendete Vorbereitu
 kann als eigener EXPERIMENTAL_STEP registriert bzw. als vorhandener Parent benutzt
 werden. Die spätere Auswertung ist ein eigener Schritt mit eigener analysis_id,
 eigenen Ergebnisdateien und den tatsächlich verwendeten Messungen als Parents.
-Notebook 08 erfasst die Messung ohne Auswertungsziel oder Ergebnisse; Notebook 09
+Das Messdaten-Notebook erfasst die Messung ohne Auswertungsziel oder Ergebnisse; das optionale Auswertungsnotebook
 ergänzt die Auswertung unabhängig in einem frischen Kernel.
 
 Das Auswertemanifest speichert tatsächliche Server-Dataset-IDs, Dateipfade, Hashes,
@@ -176,12 +176,12 @@ flowchart LR
 
 ### Konkrete openBIS-Beziehungen des Schreibtests
 
-Diese zweite Grafik zeigt ausschließlich den in Notebook 05 implementierten Test.
-**Sie ist ein Erstellungsplan, kein Nachweis bereits vorhandener Einträge.** Die
-beiden Collections müssen bestehen; Notebook 05 legt sie nicht an. Die einmalige
-Anlage übernimmt `GaSi_Playground_Testbereich_anlegen.ipynb`. Ihre exakten Pfade
-stehen zentral in der lokalen `config/playground_test_target.json` und erscheinen
-vor dem Schreiben in Notebook 05. Die öffentliche Grafik enthält keine lokalen Zielpfade.
+Diese zweite Grafik zeigt ausschließlich den synthetischen Test der einmaligen Einrichtung.
+**Sie ist ein Erstellungsplan, kein Nachweis bereits vorhandener Einträge.**
+`GaSi_02_Einmalig_einrichten.ipynb` legt passende fehlende Test-Collections an und
+prüft anschließend den synthetischen Lauf. Ihre exakten Pfade stehen zentral in
+`config/playground_test_target.json` und werden vorab angezeigt. Der einzige
+Schreibmodus steht in der Session. Die öffentliche Grafik enthält keine privaten Zielpfade.
 
 ```mermaid
 flowchart LR
@@ -252,8 +252,8 @@ bleibt lokal unter `.local_playground_test/playground_discovery.json`.
 Die zunächst fehlenden Testziele wurden auf ausdrücklichen Nutzerauftrag angelegt:
 je ein Projekt `GASI_TEST` im persönlichen FB-8.1-Laborbuch und im Inventar-Space
 `8.1_EQUIPMENT`, darin die Collections `RUNS` bzw. `INSTRUMENTS`. Die beiden
-Zielpfade und der auf sie begrenzte Freigabevermerk werden in der lokalen Ziel-JSON
-geführt. Die Einrichtung verwendet vorhandene Typen und vergibt keine Zugriffsrechte.
+Zielpfade werden in der lokalen Ziel-JSON geführt. Der zentrale Sessionmodus
+ersetzt die früheren lokalen Freigabeschalter und Auftragsreferenzen. Die Einrichtung verwendet vorhandene Typen und vergibt keine Zugriffsrechte.
 
 Für den rein fiktiven Test wird ein bestehender gültiger Standortcode als
 **synthetischer Pflichtfeld-Testwert** verwendet. Seine Kennzeichnung in
@@ -264,24 +264,23 @@ physischer Standort erforderlich; dieser Test legt keine echten Geräte an.
 
 ## 7. Umsetzung und Quellen
 
-Die Notebooks haben einzelne Aufgaben: **01 Modellgrafiken erzeugen**,
-**02 aktuelles Setup prüfen**, **03 CSVs lokal prüfen**, **04 Playground-Bestand lesen**,
-**05 synthetischen Schreibtest ausführen**, **06 Gerätebelege abgleichen** und
-**07 belegte Geräteidentitäten registrieren**. Zehn Identitäten sind im beauftragten
+Der Ablauf umfasst **Session starten → Einmalig einrichten → Messdaten hochladen**.
+Das separate Notebook **Prüfling verwalten** wird bei einem neuen Sensor benötigt.
+Die Einrichtung bündelt Paketinstallation, Ziele, Geräteabgleich und synthetischen Test;
+ihre separat ausführbare Offline-Zelle erzeugt weiterhin alle Modell-HTMLs und SVGs. Zehn Identitäten sind im beauftragten
 Geräteinventar registriert; sieben bleiben offen. Einbau und Referenzstatus sind
-weiterhin gesondert zu bestätigen. Notebook 05 importiert weder echte Geräte noch Messdaten.
+weiterhin gesondert zu bestätigen. Der synthetische Test importiert keine echten Messdaten.
 
-**Notebook 00** richtet davor bei Bedarf die zentrale lokale Session ein. Der [Abgleich mit dem bereitgestellten pyBIS-Beispiel](pybis_Beispielabgleich.md) bestätigt die technische Grundstruktur und dokumentiert die übernommenen Ergänzungen.
+**Session starten** verwaltet den Token und `SCHREIBEN = False/True` zentral. Der [Abgleich mit dem bereitgestellten pyBIS-Beispiel](pybis_Beispielabgleich.md) bestätigt die technische Grundstruktur und dokumentiert die übernommenen Ergänzungen.
 
-`GaSi_Playground_Ziele_einrichten.ipynb` pflegt die zentrale lokale Ziel-JSON für
-Notebook 04 und 05. Sie ist unabhängig von `.env` (Zugang) und `config/gasi_setup.json`
-(echter Geräteaufbau). Pfade und Freigaben werden nicht aus Gerätenamen abgeleitet.
+`GaSi_02_Einmalig_einrichten.ipynb` pflegt die zentrale lokale Ziel-JSON. Sie ist unabhängig von `.env` (Zugang) und `config/gasi_setup.json`
+(echter Geräteaufbau). Pfade werden nicht aus Gerätenamen abgeleitet.
 
 - [Lokale Wiki-Kopie](../data/wiki/home.txt): Anlagenaufbau und Geräteübersicht.
 - [Paper-SI](../data/paper/tg5c00105_si_001.pdf): ein publizierter Aufbau bestätigt keine aktuelle Geräteidentität.
 - Betriebscode-Projekt: `logger/measurement_logger.py`, `communication/a5b.py`, `communication/keller.py`, `gui/main_window.py`, `config/gas_flow_config.json` und `docs/GASI_Handbuch.html`; ausschließlich lesend verwendet.
 - Gerätebelege und konkrete Restfragen: lokale Setup-Konfiguration und `data/datasheets/`, außerhalb von Git.
-- Forschungsupload: [Uploadvertrag und offene Angaben](GaSi_Forschungsupload.md), lokale `config/gasi_run.json` und eigener Zielabschnitt `gasi_workflow`. Notebook 08 verwendet vorhandene Sensor- und Ressourcenobjekte, erhält originale CSV-Dateien und prüft jeden Rückdownload.
+- Forschungsupload: [Uploadvertrag und offene Angaben](GaSi_Forschungsupload.md), lokale `config/gasi_run.json` und eigener Zielabschnitt `gasi_workflow`. Das Messdaten-Notebook verwendet vorhandene Sensor- und Ressourcenobjekte, erhält originale CSV-Dateien und prüft jeden Rückdownload.
 - [BAM Forschungsdaten](https://bamresearch.github.io/openBIS-data-store-tutorials/represent-data-research-data/), [Laborbuch](https://bamresearch.github.io/openBIS-data-store-tutorials/lab-notebook/), [Inventar](https://bamresearch.github.io/openBIS-data-store-tutorials/inventory-data-stewards/), [Verknüpfungen](https://bamresearch.github.io/openBIS-data-store-tutorials/connect-data/).
 - [Aktuelle BAM-Anleitung zum Konzeptmodell](https://datastore.bam.de/en/openbis_20-10-12/how-to_guides/user_ui/represent_research_data), [EuVSOP-Strukturbeispiel](https://datastore.bam.de/en/use_cases/euvsop) und [BAM-Parserübersicht](https://datastore.bam.de/en/parsers), gelesen am 13.11.2026. Umsetzung und offene Entscheidungen: [GaSi in vier Schritten](GaSi_Konzeptmodell.md).
 - [BAM Objektverweise](https://bamresearch.github.io/bam-masterdata/howtos/object_references/) und [öffentliche Typdefinitionen](https://github.com/BAMresearch/bam-masterdata/blob/main/bam_masterdata/datamodel/v0/object_types.py). Öffentlicher Quellcode bestätigt kein Deployment im Playground.

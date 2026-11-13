@@ -15,7 +15,7 @@ import gasi_playground_provision as p
 class ProvisionClient(FakeClient):
     def __init__(self):
         super().__init__()
-        self.cfg = p.proposed_config("8.1_TESTUSER", "EXPLICIT LOCAL TEST AUTHORIZATION", "TEST_EXISTING_LOCATION", "Existing test value")
+        self.cfg = p.proposed_config("8.1_TESTUSER", "TEST_EXISTING_LOCATION", "Existing test value")
         self.projects, self.collections = {}, {}
         self.location_terms = {"TEST_EXISTING_LOCATION": dict(code="TEST_EXISTING_LOCATION", label="Existing test value")}
         self.saved, self.fail_after = [], None
@@ -92,8 +92,8 @@ class ProvisionTests(unittest.TestCase):
                         location=dict(code="REAL-PLACE", confirmed=True, evidence="USER ROOM CONFIRMATION"))
             current["gasi_inventory"] = real
             path.write_text(json.dumps(current), encoding="utf-8")
-            with patch.object(g, "connect_playground", return_value=(self.client, "FAKE")):
-                result, _ = p.provision_playground(self.cfg, p.CONFIRMATION, path)
+            with patch("gasi_session.writes_enabled", return_value=True), patch.object(g, "connect_playground", return_value=(self.client, "FAKE")):
+                result, _ = p.provision_playground(self.cfg, config_path=path)
             self.assertIsNotNone(result)
             self.assertEqual(json.loads(path.read_text())["gasi_inventory"], real)
 
@@ -102,7 +102,7 @@ class ProvisionTests(unittest.TestCase):
         self.cfg = self.client.cfg
 
     def run_provision(self):
-        return p.ensure_test_area(self.client, self.cfg, p.CONFIRMATION)
+        return p.ensure_test_area(self.client, self.cfg)
 
     def test_full_creation_readback_then_repeat_creates_nothing(self):
         result = self.run_provision()
@@ -125,7 +125,7 @@ class ProvisionTests(unittest.TestCase):
                 self.assertEqual(len(set(self.client.saved)), 4)
 
     def test_default_preview_never_connects_or_saves(self):
-        with patch.object(g, "connect_playground", side_effect=AssertionError("No network")):
+        with patch("gasi_session.writes_enabled", return_value=False), patch.object(g, "connect_playground", side_effect=AssertionError("No network")):
             result, message = p.provision_playground(self.cfg)
         self.assertIsNone(result)
         self.assertIn("deaktiviert", message)
@@ -141,9 +141,9 @@ class ProvisionTests(unittest.TestCase):
                 elif change == "scope":
                     cfg["inventory"]["space"] = "7.2_EQUIPMENT"
                 else:
-                    cfg["approved_test_scope"]["steward_approved"] = False
+                    cfg["test_scope"]["inventory_path_prefix"] = "/OTHER/PROJECT/COLLECTION"
                 with self.assertRaises(g.CheckFailed):
-                    p.ensure_test_area(self.client, cfg, p.CONFIRMATION)
+                    p.ensure_test_area(self.client, cfg)
                 self.assertEqual(self.client.saved, [])
 
     def test_unmarked_existing_project_is_never_reused_or_modified(self):
@@ -158,11 +158,11 @@ class ProvisionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "target.json"
             self.client.fail_after = "/8.1_TESTUSER/GASI_TEST"
-            with patch.object(g, "connect_playground", return_value=(self.client, "FAKE")):
-                result, message = p.provision_playground(self.cfg, p.CONFIRMATION, path)
+            with patch("gasi_session.writes_enabled", return_value=True), patch.object(g, "connect_playground", return_value=(self.client, "FAKE")):
+                result, message = p.provision_playground(self.cfg, config_path=path)
                 self.assertIsNone(result)
                 self.assertNotIn("SECRET", message)
                 self.assertFalse(path.exists())
-                result, _ = p.provision_playground(self.cfg, p.CONFIRMATION, path)
+                result, _ = p.provision_playground(self.cfg, config_path=path)
                 self.assertTrue(path.exists())
                 self.assertIsNotNone(result)

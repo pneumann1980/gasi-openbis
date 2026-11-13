@@ -20,7 +20,6 @@ from gasi_local_measurements import NUMERIC_FIELDS, inspect_measurements
 
 ROOT = Path(__file__).resolve().parent
 RUN_PATH = ROOT / "config/gasi_run.json"
-PHRASE = "UPLOAD CONFIGURED GASI RESEARCH WORKFLOW TO PLAYGROUND"
 ACTIVITIES = ("preparation", "measurement", "analysis")
 LABELS = {"preparation":"Vorbereitung", "measurement":"Beaufschlagung und Messung", "analysis":"Auswertung"}
 HUMIDITY_UNITS = {"relative_humidity":"%RH", "dew_point":"degC", "frost_point":"degC", "water_amount_fraction":"umol/mol"}
@@ -406,17 +405,16 @@ def prepare_bundle(run, root=ROOT):
 
 def _targets(config, active=ACTIVITIES):
     settings = (config or {}).get("gasi_workflow") or {}
-    scope = settings.get("approved_scope") or {}
-    if settings.get("host") != ob.PLAYGROUND_HOST or scope.get("approved") is not True or not scope.get("reference"):
-        raise ob.CheckFailed("Eigenständiges freigegebenes Playground-Ziel für den Forschungsablauf fehlt: gasi_workflow.")
-    prefix = scope.get("lab_path_prefix")
+    if settings.get("host") != ob.PLAYGROUND_HOST:
+        raise ob.CheckFailed("Playground-Host für den Forschungsablauf fehlt: gasi_workflow.host.")
+    prefix = settings.get("lab_project") or (settings.get("approved_scope") or {}).get("lab_path_prefix")
     if not isinstance(prefix,str) or not re.fullmatch(r"/8[.]1[A-Z0-9_.-]*/[A-Z0-9_.-]+",prefix):
-        raise ob.CheckFailed("Expliziten FB-8.1-Laborbuchprojekt-Präfix für den Forschungsablauf konfigurieren.")
+        raise ob.CheckFailed("FB-8.1-Laborbuchprojekt einmalig konfigurieren: gasi_workflow.lab_project.")
     targets = settings.get("targets") or {}
     for activity in active:
         path = ob.target_path(targets.get(activity,{ }))
         if not path.startswith(prefix + "/"):
-            raise ob.CheckFailed("Alle Forschungsziele müssen im ausdrücklich freigegebenen Laborbuchprojekt liegen.")
+            raise ob.CheckFailed("Alle Forschungsziele müssen im konfigurierten Laborbuchprojekt liegen.")
     return {key:targets[key] for key in active}
 
 
@@ -654,9 +652,10 @@ def _dataset_target(dataset,target):
         raise ob.CheckFailed("Dataset liegt nicht in der konfigurierten Laborbuch-Collection.")
 
 
-def upload_workflow(*, enabled=False, confirmation="", expected_manifest_sha=None, root=ROOT):
+def upload_workflow(*, expected_manifest_sha=None, root=ROOT):
     """Notebook boundary: defaults do nothing; never print a token or a raw server error."""
-    if not enabled or confirmation != PHRASE:
+    from gasi_session import writes_enabled
+    if not writes_enabled():
         return None,"Vorschau: kein Upload. Schreibzelle bleibt deaktiviert."
     if not isinstance(expected_manifest_sha,str) or not re.fullmatch(r"[0-9a-f]{64}",expected_manifest_sha):
         return None,"Upload gesperrt: zuerst die vollständige lokale Vorschau erzeugen."

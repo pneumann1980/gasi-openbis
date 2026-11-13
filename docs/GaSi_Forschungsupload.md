@@ -2,16 +2,17 @@
 
 ## Zwei unabhängige Einstiege
 
-**Notebook 08** erfasst einen Messlauf mit Originalen und Kontext.
-**Notebook 09** ergänzt später eine Auswertung zu einer oder mehreren bereits
+**Messdaten hochladen** erfasst einen Messlauf mit Originalen und Kontext.
+**Optionale Auswertung im Unterordner notebooks/** ergänzt später eine Auswertung zu einer oder mehreren bereits
 registrierten Messungen. Beide starten mit frischem Kernel. Run All bleibt
-Vorschau; jeder Schreibaufruf braucht Aktivierung und Bestätigungsphrase.
+Vorschau, solange `SCHREIBEN = False` in der Session gilt. `True` führt den jeweiligen
+Arbeitsaufruf aus. Es gibt keine weiteren Schreibschalter oder Bestätigungsphrasen.
 
 | Schritt | Pflichtziel | Dateien / Beziehungen |
 |---|---|---|
-| Messung, 08 | `gasi_workflow.targets.measurement` | RAW_DATA; Plan, Kontext und Server-Quellmanifest als ATTACHMENT. Sensor, Ressourcen und ggf. vorhandene Vorbereitung sind Parents. |
+| Messdaten hochladen | `gasi_workflow.targets.measurement` | RAW_DATA; Plan, Kontext und Server-Quellmanifest als ATTACHMENT. Sensor, Ressourcen und ggf. vorhandene Vorbereitung sind Parents. |
 | Vorbereitung, optional | `targets.preparation` nur bei Neuanlage | Eigenständig freigegebener/wiederverwendbarer Plan; Vorbereitung ist Parent der Messung. |
-| Auswertung, 09 | `targets.analysis` | Ergebnisse und Auswertemanifest als ATTACHMENT. Verwendete Messungen und Software sind Parents. |
+| Optionale Auswertung | `targets.analysis` | Ergebnisse und Auswertemanifest als ATTACHMENT. Verwendete Messungen und Software sind Parents. |
 
 Das automatische `plan.json` allein begründet keinen eigenen Vorbereitungsschritt.
 Allgemeine Modellgrafiken sind Projektdokumentation; zum Lauf gehört der tatsächlich
@@ -34,7 +35,7 @@ Die farbige [Konzeptansicht](GaSi_Konzeptmodell.html) zeigt diese Unterscheidung
 ## Messung konfigurieren
 
 [Leere Vorlage](../config/gasi_run.example.json) → lokale `config/gasi_run.json`.
-Notebook 08 kopiert nur eine fehlende Datei. Erforderlich sind Laufkennung, Zweck,
+Die einmalige Einrichtung kopiert nur eine fehlende Vorlage. Erforderlich sind Laufkennung, Zweck,
 Person, Sensor-ID, Ressourcen, Aufnahmeversion, Messzeiten mit UTC-Offset, Aufbau,
 Kanäle mit Größe/Einheit/Messort, Stufen und explizite Dateien/Record-Bereiche.
 Ergebnisse, Auswertungskennung/-zeiten/-software und Auswertungsziel sind nicht
@@ -49,8 +50,9 @@ als offen erhalten und verhindert nicht die Erfassung der Originale.
 - `reuse`: vorhandene EXPERIMENTAL_STEP-`identifier` als Parent, kein neues Vorbereitungsziel.
 
 Ziele bleiben zentral in `config/playground_test_target.json`. Geprüft wird nur
-das jeweils benötigte Ziel unter dem ausdrücklich freigegebenen Laborbuchprojekt.
-Die lokale Auftragsreferenz ersetzt keine organisatorische BAM-Freigabe.
+das jeweils benötigte Ziel unter dem explizit konfigurierten Laborbuchprojekt.
+Die einmalige Einrichtung ergänzt diese Ziele. Der zentrale Sessionmodus steuert
+die Ausführung; lokale Freigabereferenzen sind nicht mehr erforderlich.
 
 Original-CSV bleiben bytegleich. Es gelten die bestehenden Prüfungen des
 252-Spalten-Loggers: Zeilenform, endliche Zahlen, Zeiten/JSON und zugeordnete Kanäle.
@@ -91,7 +93,7 @@ lösen die Zuordnung eines Originals zu mehreren fachlichen Läufen nicht.
 
 ## Server-Quellmanifest
 
-Nach RAW_DATA-Registrierung/Rücklesen legt Notebook 08 `source_receipt.json` als
+Nach RAW_DATA-Registrierung/Rücklesen legt Das Messdaten-Notebook `source_receipt.json` als
 ATTACHMENT an der Messung ab: tatsächliche Server-Dataset-ID/Code und relativer
 Dateipfad, Original-SHA-256, Record-/Stufenbereiche, UTC-Offset, Messzeiten,
 Ressourcen, Kanäle und Referenznachweise. Die lokale `verification.json` enthält
@@ -101,7 +103,7 @@ ergänzt; abweichende vorhandene Inhalte werden nicht überschrieben.
 ## Spätere Auswertung
 
 [Leere Vorlage](../config/gasi_analysis.example.json) → `config/gasi_analysis.json`.
-Notebook 09 braucht keine lokale Laufkonfiguration oder lokalen Rohdaten.
+Das optionale Auswertungsnotebook braucht keine lokale Laufkonfiguration oder lokalen Rohdaten.
 `inputs` übernehmen aus dem Quellmanifest `measurement_id`, `dataset_id`,
 `file_path` und `sha256`; eigene `source_ranges`/`stage_ranges` beschreiben
 die wirklich verwendete Teilmenge. Mehrere Bereiche und mehrere Messungen sind möglich.
@@ -145,7 +147,7 @@ Diese Properties sind lesend bestätigt. Eine Masterdata-Erweiterung ist für de
 Pilot nicht erforderlich. Erst eine gewünschte instanzweite kanalweise Zahlenabfrage
 wäre eine konkrete neue Suchlücke.
 
-Browser-Abnahme nach bewusst aktiviertem Pilot:
+Browser-Abnahme nach Pilot mit `SCHREIBEN = True` in der Session:
 
 1. Sensor über vorhandene ID öffnen → Children/Hierarchie → Messlauf.
 2. Im Laborbuch Laufkennung/REFERENCE, Zweck und Messdatum suchen.
