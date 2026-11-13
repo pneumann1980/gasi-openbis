@@ -95,7 +95,35 @@ Die Messung ist Parent der Auswertung; der Auswertungsschritt benennt die
 verwendeten Eingabedatasets, Bereiche und Hashes. Ein während der Aufnahme
 erzeugtes Messprotokoll gehört hingegen direkt zur Messung. Mehrere Auswertungen
 können denselben Lauf verwenden, eine Auswertung kann mehrere Läufe vergleichen.
-Die bisherigen Notebooks erzeugen noch keinen solchen echten Forschungsablauf.
+Notebook 08 kann diesen Ablauf nach vollständiger lokaler Konfiguration und
+bewusster Aktivierung schreiben. Der vollständige Ablauf ist bisher nur mit einem
+synthetischen Testclient bestätigt; für echte Daten fehlen noch die unten
+dokumentierten fachlichen Zuordnungen und ein erfolgreicher Instanzabgleich.
+
+### Das „Sample“ ist der zu prüfende Sensor
+
+Das fachliche Prüfobjekt ist ein Gas- oder Gasfeuchtesensor. Ein vorhandener Sensor
+wird nicht in einer GaSi-Materialsynthese erzeugt. Er behält vor und nach der
+Beaufschlagung dieselbe physische Identität; auch Messstufen erzeugen keine neuen
+Sensorobjekte. Das Wort „Sample“ in der BAM-Forschungsgrafik legt keinen
+bestimmten openBIS-Typ fest: vorhandenes `INSTRUMENT` wiederverwenden oder
+`TEST_OBJECT` / geeigneten `SAMPLE`-Typ nach Schemaabgleich verwenden.
+
+Das Gegenstück zur „Treatment Solution“ der Vorlage sind bei GaSi die verwendeten
+Gasquellen und ein Belastungsprofil aus nomineller Gaszusammensetzung, Temperatur,
+Feuchtegröße, Druck und Dauer. Temperatur und Feuchte sind Bedingungen, keine
+Chemikalien oder eigenständigen Prüflinge. Die aktive Beaufschlagung und die
+Aufzeichnung von Sensorantwort und Referenzen bilden gemeinsam den Messlauf.
+Eine zusätzliche Konditionierung wird erst bei einem tatsächlich eigenständigen,
+dokumentierten Behandlungsschritt modelliert.
+
+Relative Feuchte benötigt einen Temperatur- und Sättigungsbezug (Wasser/Eis).
+Taupunkt, Frostpunkt und Stoffmengenanteil von Wasser sind andere Größen.
+Sollprofil, tatsächliche Bedingungen und Sensorsignal bleiben getrennt.
+Geregelte und ungeregelte Bedingungen werden ausdrücklich unterschieden.
+Die [farbige Ablaufgrafik](GaSi_Konzeptmodell.html) zeigt diese Zuordnung.
+Fundstelle: vom Nutzer bereitgestellte `20260630_1_workflow.svg`, Legende und
+`Sample Treatment`; GaSi-Wiki, **1 Verfahrensprinzip** und Referenzmessung.
 
 Fundstelle: [BAM Conceptual Data Model](https://datastore.bam.de/en/openbis_20-10-12/how-to_guides/user_ui/represent_research_data),
 **Core Concepts**, **1. Draw the research workflow**, insbesondere die Zuordnung
@@ -252,6 +280,7 @@ Notebook 04 und 05. Sie ist unabhängig von `.env` (Zugang) und `config/gasi_set
 - [Paper-SI](../data/paper/tg5c00105_si_001.pdf): ein publizierter Aufbau bestätigt keine aktuelle Geräteidentität.
 - Betriebscode-Projekt: `logger/measurement_logger.py`, `communication/a5b.py`, `communication/keller.py`, `gui/main_window.py`, `config/gas_flow_config.json` und `docs/GASI_Handbuch.html`; ausschließlich lesend verwendet.
 - Gerätebelege und konkrete Restfragen: lokale Setup-Konfiguration und `data/datasheets/`, außerhalb von Git.
+- Forschungsupload: [Uploadvertrag und offene Angaben](GaSi_Forschungsupload.md), lokale `config/gasi_run.json` und eigener Zielabschnitt `gasi_workflow`. Notebook 08 verwendet vorhandene Sensor- und Ressourcenobjekte, erhält originale CSV-Dateien und prüft jeden Rückdownload.
 - [BAM Forschungsdaten](https://bamresearch.github.io/openBIS-data-store-tutorials/represent-data-research-data/), [Laborbuch](https://bamresearch.github.io/openBIS-data-store-tutorials/lab-notebook/), [Inventar](https://bamresearch.github.io/openBIS-data-store-tutorials/inventory-data-stewards/), [Verknüpfungen](https://bamresearch.github.io/openBIS-data-store-tutorials/connect-data/).
 - [Aktuelle BAM-Anleitung zum Konzeptmodell](https://datastore.bam.de/en/openbis_20-10-12/how-to_guides/user_ui/represent_research_data), [EuVSOP-Strukturbeispiel](https://datastore.bam.de/en/use_cases/euvsop) und [BAM-Parserübersicht](https://datastore.bam.de/en/parsers), gelesen am 13.11.2026. Umsetzung und offene Entscheidungen: [GaSi in vier Schritten](GaSi_Konzeptmodell.md).
 - [BAM Objektverweise](https://bamresearch.github.io/bam-masterdata/howtos/object_references/) und [öffentliche Typdefinitionen](https://github.com/BAMresearch/bam-masterdata/blob/main/bam_masterdata/datamodel/v0/object_types.py). Öffentlicher Quellcode bestätigt kein Deployment im Playground.

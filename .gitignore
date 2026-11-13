@@ -12,6 +12,9 @@
 /config/.gasi-setup-*.tmp
 /config/.gasi-target-*.tmp
 /config/gasi_setup.json
+/config/gasi_run.json
+/data/results/*
+!/data/results/.gitkeep
 /.local_playground_test/
 __pycache__/
 *.py[cod]

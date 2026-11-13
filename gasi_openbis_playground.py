@@ -176,7 +176,8 @@ def discover_playground(client, config=None):
             report["type_catalogues"][family] = sorted(code(t) for t in table_records(getattr(client, f"get_{family}_types")()))
         except Exception:
             report["errors"].append(f"{family}-Typkatalog: nicht vollständig lesbar.")
-    for type_code in ("EXPERIMENTAL_STEP", "INSTRUMENT", "TESTING_EQUIPMENT", "SETUP.TEST", "CALIBRATION"):
+    for type_code in ("EXPERIMENTAL_STEP", "INSTRUMENT", "TESTING_EQUIPMENT", "SETUP.TEST", "CALIBRATION",
+                      "SAMPLE", "TEST_OBJECT", "GAS_BOTTLE", "PARAMETER_SET", "ENVIRONMENTAL_CONDITIONS", "SOP", "SOFTWARE_CODE"):
         report["object_types"][type_code] = type_details(client, "sample", type_code)
     for type_code in ("RAW_DATA", "ATTACHMENT", "ELN_PREVIEW"):
         report["dataset_types"][type_code] = type_details(client, "dataset", type_code)
@@ -432,7 +433,7 @@ class PybisGateway:
             dataset.download(destination=temp, create_default_folders=False)
             files = list(Path(temp).rglob(filename))
             if len(files) != 1:
-                raise CheckFailed("Download enthält die synthetische CSV nicht eindeutig.")
+                raise CheckFailed("Download enthält die angeforderte Datei nicht eindeutig.")
             actual = hashlib.sha256(files[0].read_bytes()).hexdigest()
         if actual != expected_hash:
             raise CheckFailed("SHA-256 des Downloads weicht ab. Dataset wird nicht automatisch ersetzt.")

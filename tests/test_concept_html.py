@@ -78,14 +78,14 @@ class ConceptTests(unittest.TestCase):
         source = SOURCE.read_text(encoding="utf-8")
         workflow, _, combined, relations = graphs(source)
         for broken in (workflow + "\nE -->|erzeugt| NEW[Neues Ergebnis]",
-                       workflow.replace("M -->|danach| E", "M -->|danach| DP"),
+                       workflow.replace("C -->|gibt Sollbedingungen vor| M", "C -->|gibt Sollbedingungen vor| E"),
                        relations.replace("|Parent|", "|Dataset attachment|", 1),
                        combined.replace("|enthält|", "|Parent|", 1)):
             with self.assertRaises(ValueError):
                 concept_svg(broken)
-        changed = workflow.replace("Ergebnisse beurteilen", "Neue Ergebnisse")
+        changed = workflow.replace("Sensorsignal und Referenz vergleichen", "Neue Ergebnisse")
         self.assertIn("Neue Ergebnisse", concept_svg(changed))
-        self.assertNotIn("Ergebnisse beurteilen", concept_svg(changed))
+        self.assertNotIn("Sensorsignal und Referenz vergleichen", concept_svg(changed))
 
     def test_existing_notebook_entrypoint_regenerates_companion_and_standalone_svgs(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -107,7 +107,7 @@ class ConceptTests(unittest.TestCase):
             self.assertEqual(concept.read_bytes(), original)
             generate_simple_html(model)
             self.assertEqual(first, concept.with_suffix(".html").read_bytes())
-            concept.write_text(original.decode("utf-8").replace("Ergebnisse beurteilen", "Neue Ergebnisse"), encoding="utf-8")
+            concept.write_text(original.decode("utf-8").replace("Sensorsignal und Referenz vergleichen", "Neue Ergebnisse"), encoding="utf-8")
             generate_simple_html(model)
             self.assertIn("Neue Ergebnisse", concept.with_suffix(".html").read_text(encoding="utf-8"))
 
@@ -135,6 +135,22 @@ class ConceptTests(unittest.TestCase):
             self.assertEqual(ax+aw/2, dx+dw/2, "Dataset belongs below its generating activity")
             self.assertGreater(dy, max(objects[k][1]+objects[k][3] for k in ("I","P","M","E","Q","G","W","D")))
         self.assertIn('href="GaSi_Konzeptmodell_combined.svg" download', html)
+
+    def test_workflow_shows_sensor_exposure_resources_outputs_and_bam_colors(self):
+        graph=graphs(SOURCE.read_text(encoding="utf-8"))[0]
+        svg=ET.fromstring(concept_svg(graph))
+        expected={"D":("sample","#d5e8d4"),"P":("activity","#fff2cc"),"M":("activity","#fff2cc"),
+                  "E":("activity","#fff2cc"),"G":("resource","#e1d5e7"),"I":("resource","#e1d5e7"),
+                  "DM":("dataset","#f8cecc"),"C":("conditions","#dae8fc")}
+        for key,(role,color) in expected.items():
+            node=next(n for n in svg.iter() if n.attrib.get("data-node")==key)
+            self.assertEqual(node.attrib["data-role"],role)
+            rect=next(n for n in node.iter() if n.attrib.get("class")=="node-box")
+            self.assertEqual(rect.attrib["fill"],color)
+        self.assertIn("Gas- oder Gasfeuchtesensor"," ".join(svg.itertext()))
+        edges={(n.attrib.get("data-source"),n.attrib.get("data-target")) for n in svg.iter() if "data-source" in n.attrib}
+        self.assertIn(("D","M"),edges)
+        self.assertFalse(any(end=="D" for start,end in edges),"GaSi does not manufacture another sensor")
 
 
 if __name__ == "__main__":

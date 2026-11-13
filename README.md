@@ -49,6 +49,7 @@ Empfohlene Reihenfolge; jedes Notebook funktioniert unabhängig mit einem frisch
 | [GaSi_05_Playground_Schreibtest.ipynb](GaSi_05_Playground_Schreibtest.ipynb) | Einen synthetischen Testlauf schreiben und verifizieren | Vorschau und lesende Prüfung; Schreiben standardmäßig deaktiviert |
 | [GaSi_06_Geraetezuordnung_pruefen.ipynb](GaSi_06_Geraetezuordnung_pruefen.ipynb) | Gerätebelege und Anlagen-Inventarnummern lokal abgleichen | Offline; erzeugt ausschließlich lokale Berichte |
 | [GaSi_07_Geraeteinventar_anlegen.ipynb](GaSi_07_Geraeteinventar_anlegen.ipynb) | Belegte Geräteidentitäten im eigenen GaSi-Inventar registrieren | Vorschau und lesender Dublettenabgleich; Schreiben deaktiviert |
+| [GaSi_08_Forschungsablauf_hochladen.ipynb](GaSi_08_Forschungsablauf_hochladen.ipynb) | Einen Sensor-Prüflauf mit Vorbereitung, Messung und Auswertung hochladen | Lokal prüfen/Paket vorbereiten; Upload standardmäßig deaktiviert |
 
 Die bisherigen Dateinamen wurden ersetzt:
 
@@ -101,6 +102,10 @@ Variablen aus einem vorherigen Notebook werden nicht benötigt.
 **Neu: [GaSi-Konzeptmodell in vier Schritten](docs/GaSi_Konzeptmodell.html)**:
 Forschungsablauf zeichnen, Entitäten und Typen bestimmen, in Laborbuch/Inventar
 einordnen und Objekte verbinden. Die HTML zeigt einen Schritt pro Ansicht.
+**1 · Ablauf** verwendet nun die Farblogik der bereitgestellten BAM-SVG:
+Gelb für Tätigkeiten, Grün für den Gas-/Gasfeuchtesensor, Lila für Ressourcen,
+Rot für Dateien und ergänzend Blau für das Gas-/Temperatur-/Feuchteprofil.
+Der Sensor ist das fachliche „Sample“ und behält seine vorhandene Identität.
 In **2 · Bausteine** stehen drei Tabellen direkt sichtbar: jeweils Entitätstyp,
 GaSi-Objekte/Dateien und Ort für Vorbereitung, Messung und Auswertung.
 **4 · Verbindungen** zeigt das Gesamtmodell wie im BAM-Beispiel mit
@@ -109,8 +114,8 @@ Die einfachere Objektansicht und weitere Fachfragen lassen sich aufklappen. Die
 [Markdown-Quelle](docs/GaSi_Konzeptmodell.md) enthält die Entscheidungen und Fundstellen.
 
 **Neu erzeugen:** Notebook **01** mit frischem Kernel öffnen und **Run All**
-ausführen. Den erzeugten Link **Einfache Grafik öffnen** anklicken und dort
-**Forschungsablauf: die vier BAM-Schritte ansehen** wählen. Derselbe Aufruf
+ausführen. Den erzeugten Link **Farbigen Forschungsablauf öffnen** anklicken.
+Die einfache Geräteübersicht bleibt zusätzlich verlinkt. Derselbe Aufruf
 aktualisiert die Konzeptansicht mit ihren Tabellen und vier separat nutzbaren SVGs
 `GaSi_Konzeptmodell_workflow.svg`, `_mapping.svg`, `_combined.svg` und `_relations.svg`
 in `docs/`. Jede Grafik bietet auch **SVG herunterladen**.
@@ -138,9 +143,12 @@ Die [Parserübersicht](https://datastore.bam.de/en/parsers) dient als Ausgangspu
 für einen späteren GaSi-Importer, sobald Laufgrenzen und Kanalzuordnungen feststehen.
 
 Dieser Schritt ändert die **lokale Modelldokumentation und ihre Visualisierung**.
-Die drei Forschungsaktivitäten, echte Laborbuch-Collections sowie Gas-/SOP- und
-Softwareobjekte wurden damit noch nicht live angelegt. Das vorhandene Geräteinventar
-und der synthetische Test bleiben die separat bestätigten Instanzbefunde.
+Die drei Forschungsaktivitäten können nach vollständiger Konfiguration mit
+Notebook 08 geschrieben werden. Der vollständige Ablauf ist bisher lokal mit einem
+Testclient bestätigt. Echte Laborbuch-Collections sowie die konkreten Sensor-,
+Gas-/SOP- und Softwareobjekte sind damit noch nicht live angelegt oder bestätigt.
+Das vorhandene Geräteinventar und Notebook 05 bleiben die separat bestätigten
+Instanzbefunde.
 
 Nach einer Modelländerung Notebook 01 erneut ausführen. Der Generator wird auch beim
 erneuten Ausführen nur der Erzeugungszelle frisch geladen. Die HTML-Datei funktioniert
@@ -156,10 +164,37 @@ Alternativ: `python gasi_model_html.py` oder unter Windows
 
 ## Aktuelles Setup lokal pflegen
 
+Für den ersten **Sensor-Prüflauf** gelten zusätzlich die Schritte im
+[Forschungsupload-Vertrag](docs/GaSi_Forschungsupload.md):
+**01** farbigen Ablauf prüfen → **00** Token bei Bedarf erneuern →
+**04** Sensor-/Gas-/Ressourcentypen und Bestand lesen →
+**02/06** aktuellen Aufbau und Geräteidentitäten bestätigen →
+**03** ausgewählte Loggerdateien lokal prüfen → **08** Lauf konfigurieren und
+zunächst nur die lokale Vorschau ausführen.
+Notebook 07 wird nur für noch fehlende belegte Geräteidentitäten benötigt.
+
+Laufmetadaten stehen in der ignorierten `config/gasi_run.json`:
+Sensor-ID, Gas-/Temperatur-/Feuchteprofil, Zeitstempel mit UTC-Offset, Einheiten,
+Messorte, Kanalzuordnungen und bestätigte Daten-/Stufenbereiche.
+Ergebnisdateien liegen lokal unter `data/results/`. Forschungsziele stehen
+getrennt im Abschnitt `gasi_workflow` der **zentralen**
+`config/playground_test_target.json`; eine fehlende, nicht freigegebene Vorlage
+steht in `config/playground_test_target.example.json`.
+Die vorhandenen Ziele und Freigaben des synthetischen Tests gelten nicht automatisch
+für echte Forschungsdaten.
+
+Notebook 08 überträgt erst nach bewusster Aktivierung der letzten Zelle.
+Es verwendet den vorhandenen Sensor, verknüpft die Ressourcen, hängt Plan/CSV/
+Kontext/Ergebnisse an die erzeugende Tätigkeit und prüft alle Rückdownloads per
+SHA-256. Eine neue `analysis_id` verwendet dieselbe unveränderte Messung erneut.
+Offen sind derzeit vor allem die tatsächliche Sensoridentität, Mess-/Kanalzuordnung,
+Gasquellen und ausdrückliche Forschungsziele; das wird nicht mit Beispielwerten gefüllt.
+
 Die tatsächlichen Geräteangaben stehen in **`config/gasi_setup.json`**. Diese Datei ist
 von Git ausgeschlossen. In dieser Arbeitskopie wurde ein Entwurf anhand der lokalen
 Quellen vorbereitet; bestätigte Unterlagen sind von noch unbestätigten Einbaupositionen
-und offenen Geräteangaben getrennt. Es wurden keine echten Geräte registriert.
+und offenen Geräteangaben getrennt. Zehn belegte Geräteidentitäten sind registriert;
+das bestätigt weder ihre aktuellen Positionen noch den zu prüfenden Sensor.
 
 Fehlt die lokale Datei nach einem frischen Clone, die leere Vorlage kopieren:
 
@@ -388,7 +423,21 @@ oder hochgeladen; GaSi verwendet weiterhin seine eigene kleine synthetische CSV.
 
 ## Prüfung: lokal und live getrennt
 
-**Konzeptabgleich 13.11.2026:** 90 lokale Tests bestanden. Notebook 01 wurde
+Der Sensor-/Belastungsprofil-Abgleich erweitert die CSV-Vorschau um Sensorrolle,
+Gas-/Temperatur-/Feuchtebedingungen und den getrennten Auswertungsschritt.
+Notebook 04 prüft zusätzlich Sensor-/Prüflings-, Gas-, Parameter-, Umwelt-,
+SOP- und Softwaretypen. Der erneute lesende Verbindungsversuch war mit dem
+vorhandenen Session-Zugang nicht erfolgreich; daraus wird keine neue Live-Bestätigung
+abgeleitet. Der vollständige Forschungsupload wird ausschließlich mit einem
+synthetischen Testclient geprüft, einschließlich Teilfehler, Wiederholung,
+eigenständiger Neuauswertung und Hashvergleich.
+
+**Konzept-/Uploadabgleich 13.11.2026:** 101 lokale Tests bestanden.
+Alle zwölf GaSi-Notebooks wurden mit frischen Kernels und gesperrtem Netzwerk
+geprüft (27 lokale Durchläufe einschließlich Workshop-Einrichtung).
+Notebook 08 prüft fehlende Angaben, Vorschau sowie den aktivierten vollständigen
+Testclient-Upload mit Wiederholung. Die 31 Original-CSVs blieben laut SHA-256
+unverändert. Notebook 01 wurde
 zusätzlich mit frischem Kernel und gesperrtem Netzwerk ausgeführt: beide
 Markdown-Quellen unverändert, alle drei HTML-Dateien und die vier Konzept-SVGs
 erzeugt. Die vier Ansichten wurden in Edge geprüft; je Auswahl ist genau ein

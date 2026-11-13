@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="gasi-view" content="full"><meta name="gasi-model-sha256" content="884e4ada9980c58ca21ebe805d425fd8312d4621280740fb7a4934d9bfa62597">
+<meta name="gasi-view" content="full"><meta name="gasi-model-sha256" content="062d2f7e2cd6a03c22979571bf0aa845e33da1f7f7f3e8cec57b2caf9eeebfa5">
 <title>GaSi-Datenmodell: aktueller Aufbau und Messlauf</title><style>
 :root { color-scheme: light; --ink:#183448; --muted:#526b7b; --blue:#126b88;
   --line:#d9e4e9; --paper:#fff; --wash:#f0f5f7; }
@@ -298,7 +298,31 @@ Die Messung ist Parent der Auswertung; der Auswertungsschritt benennt die
 verwendeten Eingabedatasets, Bereiche und Hashes. Ein während der Aufnahme
 erzeugtes Messprotokoll gehört hingegen direkt zur Messung. Mehrere Auswertungen
 können denselben Lauf verwenden, eine Auswertung kann mehrere Läufe vergleichen.
-Die bisherigen Notebooks erzeugen noch keinen solchen echten Forschungsablauf.</p>
+Notebook 08 kann diesen Ablauf nach vollständiger lokaler Konfiguration und
+bewusster Aktivierung schreiben. Der vollständige Ablauf ist bisher nur mit einem
+synthetischen Testclient bestätigt; für echte Daten fehlen noch die unten
+dokumentierten fachlichen Zuordnungen und ein erfolgreicher Instanzabgleich.</p>
+<h3 id="das-sample-ist-der-zu-prufende-sensor">Das „Sample“ ist der zu prüfende Sensor<a class="headerlink" href="#das-sample-ist-der-zu-prufende-sensor" title="Permanent link">&para;</a></h3>
+<p>Das fachliche Prüfobjekt ist ein Gas- oder Gasfeuchtesensor. Ein vorhandener Sensor
+wird nicht in einer GaSi-Materialsynthese erzeugt. Er behält vor und nach der
+Beaufschlagung dieselbe physische Identität; auch Messstufen erzeugen keine neuen
+Sensorobjekte. Das Wort „Sample“ in der BAM-Forschungsgrafik legt keinen
+bestimmten openBIS-Typ fest: vorhandenes <code>INSTRUMENT</code> wiederverwenden oder
+<code>TEST_OBJECT</code> / geeigneten <code>SAMPLE</code>-Typ nach Schemaabgleich verwenden.</p>
+<p>Das Gegenstück zur „Treatment Solution“ der Vorlage sind bei GaSi die verwendeten
+Gasquellen und ein Belastungsprofil aus nomineller Gaszusammensetzung, Temperatur,
+Feuchtegröße, Druck und Dauer. Temperatur und Feuchte sind Bedingungen, keine
+Chemikalien oder eigenständigen Prüflinge. Die aktive Beaufschlagung und die
+Aufzeichnung von Sensorantwort und Referenzen bilden gemeinsam den Messlauf.
+Eine zusätzliche Konditionierung wird erst bei einem tatsächlich eigenständigen,
+dokumentierten Behandlungsschritt modelliert.</p>
+<p>Relative Feuchte benötigt einen Temperatur- und Sättigungsbezug (Wasser/Eis).
+Taupunkt, Frostpunkt und Stoffmengenanteil von Wasser sind andere Größen.
+Sollprofil, tatsächliche Bedingungen und Sensorsignal bleiben getrennt.
+Geregelte und ungeregelte Bedingungen werden ausdrücklich unterschieden.
+Die <a href="GaSi_Konzeptmodell.html">farbige Ablaufgrafik</a> zeigt diese Zuordnung.
+Fundstelle: vom Nutzer bereitgestellte <code>20260630_1_workflow.svg</code>, Legende und
+<code>Sample Treatment</code>; GaSi-Wiki, <strong>1 Verfahrensprinzip</strong> und Referenzmessung.</p>
 <p>Fundstelle: <a href="https://datastore.bam.de/en/openbis_20-10-12/how-to_guides/user_ui/represent_research_data">BAM Conceptual Data Model</a>,
 <strong>Core Concepts</strong>, <strong>1. Draw the research workflow</strong>, insbesondere die Zuordnung
 von Datasets zur erzeugenden Tätigkeit und die Vereinfachung von Schritten ohne Dataset.</p>
@@ -553,12 +577,13 @@ Notebook 04 und 05. Sie ist unabhängig von <code>.env</code> (Zugang) und <code
 <li><a href="../data/paper/tg5c00105_si_001.pdf">Paper-SI</a>: ein publizierter Aufbau bestätigt keine aktuelle Geräteidentität.</li>
 <li>Betriebscode-Projekt: <code>logger/measurement_logger.py</code>, <code>communication/a5b.py</code>, <code>communication/keller.py</code>, <code>gui/main_window.py</code>, <code>config/gas_flow_config.json</code> und <code>docs/GASI_Handbuch.html</code>; ausschließlich lesend verwendet.</li>
 <li>Gerätebelege und konkrete Restfragen: lokale Setup-Konfiguration und <code>data/datasheets/</code>, außerhalb von Git.</li>
+<li>Forschungsupload: <a href="GaSi_Forschungsupload.md">Uploadvertrag und offene Angaben</a>, lokale <code>config/gasi_run.json</code> und eigener Zielabschnitt <code>gasi_workflow</code>. Notebook 08 verwendet vorhandene Sensor- und Ressourcenobjekte, erhält originale CSV-Dateien und prüft jeden Rückdownload.</li>
 <li><a href="https://bamresearch.github.io/openBIS-data-store-tutorials/represent-data-research-data/">BAM Forschungsdaten</a>, <a href="https://bamresearch.github.io/openBIS-data-store-tutorials/lab-notebook/">Laborbuch</a>, <a href="https://bamresearch.github.io/openBIS-data-store-tutorials/inventory-data-stewards/">Inventar</a>, <a href="https://bamresearch.github.io/openBIS-data-store-tutorials/connect-data/">Verknüpfungen</a>.</li>
 <li><a href="https://datastore.bam.de/en/openbis_20-10-12/how-to_guides/user_ui/represent_research_data">Aktuelle BAM-Anleitung zum Konzeptmodell</a>, <a href="https://datastore.bam.de/en/use_cases/euvsop">EuVSOP-Strukturbeispiel</a> und <a href="https://datastore.bam.de/en/parsers">BAM-Parserübersicht</a>, gelesen am 13.11.2026. Umsetzung und offene Entscheidungen: <a href="GaSi_Konzeptmodell.md">GaSi in vier Schritten</a>.</li>
 <li><a href="https://bamresearch.github.io/bam-masterdata/howtos/object_references/">BAM Objektverweise</a> und <a href="https://github.com/BAMresearch/bam-masterdata/blob/main/bam_masterdata/datamodel/v0/object_types.py">öffentliche Typdefinitionen</a>. Öffentlicher Quellcode bestätigt kein Deployment im Playground.</li>
 </ul></div></details></section>
 <footer class="source-note">Quelle: <a href="GaSi_Datenmodell.md">GaSi_Datenmodell.md</a> · Neu erzeugen: GaSi_01_Datenmodell_HTML_erzeugen.ipynb → Run All.
-<details><summary>Quellstand und Offline-Ansicht</summary>SHA-256: 884e4ada9980c58ca21ebe805d425fd8312d4621280740fb7a4934d9bfa62597<br>
+<details><summary>Quellstand und Offline-Ansicht</summary>SHA-256: 062d2f7e2cd6a03c22979571bf0aa845e33da1f7f7f3e8cec57b2caf9eeebfa5<br>
 Die Markdown-Datei bleibt die maßgebliche Quelle. Die Ansicht benötigt keine Internetverbindung.</details></footer></div></details></article>
 </main></div><script>
 const article = document.querySelector('article');

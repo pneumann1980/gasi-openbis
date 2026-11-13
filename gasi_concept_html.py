@@ -13,14 +13,20 @@ import textwrap
 def _profile(kind):
     if kind == "workflow":
         boxes = {
-            "P": (40, 45, 320, 100), "M": (490, 45, 320, 100), "E": (940, 45, 320, 100),
-            "DP": (40, 255, 320, 100), "DM": (490, 255, 320, 100), "DE": (940, 255, 320, 100),
+            "Q": (40, 180, 300, 100), "P": (520, 180, 320, 100),
+            "G": (40, 350, 300, 100), "C": (520, 350, 320, 100),
+            "D": (40, 550, 300, 100), "M": (520, 540, 320, 100),
+            "I": (40, 730, 300, 100), "W": (40, 900, 300, 100), "E": (520, 900, 320, 100),
+            "DP": (1120, 180, 320, 100), "DM": (1120, 540, 320, 100), "DE": (1120, 900, 320, 100),
         }
         routes = {
-            ("P", "M"): "M360 95 H490", ("M", "E"): "M810 95 H940",
-            ("P", "DP"): "M200 145 V255", ("M", "DM"): "M650 145 V255", ("E", "DE"): "M1100 145 V255",
+            ("Q", "P"): "M340 230 H520", ("P", "C"): "M680 280 V350",
+            ("C", "M"): "M680 450 V540", ("G", "M"): "M340 400 H430 V560 H520",
+            ("D", "M"): "M340 600 H520", ("I", "M"): "M340 780 H430 V630 H520",
+            ("M", "E"): "M680 640 V900", ("W", "E"): "M340 950 H520",
+            ("P", "DP"): "M840 230 H1120", ("M", "DM"): "M840 590 H1120", ("E", "DE"): "M840 950 H1120",
         }
-        return (1300, 390), boxes, routes
+        return (1500, 1160), boxes, routes
     if kind == "mapping":
         rows = [("LS", "LP", "LC", "LO", "LD"), ("IS", "IP", "IC", "IO"), ("GS", "GP", "GC", "GO")]
         boxes, routes = {}, {}
@@ -44,7 +50,7 @@ def _profile(kind):
             ("G", "M"): "M670 155 V350", ("D", "M"): "M900 155 V250 H750 V350",
             ("W", "E"): "M1180 155 V350",
         }
-        return (1340, 490), boxes, routes
+        return (1340, 560), boxes, routes
     if kind == "combined":
         boxes = {
             "IS": (130, 90, 240, 60), "IP": (130, 190, 240, 60), "IC": (130, 290, 240, 60),
@@ -68,7 +74,7 @@ def _profile(kind):
             ("W", "E"): "M1320 735 H1280 V615 H1250",
             ("D", "M"): "M1320 875 H950 V640",
         }
-        return (1600, 1110), boxes, routes
+        return (1600, 1200), boxes, routes
     raise ValueError(f"Unbekannte Konzeptgrafik: {kind}")
 
 
@@ -81,11 +87,25 @@ def concept_svg(source):
     (width, height), boxes, routes = _profile(kind)
     node = r"([A-Za-z]\w*)(?:\[([^\]]+)\])?"
     edge = re.compile(rf"{node}\s*-->\s*\|([^|]+)\|\s*{node}")
-    labels, edges = {}, {}
+    labels, edges, styles, roles = {}, {}, {}, {}
     lines = [s.strip() for s in source.splitlines() if s.strip() and not s.strip().startswith("%%")]
-    if not lines or lines[0] != "flowchart LR":
-        raise ValueError("Konzeptgrafik benötigt flowchart LR.")
+    expected_direction = "flowchart TD" if kind == "workflow" else "flowchart LR"
+    if not lines or lines[0] != expected_direction:
+        raise ValueError(f"Konzeptgrafik benötigt {expected_direction}.")
     for line in lines[1:]:
+        style = re.fullmatch(r"classDef (\w+) fill:(#[0-9a-fA-F]{6}),stroke:(#[0-9a-fA-F]{6}),color:(#[0-9a-fA-F]{6})", line)
+        if style:
+            role, fill, stroke, ink = style.groups()
+            styles[role] = (fill, stroke, ink)
+            continue
+        assignment = re.fullmatch(r"class ([A-Za-z]\w*(?:,[A-Za-z]\w*)*) (\w+)", line)
+        if assignment:
+            keys, role = assignment.groups()
+            for key in keys.split(","):
+                if key in roles:
+                    raise ValueError("Doppelte Farbkategorie in der Konzeptgrafik.")
+                roles[key] = role
+            continue
         match = edge.fullmatch(line)
         if not match:
             single = re.fullmatch(node, line)
@@ -107,6 +127,13 @@ def concept_svg(source):
         edges[start, end] = relation
     if set(labels) != set(boxes) or set(edges) != set(routes):
         raise ValueError("Konzeptgrafik wurde strukturell geändert; Diagrammlayout zuerst anpassen.")
+    if roles and (set(roles) - set(labels) or set(roles.values()) - set(styles)):
+        raise ValueError("Farbkategorien müssen bekannte Knoten und definierte Farben verwenden.")
+    if kind=="workflow" and set(roles)!=set(labels):
+        raise ValueError("Der Forschungsablauf benötigt vollständige Farbkategorien.")
+    if kind == "workflow" and (roles.get("D") != "sample" or roles.get("C") != "conditions" or
+                               any(roles.get(k) != "activity" for k in ("P","M","E"))):
+        raise ValueError("Der GaSi-Ablauf benötigt Sensor-Prüfobjekt, Bedingungen und Tätigkeiten.")
     for pair, relation in edges.items():
         expected = None
         if kind == "relations":
@@ -135,9 +162,13 @@ def concept_svg(source):
         # Labels are in free lanes, never on the connectors or a node.
         if kind == "workflow":
             x, y, w, h = boxes[start]
-            tx, ty = ((x+w+65, y+h/2-12) if start in ("P", "M") and end in ("M", "E")
-                      else (x+w/2+40, y+h+55))
-            parts.append(f'<text x="{tx}" y="{ty}" text-anchor="middle" font-size="14" fill="#496777">{escape(relation)}</text>')
+            if relation == "erzeugt":
+                tx, ty = (x+w+boxes[end][0])/2, y+h/2-12
+            elif (start, end) in (("P","C"),("C","M"),("M","E")):
+                tx, ty = x+w/2+115, (y+h+boxes[end][1])/2
+            else:
+                continue
+            parts.append(f'<text x="{tx}" y="{ty}" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#496777">{escape(relation)}</text>')
         if kind == "relations" and (start, end) in (("P", "M"), ("M", "E")):
             x, y, w, h = boxes[start]
             tx = (x+w+boxes[end][0])/2
@@ -152,7 +183,10 @@ def concept_svg(source):
             y = boxes[key][1]
             fill = ("#e9eef5" if y == 90 else "#e8f4e9" if y == 190 else
                     "#fff4d6" if y == 290 else "#f2eafb" if key in {"DP","DM","DE"} else "#e4effb")
-        parts.append(f'<g data-node="{key}"><title>{escape(label)}</title><rect class="node-box" x="{x}" y="{y}" width="{w}" height="{h}" rx="10" fill="{fill}" stroke="#b3cbd6"/>')
+        stroke = "#b3cbd6"
+        if key in roles:
+            fill, stroke, ink = styles[roles[key]]
+        parts.append(f'<g data-node="{key}" data-role="{roles.get(key, "")}"><title>{escape(label)}</title><rect class="node-box" x="{x}" y="{y}" width="{w}" height="{h}" rx="10" fill="{fill}" stroke="{stroke}"/>')
         title, _, subtitle = label.partition(" / ")
         heading = textwrap.wrap(title, width=max(14, int(w/10)))
         detail = textwrap.wrap(subtitle, width=max(16, int(w/8)))
@@ -163,6 +197,15 @@ def concept_svg(source):
             ty = y+h/2+(i-(len(lines)-1)/2)*21+5
             parts.append(f'<text x="{x+w/2}" y="{ty}" text-anchor="middle" font-family="sans-serif" font-size="{size}" font-weight="{600 if bold else 400}" fill="{ink}">{escape(line)}</text>')
         parts.append("</g>")
+    if roles:
+        captions = {"activity":"Tätigkeit","sample":"Sensor / Prüfobjekt","resource":"Verwendete Ressourcen",
+                    "dataset":"Dateien / Datasets","conditions":"Belastungsprofil"}
+        used = [role for role in captions if role in roles.values()]
+        for index, role in enumerate(used):
+            x = 25 + index * ((width-50)/len(used))
+            w = (width-70)/len(used)-12
+            fill, stroke, ink = styles[role]
+            parts.append(f'<g class="legend"><rect x="{x}" y="{height-65}" width="{w}" height="42" fill="{fill}" stroke="{stroke}"/><text x="{x+w/2}" y="{height-38}" text-anchor="middle" font-family="sans-serif" font-size="15" fill="{ink}">{captions[role]}</text></g>')
     return "".join(parts) + "</svg>"
 
 
@@ -178,6 +221,7 @@ nav a[aria-current=step]{background:#163f50;color:white}
 .step[hidden]{display:none}figure{margin:8px 0 16px}figure .drawing{overflow:auto}
 svg{display:block;width:100%;min-width:850px;max-height:62vh}figcaption{font-size:.85rem}
 svg[data-profile=combined]{max-height:none;min-width:1200px}
+svg[data-profile=workflow]{max-height:none;min-width:1100px}
 details{margin:12px 0;border-top:1px solid #d9e5ea;padding:10px 0}
 summary{cursor:pointer;color:#125570}table{border-collapse:collapse;font-size:.88rem;width:100%}
 td,th{padding:9px 11px;border-bottom:1px solid #d9e5ea;text-align:left;vertical-align:top}

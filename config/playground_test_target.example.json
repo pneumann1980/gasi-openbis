@@ -36,6 +36,19 @@
   "dataset_properties": {
     "name": "GASI_SYNTHETIC_TEST_01"
   },
+  "gasi_workflow": {
+    "host": "https://playground.datastore.bam.de",
+    "approved_scope": {
+      "approved": false,
+      "reference": "",
+      "lab_path_prefix": ""
+    },
+    "targets": {
+      "preparation": {"space": "", "project": "", "collection": ""},
+      "measurement": {"space": "", "project": "", "collection": ""},
+      "analysis": {"space": "", "project": "", "collection": ""}
+    }
+  },
   "gasi_inventory": {
     "target": {
       "space": "8.1_EQUIPMENT",

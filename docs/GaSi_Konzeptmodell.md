@@ -7,18 +7,45 @@ sind getrennte Aussagen.
 
 ## 1. Draw the research workflow
 
-**Vorbereiten → Messen → Auswerten.** Jeder Arbeitsschritt erzeugt eigene Dateien.
-Geräte, Prüfling, Gase und Verfahren werden dafür wiederverwendet.
+**Ein Gas- oder Gasfeuchtesensor wird definierten Prüfbedingungen ausgesetzt,
+sein Signal wird aufgezeichnet und anschließend bewertet.** Der Sensor ist unser
+Prüfobjekt („Sample“). GaSi stellt ihn nicht her.
 
 ```mermaid
-flowchart LR
+flowchart TD
     %% gasi-view: workflow
-    P[Vorbereiten / Prüfaufgabe und Messplan] -->|danach| M[Messen / Einen Messlauf aufnehmen]
-    M -->|danach| E[Auswerten / Ergebnisse beurteilen]
-    P -->|erzeugt| DP[Prüfplan / Startkonfiguration]
-    M -->|erzeugt| DM[Unveränderte Logger-CSV / Tatsächlicher Aufbau]
-    E -->|erzeugt| DE[Ausgewertete Daten / Diagramme und Bericht]
+    Q[Verfahren / Gültige SOP und Prüfauftrag] -->|wird verwendet| P[1. Prüfung vorbereiten / Sensor und Messplan festlegen]
+    P -->|legt fest| C[Belastungsprofil / Gas, Temperatur, Feuchte und Dauer]
+    C -->|gibt Sollbedingungen vor| M[2. Beaufschlagen und messen / Sensorantwort und Referenzen erfassen]
+    G[Gasquellen / Prüfgas und Trägergas] -->|werden verwendet| M
+    D[Prüfobjekt: Sample / Gas- oder Gasfeuchtesensor] -->|wird geprüft| M
+    I[GaSi und Referenzgeräte / MFC, Befeuchter und Messkette] -->|werden verwendet| M
+    M -->|Messdaten sind Eingabe| E[3. Daten auswerten / Sensorsignal und Referenz vergleichen]
+    W[Auswertesoftware / Festgehaltene Version] -->|wird verwendet| E
+    P -->|erzeugt| DP[Prüfplan / Sollprofil und Startkonfiguration]
+    M -->|erzeugt| DM[Messdaten / Logger-CSV und Lauf-Snapshot]
+    E -->|erzeugt| DE[Prüfergebnis / Ergebnisdateien, Code und Bericht]
+    classDef activity fill:#fff2cc,stroke:#d6b656,color:#172f3a
+    classDef sample fill:#d5e8d4,stroke:#82b366,color:#172f3a
+    classDef resource fill:#e1d5e7,stroke:#9673a6,color:#172f3a
+    classDef dataset fill:#f8cecc,stroke:#b85450,color:#172f3a
+    classDef conditions fill:#dae8fc,stroke:#6c8ebf,color:#172f3a
+    class P,M,E activity
+    class D sample
+    class Q,G,I,W resource
+    class DP,DM,DE dataset
+    class C conditions
 ```
+
+**Die Farben haben die Bedeutung der Vorlage:** Gelb = Tätigkeit, Grün = Prüfobjekt,
+Lila = verwendete Ressourcen, Rot = Dateien/Datasets. Blau ergänzt bei GaSi das
+Belastungsprofil. Grün behauptet keine Herstellung des Sensors durch GaSi.
+
+**„Treatment Solution“ wird nicht wörtlich übernommen:** Gasquellen sind Materialien;
+Temperatur und Feuchte sind Prüfbedingungen. Das Belastungsprofil enthält ihre
+Sollwerte und die Stufendauer. Tatsächliche Bedingungen und Sensorantwort werden
+getrennt gemessen. Beaufschlagung und Signalerfassung laufen im Messlauf gemeinsam;
+es wird kein künstlicher zusätzlicher Behandlungsschritt pro Plateau erzeugt.
 
 <details markdown="1">
 <summary>Was gehört zu den drei Arbeitsschritten?</summary>
@@ -26,7 +53,7 @@ flowchart LR
 | Tätigkeit | Was geschieht bei GaSi? | Eigene Ergebnisse / Dateien |
 |---|---|---|
 | Vorbereiten | Prüfzweck und Prüfling festlegen; eingesetzte Geräte, Gasquellen, Kanal- und Messortzuordnung prüfen; Messstufen und Bezugsbedingungen festlegen. | Prüfplan, Sollprofil und geprüfte Startkonfiguration. Nur wenn diese eigenständig aufbewahrt werden, eigener Arbeitsschritt. Sonst Teil der Messung. |
-| Messen | Gasströme und gegebenenfalls Feuchte einstellen; Stufen durchlaufen; Referenz-, Prozess- und Prüflingssignale aufzeichnen. | Unveränderte Loggerdateien, tatsächlich verwendeter Lauf-Snapshot und gegebenenfalls Messprotokoll. |
+| Beaufschlagen und messen | Den identifizierten Gas-/Gasfeuchtesensor dem Gas-, Temperatur- und Feuchteprofil aussetzen; Stufen durchlaufen; Sensorantwort, Referenz- und Prozesssignale gleichzeitig aufzeichnen. | Unveränderte Loggerdateien, tatsächlich verwendeter Lauf-Snapshot und gegebenenfalls Messprotokoll. |
 | Auswerten | Gültige Zeitbereiche/Stufen auswählen; Soll, Referenz und Prüfling vergleichen; Korrekturen, Bedingungen und Unsicherheit dokumentieren. | Ergebnisdateien, Diagramme, Bericht sowie verwendeter Auswertecode mit Version. |
 
 Ein Messlauf kann mehrere Dateien und Messstufen haben. Eine CSV-Zeile ist ein
@@ -36,6 +63,23 @@ Auswertungsschritte und überschreiben weder Messdateien noch frühere Ergebniss
 Die Gasmischung ist hier ein zeitabhängiger Prozesszustand im Lauf. Es wird kein
 zusätzliches Probenobjekt für jedes Mischverhältnis oder Plateau erfunden. Ein
 physisch entnommenes, weiterverwendetes Gas-/Materialmuster wäre ein neuer Fall.
+Auch der Sensor nach der Beaufschlagung bleibt dasselbe physische Prüfobjekt.
+Eine eigenständige Konditionierung, Alterung oder irreversible Behandlung wäre nur
+dann ein zusätzlicher Arbeitsschritt, wenn sie tatsächlich stattfindet und eigene
+dokumentierte Ergebnisse hat. Der vorliegende Aufbau belegt eine solche Trennung nicht.
+
+| Angabe im Belastungsprofil | Sollwert | Tatsächlicher Wert / notwendiger Bezug |
+|---|---|---|
+| Gasgemisch | Komponente, Trägergas, nomineller Gehalt, Einheit und trocken/feucht-Bezug | Eine Rezeptkonzentration ist kein unabhängig gemessener Referenzwert. Gasquelle/Charge und gegebenenfalls Zertifikat referenzieren. |
+| Temperatur T | Wert, Einheit und Zielort, z. B. Kammer oder Gas am Prüfling | Kammer-Ist, Gastemperatur und Sensortemperatur sind unterschiedliche Messgrößen. Zugeordneten Kanal und Messort nennen. |
+| Feuchte H | Konkrete Größe: relative Feuchte, Tau-/Frostpunkt oder Stoffmengenanteil von Wasser; Wert und Einheit | Relative Feuchte braucht die zugehörige Gastemperatur; Tau-/Frostpunkt sind zu unterscheiden. Druck und Bezugszustand für die Umrechnung dokumentieren. |
+| Druck und Durchfluss | Sollwert, Einheit; Druckart und Normalbedingungen, falls verwendet | Absolut-/Überdruck sowie Normvolumenstrom und Betriebsvolumenstrom unterscheiden. |
+| Messstufe | Stufenkennung, Reihenfolge, Dauer und gegebenenfalls Wiederholung | Zeitbereich und Stabilitäts-/Auswahlregel; kein Objekt pro Messpunkt oder Stufe. |
+| Sensorsignal | Kein Ersatz durch einen Soll- oder Referenzwert | Kanal, Sensorkennung, Einheit, Messort und Zeitbezug der tatsächlichen Antwort. |
+
+Nicht geregelte Bedingungen werden ausdrücklich als solche dokumentiert. Ein
+fehlender Feuchtewert darf nicht automatisch „trocken“ und eine fehlende
+Temperaturzuordnung nicht „Sensortemperatur“ bedeuten.
 
 Das Wiki, Abschnitt **1 Verfahrensprinzip**, belegt Prüfplan, Gasmischung,
 Feuchteeinstellung und Signalerfassung. Die [Paper-SI](../data/paper/tg5c00105_si_001.pdf),
@@ -49,7 +93,8 @@ Feld- und Zeitregeln stehen im [detaillierten Datenmodell](GaSi_Datenmodell.md).
 ## 2. Identify Entities and Entity types
 
 **Tätigkeiten:** Vorbereitung, Messung, Auswertung.<br>
-**Verwendete Dinge:** Geräte, Prüfling, Gasquellen und versionierte Verfahren.<br>
+**Prüfobjekt:** ein identifizierter Gas- oder Gasfeuchtesensor, vor und nach dem Lauf dieselbe Identität.<br>
+**Verwendete Dinge:** Geräte, Gasquellen und versionierte Verfahren.<br>
 **Ergebnisse:** Plan, Messdateien und Auswerteergebnisse.
 
 ### Vorbereitung: Objekte und Typen
@@ -66,10 +111,11 @@ Feld- und Zeitregeln stehen im [detaillierten Datenmodell](GaSi_Datenmodell.md).
 |---|---|---|
 | `EXPERIMENTAL_STEP` | Ein fachlich zusammenhängender GaSi-Messlauf | Laborbuch |
 | `INSTRUMENT` | Verwendete MFC/MFM, Druckregler, Feuchtereferenzen und Erfassung | Geräteinventar; als Parents der Messung |
-| Vorhandener Prüflingstyp | Geprüfter Sensor bzw. geprüftes Gerät, mit seiner vorhandenen Identität | Passendes Inventar; als Parent der Messung |
+| Vorhandener Prüflingstyp | Gas- oder Gasfeuchtesensor („Sample“), mit seiner vorhandenen Identität | Passendes Inventar; als Parent der Messung |
 | `GAS_BOTTLE`, Kandidat | Tatsächlich verwendete Gasquelle bzw. Flasche | Materialinventar; als Parent der Messung |
 | `RAW_DATA`, Dataset | Unveränderte Loggerdateien | An der Messung |
 | `ATTACHMENT`, Dataset | Tatsächlich verwendeter Aufbau, Kanalplan und Messprotokoll | An der Messung |
+| Kein eigenes Objekt erforderlich | Gas-/Temperatur-/Feuchteprofil mit Stufen, Dauer, Einheiten und Bezug | Sollprofil an Vorbereitung; tatsächliche Bedingungen an Messung |
 
 ### Auswertung: Objekte und Typen
 
@@ -95,11 +141,12 @@ die Sichtbarkeit eines Typcodes; Properties und Schreibrechte bleiben offen.
 |---|---|---|
 | Vorbereitung, Messlauf, Auswertung | Je ein Objekt `EXPERIMENTAL_STEP` | Typ und Properties bestätigt. Fachlich: stabile Kennung, Zweck, Person, Beginn/Ende mit Zeitzone, verwendete Ressourcen. Drei Tätigkeiten benötigen keine drei neuen Typen. |
 | MFC, MFM, Druckregler, Feuchtereferenz, Erfassung, weitere einzeln verwaltete Geräte | Inventarobjekt `INSTRUMENT` | Bestätigt; Hersteller, Modell, Seriennummer als belegte Identität; OE und Standort. Rolle und Position gehören zur Verwendung im Aufbau. Ein MFC ist kein MFM. |
-| Prüfling / DUT | Vorhandenes `INSTRUMENT` wiederverwenden, wenn er ein verwaltetes Gerät ist; sonst `TEST_OBJECT` oder geeigneter `SAMPLE`-Typ prüfen | Letztere nur im Katalog bestätigt. Identität und Art klären. „Prüfling“ ist eine Rolle; das gleiche Gerät nicht zusätzlich als zweites DUT-Objekt anlegen. |
+| Prüfling / DUT / fachliches „Sample“ | Der Gas-/Gasfeuchtesensor. Vorhandenes `INSTRUMENT` wiederverwenden, wenn er ein verwaltetes Gerät ist; sonst `TEST_OBJECT` oder geeigneter `SAMPLE`-Typ prüfen | Letztere nur im Katalog bestätigt. Das fachliche Wort Sample legt den API-Typ nicht fest. Kein zweites Sensorobjekt nach Beaufschlagung oder je Messstufe. |
 | Gasquelle / Flasche / Referenzmaterial | `GAS_BOTTLE`, gegebenenfalls passender Materialtyp | `GAS_BOTTLE` im Katalog; Properties noch nicht geprüft. Quelle/Charge, Zusammensetzung, Zertifikat und Gültigkeit bei Bedarf. Gasflasche, Betriebsmedium und dynamische Mischung unterscheiden. |
 | Verfahrensvorschrift | `SOP` | Im Katalog; konkrete Version, Gültigkeit und Properties prüfen. Beim Vorbereiten referenzieren. |
 | Softwareversion | `SOFTWARE_CODE` als wiederverwendbare Ressource | Im Katalog, Properties offen. Loggerstand zusätzlich im Mess-Snapshot, Auswertecode bei der Auswertung sichern; keine ausführbaren Geheimnisse einbetten. |
 | Aktueller Aufbau | Zunächst Setup-Datei; `SETUP.TEST` nur als späterer Objektkandidat | Typ bestätigt, aber keine Geräte-/Kanalproperties. Geräteposition, Messort, Signalrolle und Gasweg im Snapshot; kein künstliches Gerüst aus neuen Typen. |
+| Belastungsprofil / Behandlung | Kein Flaschen-, Sensor- oder Geräteobjekt; versioniertes Sollprofil und tatsächliche Bedingungen als Dateien | Gaszusammensetzung, Temperatur, Feuchtegröße, Druck, Dauer; Soll, Referenz und Sensorsignal strikt trennen. `PARAMETER_SET` / `ENVIRONMENTAL_CONDITIONS` nur bei späterem belegtem Nutzen zusätzlich prüfen. |
 | Anlagen- und Modulübersicht | Gliederung des Aufbaus | Noch keine eigenen Objekte nötig. Physische Teil-von-Beziehungen sind keine automatisch festgelegten Parent-Beziehungen. |
 | Geräte-Kalibriernachweis | `CALIBRATION`, soweit Pflichtangaben belegt | Typ und Pflichtfelder bestätigt. Verweis `INSTRUMENT` hat API-Datentyp `SAMPLE`. Nicht mit dem GaSi-Prüflingstest gleichsetzen. |
 | Plan, Snapshot, Messprotokoll, Bericht | Dataset `ATTACHMENT` an der erzeugenden Tätigkeit | Typ/Assignments bestätigt. Datensatz kann mehrere zusammengehörige Dateien enthalten. |
@@ -191,15 +238,23 @@ flowchart LR
     RS[BAM-/FB-Inventar / Weitere Ziele offen] -->|enthält| RP[Ressourcenprojekte / Ziele prüfen]
     RP -->|enthält| RC[Ressourcen / Gas, SOP, Software]
     Q[Verfahren / SOP als Kandidat] -->|Parent| P[Vorbereitung / EXPERIMENTAL_STEP]
-    P -->|Parent| M[Messung / EXPERIMENTAL_STEP]
+    P -->|Parent| M[Beaufschlagung und Messung / EXPERIMENTAL_STEP]
     M -->|Parent| E[Auswertung / EXPERIMENTAL_STEP]
     I[Verwendete Geräte / INSTRUMENT] -->|Parent| M
     G[Gasquelle / GAS_BOTTLE als Kandidat] -->|Parent| M
-    D[Prüfling / Vorhandenes Objekt] -->|Parent| M
+    D[Sensor-Prüfling / Vorhandene Objektidentität] -->|Parent| M
     W[Auswertesoftware / SOFTWARE_CODE als Kandidat] -->|Parent| E
-    DP[Prüfplan / ATTACHMENT an Vorbereitung]
+    DP[Prüfplan und G/T/H-Profil / ATTACHMENT an Vorbereitung]
     DM[Logger-CSV und Aufbau / RAW_DATA, ATTACHMENT an Messung]
     DE[Ergebnisse und Bericht / ATTACHMENT an Auswertung]
+    classDef activity fill:#fff2cc,stroke:#d6b656,color:#172f3a
+    classDef sample fill:#d5e8d4,stroke:#82b366,color:#172f3a
+    classDef resource fill:#e1d5e7,stroke:#9673a6,color:#172f3a
+    classDef dataset fill:#f8cecc,stroke:#b85450,color:#172f3a
+    class P,M,E activity
+    class D sample
+    class I,Q,G,W resource
+    class DP,DM,DE dataset
 ```
 
 Ressourcenkästen stehen für einzelne wiederverwendbare Objekte. Bei einem
@@ -215,12 +270,18 @@ gemeinsamen bereits existierenden Space.
 flowchart LR
     %% gasi-view: relations
     Q[Verfahren / SOP als Kandidat] -->|Parent| P[Vorbereitung / EXPERIMENTAL_STEP]
-    P -->|Parent| M[Messung / EXPERIMENTAL_STEP]
+    P -->|Parent| M[Beaufschlagung und Messung / EXPERIMENTAL_STEP]
     M -->|Parent| E[Auswertung / EXPERIMENTAL_STEP]
     I[Verwendete Geräte / INSTRUMENT] -->|Parent| M
     G[Verwendete Gasquelle / GAS_BOTTLE als Kandidat] -->|Parent| M
-    D[Prüfling / Vorhandenes Objekt] -->|Parent| M
+    D[Sensor-Prüfling / Vorhandene Objektidentität] -->|Parent| M
     W[Auswertesoftware / SOFTWARE_CODE als Kandidat] -->|Parent| E
+    classDef activity fill:#fff2cc,stroke:#d6b656,color:#172f3a
+    classDef sample fill:#d5e8d4,stroke:#82b366,color:#172f3a
+    classDef resource fill:#e1d5e7,stroke:#9673a6,color:#172f3a
+    class P,M,E activity
+    class D sample
+    class Q,I,G,W resource
 ```
 
 </details>
@@ -268,9 +329,13 @@ erzeugen. Beim ersten echten Lauf werden die verwendeten Geräte verbunden.
 | Aktueller Einbau und Kanalplan | Vor Ort bestätigen, welches Gerät an welcher Position bzw. welchem Messort betrieben wird. Sieben Identitäten bleiben offen. | Lokaler Gerätebericht; Notebook 02/06. |
 | Erster echter Lauf | Laufgrenze, Zeitbasis, Messplan, zulässige Eingabewerte und Auswerteziel gemeinsam festlegen. Einbauenachweis und Referenzstatus sind laufbezogen zu bestätigen. | Detailliertes Modell: Messlauf und Messwerte. |
 | Parser | Erst nach verbindlicher Lauf-/Datei-/Kanalzuordnung spezifizieren; kein bereits vorhandener GaSi-Parser aus dem Katalog ableitbar. | BAM-Parserseite verlinkt Beispiele und eine ETL-Anleitung; sie liefert keine GaSi-Feldzuordnung. |
+| Forschungsupload | Notebook 08 prüft die vervollständigte lokale Laufkonfiguration, erstellt ein Paket und kann es nach bewusster Aktivierung hochladen. Sensor und Ressourcen müssen existieren; fehlende Identitäten werden nicht erfunden. | [Uploadvertrag und offene Voraussetzungen](GaSi_Forschungsupload.md). |
 
 **Stand:** Konzeptabgleich am 13.11.2026, offline gegen lokale Nachweise.
-Keine neuen Live-Einträge und kein Upload echter Messdaten in diesem Schritt.
+Der erneute lesende Zugang am 13.11.2026 war nicht erfolgreich; zusätzliche Typen
+sind damit nicht neu live bestätigt. Keine neuen Live-Einträge und kein Upload
+echter Messdaten in diesem Schritt. Der vollständige Uploadablauf ist lokal mit
+einem Testclient geprüft; konkrete Instanz-Validatoren bleiben separat zu bestätigen.
 Die bestehenden Inventar- und synthetischen Testbefunde sind getrennt dokumentiert.
 
 </details>
@@ -281,6 +346,7 @@ Die bestehenden Inventar- und synthetischen Testbefunde sind getrennt dokumentie
 - [BAM: Conceptual Data Model, Schritte 1–4](https://datastore.bam.de/en/openbis_20-10-12/how-to_guides/user_ui/represent_research_data), gelesen am 13.11.2026.
 - [BAM: EuVSOP](https://datastore.bam.de/en/use_cases/euvsop), Abschnitte **Register data in the Lab Notebook** und **Connect Inventory and ELN**: getrennte Tätigkeiten mit Datasets, Ressourcen als Parents. Als Strukturvorbild verwendet, ohne dessen Forschungsobjekte oder Sondertypen auf GaSi zu übertragen.
 - Direkt abgeglichene Beispielgrafiken: [Objekte und Typen je Arbeitsschritt](https://datastore.bam.de/use_case_pics/20260728_use_case_euvsop_objects_and_object_types.svg) und [Gesamtmodell mit Hierarchie und Beziehungen](https://datastore.bam.de/use_case_pics/20260728_use_case_euvsop_data_model.svg). Die GaSi-Ansicht verwendet deren Darstellungsprinzip mit eigenen Tätigkeiten, Typen und Dateien.
+- Vom Nutzer bereitgestellte `20260630_1_workflow.svg`, SHA-256 `1057c0031e8af41216ff3d1707dca964a173b7250c9a1789b8fab706507c896c`: Materialsynthese, Sample Treatment, Charakterisierung und Analyse sowie vier Farbkategorien. GaSi übernimmt die Farbbedeutung, verwendet aber einen vorhandenen Sensor und ein Gas-/Temperatur-/Feuchteprofil. Das Original bleibt lokal und unverändert.
 - [BAM: Parsers](https://datastore.bam.de/en/parsers), Einstieg zu Beispielen, Workshop und ETL-Pipeline. Weitere Umsetzung nach Bestätigung der GaSi-Semantik.
 - [GaSi-Wiki](../data/wiki/home.txt), **1 Verfahrensprinzip**, **Aufbau**.
 - [GaSi-Paper, Supporting Information](../data/paper/tg5c00105_si_001.pdf), **1 Humidification unit**, insbesondere Figure S1 und Referenzmessung auf Seite 3.

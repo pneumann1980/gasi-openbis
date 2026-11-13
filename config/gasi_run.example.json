@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "run_id": null,
+  "analysis_id": null,
+  "purpose": null,
+  "responsible_person": null,
+  "dut": {
+    "identifier": null,
+    "kind": "gas_humidity_sensor",
+    "identity_confirmed": false
+  },
+  "resources": {
+    "instruments": [],
+    "gas_sources": [],
+    "sop": [],
+    "software": []
+  },
+  "setup_confirmed": false,
+  "setup_evidence": null,
+  "reference_assessment": {"confirmed": false, "basis": null, "scope": null},
+  "source_association_confirmed": false,
+  "source_association_evidence": null,
+  "software_versions": {"acquisition": null, "analysis": null},
+  "times": {
+    "preparation": {"start": null, "end": null},
+    "measurement": {"start": null, "end": null},
+    "analysis": {"start": null, "end": null}
+  },
+  "stages": [
+    {
+      "stage_id": null,
+      "duration_s": null,
+      "gas": {
+        "carrier": null,
+        "basis": null,
+        "components": [{"species": null, "value": null, "unit": "umol/mol"}]
+      },
+      "temperature": {"controlled": true, "setpoint_C": null, "location": null},
+      "humidity": {
+        "controlled": true,
+        "quantity": null,
+        "value": null,
+        "unit": null,
+        "saturation_phase": null,
+        "location": null,
+        "temperature_reference": null
+      },
+      "pressure": {"value_Pa": null, "kind": "absolute", "location": null}
+    }
+  ],
+  "channels": [
+    {"column": null, "role": "dut_signal", "object_identifier": null, "quantity": null, "unit": null, "location": null, "confirmed": false},
+    {"column": null, "role": "reference_humidity", "object_identifier": null, "quantity": null, "unit": null, "location": null, "confirmed": false},
+    {"column": null, "role": "temperature", "object_identifier": null, "quantity": null, "unit": null, "location": null, "confirmed": false}
+  ],
+  "files": {
+    "preparation": [],
+    "raw_data": [],
+    "analysis": []
+  },
+  "source_ranges": [],
+  "stage_ranges": []
+}
