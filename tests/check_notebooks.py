@@ -131,7 +131,7 @@ originals = {{p: p.read_bytes() for p in (root / 'data/measurements').glob('*.cs
     if name == SESSION:
         assertions += "assert session.session_value(session.TOKEN_ENV) == 'SYNTHETIC_NOTEBOOK_TOKEN'\nassert 'token' not in globals()\n"
     if name == SETUP:
-        assertions += "assert len(pip_calls) == 1\nassert Path('docs/GaSi_Datenmodell_einfach.html').is_file()\nassert len(list(Path('docs').glob('GaSi_Konzeptmodell_*.svg'))) == 4\n"
+        assertions += "assert len(pip_calls) == 1\nassert Path('docs/GaSi_Konzeptmodell.html').is_file()\nassert Path('docs/GaSi_Datenmodell.html').is_file()\nassert not Path('docs/GaSi_Datenmodell_einfach.html').exists()\nassert len(list(Path('docs').glob('GaSi_Konzeptmodell_*.svg'))) == 4\n"
     if fake:
         assertions += 'assert all(p.read_bytes() == content for p, content in originals.items())\n' if name != SETUP else ''
         if not write:

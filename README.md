@@ -86,11 +86,11 @@ In **Einmalig einrichten** unten die Zelle **Datenmodell und HTML neu erzeugen**
 ausführen. Diese Zelle funktioniert einzeln mit frischem Kernel und ohne BAM-Zugang.
 Nach einer Modelländerung genügt es, nur diese Zelle erneut auszuführen.
 
-Erhalten bleiben die einfache und ausführliche Datenmodell-HTML sowie die farbige
-Konzeptansicht mit Tabellen und vier SVGs. Quellen sind
+Erzeugt werden die farbige Konzeptansicht mit Tabellen und vier SVGs sowie die
+ausführliche Datenmodell-HTML. Quellen sind
 [Datenmodell](docs/GaSi_Datenmodell.md) und [Konzeptmodell](docs/GaSi_Konzeptmodell.md).
-Direkt öffnen: [einfache Übersicht](docs/GaSi_Datenmodell_einfach.html),
-[farbiges Konzept](docs/GaSi_Konzeptmodell.html).
+Zentrale grafische Ansicht: [farbiges Konzept](docs/GaSi_Konzeptmodell.html).
+Die [ausführliche Dokumentation](docs/GaSi_Datenmodell.html) bleibt ergänzend erhalten.
 
 ## Prüfling und Messlauf
 

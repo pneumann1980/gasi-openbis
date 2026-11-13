@@ -363,6 +363,6 @@ Details: [aktueller Projektstatus](GaSi_Projektstatus.md).
 - [GaSi-Wiki](../data/wiki/home.txt), **1 Verfahrensprinzip**, **Aufbau**.
 - [GaSi-Paper, Supporting Information](../data/paper/tg5c00105_si_001.pdf), **1 Humidification unit**, insbesondere Figure S1 und Referenzmessung auf Seite 3.
 - Betriebscode `logger/measurement_logger.py`, `communication/a5b.py` und `config/gas_flow_config.json`; nur lesend abgeglichener Betriebscode außerhalb dieses Repositorys.
-- [Detailliertes Datenmodell und Instanzbefund](GaSi_Datenmodell.md), [synthetischer Live-Testnachweis](GaSi_Playground_Testnachweis.md). Gerätebelege, konkrete Kanalzuordnungen und Seriennummern bleiben lokal.
+- [Detailliertes Datenmodell](GaSi_Datenmodell.md) und [aktueller Projektstatus mit Instanzbefunden](GaSi_Projektstatus.md). Gerätebelege, konkrete Kanalzuordnungen und Seriennummern bleiben lokal.
 
 </details>

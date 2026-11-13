@@ -7,7 +7,7 @@ import unittest
 import xml.etree.ElementTree as ET
 
 from gasi_concept_html import concept_svg, render_concept_html
-from gasi_model_html import generate_simple_html
+from gasi_model_html import generate_html
 from tests.test_model_html import Page, VisibleText
 
 
@@ -97,8 +97,8 @@ class ConceptTests(unittest.TestCase):
             # Windows checkout must retain the hash of the actual CRLF source.
             original = SOURCE.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
             concept.write_bytes(original)
-            simple = generate_simple_html(model)
-            self.assertIn('href="GaSi_Konzeptmodell.html"', simple.read_text(encoding="utf-8"))
+            detailed = generate_html(model)
+            self.assertIn('href="GaSi_Konzeptmodell.html"', detailed.read_text(encoding="utf-8"))
             first = concept.with_suffix(".html").read_bytes()
             self.assertIn(sha256(original).hexdigest().encode("ascii"), first)
             for kind in ("workflow", "mapping", "combined", "relations"):
@@ -106,10 +106,10 @@ class ConceptTests(unittest.TestCase):
                 self.assertTrue(svg.exists())
                 ET.fromstring(svg.read_text(encoding="utf-8"))
             self.assertEqual(concept.read_bytes(), original)
-            generate_simple_html(model)
+            generate_html(model)
             self.assertEqual(first, concept.with_suffix(".html").read_bytes())
             concept.write_text(original.decode("utf-8").replace("Sensorsignal und Referenz vergleichen", "Neue Ergebnisse"), encoding="utf-8")
-            generate_simple_html(model)
+            generate_html(model)
             self.assertIn("Neue Ergebnisse", concept.with_suffix(".html").read_text(encoding="utf-8"))
 
     def test_activity_type_tables_are_visible_and_combined_view_keeps_openbis_levels(self):

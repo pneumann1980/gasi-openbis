@@ -6,8 +6,10 @@ Im Hauptordner bleiben drei Arbeitsnotebooks: **Session starten**, **Einmalig
 einrichten** und **Messdaten hochladen**. **Prüfling verwalten** ist separat.
 Die optionale spätere Auswertung liegt im Unterordner `notebooks/`.
 Einrichtung, Zielkonfiguration, Geräteinventar und synthetischer Schreibtest sind
-zusammengeführt. Alle Modell-HTMLs und vier Konzept-SVGs werden weiterhin über
-eine separat ausführbare Offline-Zelle der Einrichtung erzeugt.
+zusammengeführt. Die zentrale Konzept-HTML, die ausführliche Datenmodell-HTML und
+vier Konzept-SVGs werden über eine separat ausführbare Offline-Zelle der Einrichtung erzeugt.
+Die zusätzliche einfache HTML entfällt. Diese Bereinigung ist mit 15 HTML-/SVG-Tests
+und dem Einrichtungsnotebook in einem frischen Kernel geprüft.
 
 **Ein Schalter:** `SCHREIBEN = False/True` ausschließlich im Session-Notebook.
 Der lokale Modus in `.env` wird von jedem Arbeitsaufruf neu gelesen; er gilt auch

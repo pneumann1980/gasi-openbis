@@ -12,4 +12,8 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
-start "" "%~dp0docs\GaSi_Datenmodell_einfach.html"
+if exist "%~dp0docs\GaSi_Konzeptmodell.html" (
+    start "" "%~dp0docs\GaSi_Konzeptmodell.html"
+) else (
+    start "" "%~dp0docs\GaSi_Datenmodell.html"
+)

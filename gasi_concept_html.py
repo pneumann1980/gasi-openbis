@@ -304,7 +304,7 @@ def render_concept_html(source, source_name="GaSi_Konzeptmodell.md"):
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="gasi-concept-sha256" content="{digest}"><title>GaSi: Konzeptmodell in vier Schritten</title>
 <style>{STYLE}</style></head><body>
-<header><a href="GaSi_Datenmodell_einfach.html">Geräteübersicht</a><span>BAM · FB 8.1</span><button type="button" data-print>Drucken</button></header>
+<header><a href="GaSi_Datenmodell.html">Ausführliche Dokumentation</a><span>BAM · FB 8.1</span><button type="button" data-print>Drucken</button></header>
 <main><div class="intro">{intro}</div><nav aria-label="Die vier BAM-Schritte">
 <a href="#schritt-1">1 · Ablauf</a><a href="#schritt-2">2 · Bausteine</a>
 <a href="#schritt-3">3 · Ablage</a><a href="#schritt-4">4 · Verbindungen</a></nav>

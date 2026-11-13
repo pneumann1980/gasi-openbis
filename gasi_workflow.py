@@ -200,8 +200,8 @@ def generate_model(root=ROOT):
     root = Path(root)
     source = root / "docs/GaSi_Datenmodell.md"
     detailed = gasi_model_html.generate_html(source)
-    simple = gasi_model_html.generate_simple_html(source)
-    return dict(overview=simple, details=detailed, concept=root / "docs/GaSi_Konzeptmodell.html")
+    concept = root / "docs/GaSi_Konzeptmodell.html"
+    return dict(concept=concept, details=detailed) if concept.is_file() else dict(details=detailed)
 
 
 def show_result(result, message):

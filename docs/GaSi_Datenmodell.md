@@ -206,8 +206,9 @@ beschreibt spätere fachliche Zuordnungen. Testinstrument und Testlauf werden ü
 ihre stabilen Codes wiedergefunden, das Dataset über seine Zugehörigkeit und den
 stabilen Namen. Dataset-Code/PermID vergibt der Server; sie erscheinen nach dem Test.
 
-Der ausgeführte Live-Test mit IDs, Browserlinks, Wiederaufnahme und Hashvergleich
-ist im [Playground-Testnachweis](GaSi_Playground_Testnachweis.md) dokumentiert.
+Aktuelle Instanzbefunde und offene Abnahmeschritte stehen im
+[Projektstatus](GaSi_Projektstatus.md). IDs, Browserlinks und Hashvergleich werden
+nach Ausführung der Einrichtung ausgegeben und lokal dokumentiert.
 
 ## 6. Zuordnung im BAM Data Store
 
@@ -271,7 +272,7 @@ ihre separat ausführbare Offline-Zelle erzeugt weiterhin alle Modell-HTMLs und 
 Geräteinventar registriert; sieben bleiben offen. Einbau und Referenzstatus sind
 weiterhin gesondert zu bestätigen. Der synthetische Test importiert keine echten Messdaten.
 
-**Session starten** verwaltet den Token und `SCHREIBEN = False/True` zentral. Der [Abgleich mit dem bereitgestellten pyBIS-Beispiel](pybis_Beispielabgleich.md) bestätigt die technische Grundstruktur und dokumentiert die übernommenen Ergänzungen.
+**Session starten** verwaltet den Token und `SCHREIBEN = False/True` zentral.
 
 `GaSi_02_Einmalig_einrichten.ipynb` pflegt die zentrale lokale Ziel-JSON. Sie ist unabhängig von `.env` (Zugang) und `config/gasi_setup.json`
 (echter Geräteaufbau). Pfade werden nicht aus Gerätenamen abgeleitet.

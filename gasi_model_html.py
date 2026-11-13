@@ -253,30 +253,6 @@ document.querySelectorAll('figure[data-graph]').forEach(figure => {
 });
 """
 
-SIMPLE_STYLE = """
-*{box-sizing:border-box}body{margin:0;background:#f0f5f7;color:#183448;font:17px/1.5 system-ui,sans-serif}
-.toolbar{display:flex;justify-content:space-between;align-items:center;background:#12384b;color:white;padding:12px 24px}
-button{font:inherit;padding:6px 12px;border:1px solid #a2bdca;border-radius:6px;background:white;color:#183448;cursor:pointer}
-a{color:#126b88}.layout{max-width:1320px;margin:auto;padding:0 22px 24px}.hero{display:flex;align-items:center;gap:20px}
-h1{font-size:1.8rem;line-height:1.2}h2{font-size:1.1rem;margin:0}.status-pill{border-radius:15px;padding:4px 12px;background:#fff0ce;font-size:.85rem}
-figure{margin:0;background:white;padding:16px 20px;border:1px solid #d9e4e9;border-radius:10px}
-.figure-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}.diagram{overflow:auto;margin-top:8px}
-.diagram svg{display:block;width:100%;height:auto;max-height:calc(100vh - 230px)}figcaption{font-size:.85rem;color:#526b7b}
-figure:fullscreen{display:flex;flex-direction:column;background:white;padding:20px;width:100vw;height:100vh}
-figure:fullscreen .diagram{flex:1;min-height:0}figure:fullscreen svg{width:100%;height:100%;max-height:none}
-.skip{position:absolute;left:-9999px}.skip:focus{left:10px;top:10px;background:white}
-@media(max-width:700px){h1{font-size:1.35rem}.layout{padding:0 10px}.hero{flex-wrap:wrap;gap:5px;padding:10px 0}figure{padding:10px}.diagram svg{min-width:720px}.toolbar{padding:10px}}
-@media print{.toolbar,.graph-controls,.skip{display:none}.diagram svg{max-height:none}figure{border:0}}
-"""
-
-SIMPLE_SCRIPT = """
-document.getElementById('print').addEventListener('click',()=>window.print());
-document.querySelectorAll('[data-fullscreen]').forEach(button=>button.addEventListener('click',async()=>{
-try{if(document.fullscreenElement)await document.exitFullscreen();else await button.closest('figure').requestFullscreen();}
-catch(_){button.textContent='Bitte Browser maximieren';}}));
-"""
-
-
 def _node_caption(label):
     prefix, _, description = label.partition(" / ")
     area, colon, type_code = prefix.partition(": ")
@@ -656,8 +632,7 @@ def _document_sections(body):
     return "".join(sections)
 
 
-def render_html(source: str, source_name: str = "GaSi_Datenmodell.md", *, details_href: str | None = None,
-                concept_href: str | None = None) -> str:
+def render_html(source: str, source_name: str = "GaSi_Datenmodell.md", *, concept_href: str | None = None) -> str:
     import markdown
 
     md = markdown.Markdown(extensions=["tables", "fenced_code", "toc", "sane_lists"],
@@ -683,7 +658,7 @@ def render_html(source: str, source_name: str = "GaSi_Datenmodell.md", *, detail
         simple_controls = '<div class="graph-controls"><button type="button" data-fullscreen>Größer ansehen</button></div>' if graph_attr else ""
         is_test = 'GASI_TEST_RUN_01' in raw
         title = 'openBIS: Schreibtest' if is_test else 'Das gehört zusammen'
-        caption = 'Erstellungsplan; Collections müssen bereits bestehen. Konkrete Zielpfade: Notebook 05.' if is_test else 'Zu einer Messung können mehrere Dateien gehören.'
+        caption = 'Erstellungsplan des synthetischen Tests; Zielpfade und Anlage: Einmalig einrichten.' if is_test else 'Zu einer Messung können mehrere Dateien gehören.'
         figure = f'<figure{graph_attr}><div class="figure-heading"><h2>{title}</h2>{simple_controls}</div>{drawing}<figcaption class="simple-note">{caption}</figcaption></figure>'
         diagrams.append(f'<details class="relations-view"><summary>openBIS-Beziehungen des Schreibtests ansehen</summary>{figure}</details>' if is_test else figure)
         technical_diagrams.append(f'<figure{graph_attr}><div class="figure-heading"><h2>{title if is_test else "Technische Bezeichnungen"}</h2>{controls}</div>{technical_drawing}'
@@ -710,22 +685,18 @@ def render_html(source: str, source_name: str = "GaSi_Datenmodell.md", *, detail
 <footer class="source-note">Quelle: <a href="{escape(source_name, quote=True)}">{escape(source_name)}</a> · Neu erzeugen: GaSi_02_Einmalig_einrichten.ipynb (Zelle Datenmodell und HTML) → Run All.
 <details><summary>Quellstand und Offline-Ansicht</summary>SHA-256: {digest}<br>
 Die Markdown-Datei bleibt die maßgebliche Quelle. Die Ansicht benötigt keine Internetverbindung.</details></footer></div></details>'''
-    if details_href is not None:
-        details = f'<p><a href="{escape(details_href, quote=True)}">Mehr wissen: Technik und Quellen →</a></p>'
-    view = "simple" if details_href is not None else "full"
-    style, script = (SIMPLE_STYLE, SIMPLE_SCRIPT) if details_href is not None else (STYLE, SCRIPT)
     concept_link = (f'<p><a href="{escape(concept_href, quote=True)}">Forschungsablauf: die vier BAM-Schritte ansehen →</a></p>'
                     if concept_href else "")
     return f'''<!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="gasi-view" content="{view}"><meta name="gasi-model-sha256" content="{digest}">
-<title>{escape(title)}</title><style>{style}</style></head><body>
+<meta name="gasi-view" content="full"><meta name="gasi-model-sha256" content="{digest}">
+<title>{escape(title)}</title><style>{STYLE}</style></head><body>
 <a class="skip" href="#diagram">Zum Datenmodell</a>
 <header class="toolbar"><span class="brand">GaSi · BAM / FB 8.1</span>
 <button id="print" type="button">Drucken</button></header>
 <div class="layout"><main id="model"><div class="hero"><h1>{escape(short_title)}</h1>{status}</div>
 <article>{concept_link}<section id="diagram" aria-label="Modellübersicht">{diagram_view}</section>{details}</article>
-</main></div><script>{script}</script></body></html>
+</main></div><script>{SCRIPT}</script></body></html>
 '''
 
 
@@ -751,24 +722,11 @@ def generate_html(source_path: str | Path = SOURCE) -> Path:
     """Full reference view; kept for callers that need the complete document."""
     source_path, source = _read_model(source_path)
     concept_href = _generate_concept_view(source_path)
-    document = render_html(source, source_path.name, concept_href=concept_href)
+    document = render_html(source, source_path.name, concept_href=concept_href).replace(
+        '<details id="details" class="expert-view">', '<details id="details" class="expert-view" open>')
     output = source_path.with_suffix(".html")
     output.write_text(document, encoding="utf-8", newline="\n")
     return output
-
-
-def generate_simple_html(source_path: str | Path = SOURCE) -> Path:
-    """Create a genuinely small overview and keep the full text in a separate file."""
-    source_path, source = _read_model(source_path)
-    concept_href = _generate_concept_view(source_path)
-    full_output = source_path.with_suffix(".html")
-    simple_output = source_path.with_name(source_path.stem + "_einfach.html")
-    full_document = render_html(source, source_path.name, concept_href=concept_href).replace(
-        '<details id="details" class="expert-view">', '<details id="details" class="expert-view" open>')
-    simple_document = render_html(source, source_path.name, details_href=full_output.name + "#details", concept_href=concept_href)
-    full_output.write_text(full_document, encoding="utf-8", newline="\n")
-    simple_output.write_text(simple_document, encoding="utf-8", newline="\n")
-    return simple_output
 
 
 def show_model_export_button(repo_root: str | Path = ROOT):
@@ -796,9 +754,11 @@ def show_model_export_button(repo_root: str | Path = ROOT):
                 # Also refresh the renderer when an already displayed button is reused.
                 import importlib
                 current = importlib.reload(sys.modules[__name__])
-                path = current.generate_simple_html(root / "docs" / "GaSi_Datenmodell.md")
-                print("Einfache HTML-Ansicht neu erzeugt.")
-                display(FileLink(path.relative_to(root).as_posix(), result_html_prefix="Einfache Grafik öffnen: "))
+                detailed = current.generate_html(root / "docs" / "GaSi_Datenmodell.md")
+                concept = detailed.with_name("GaSi_Konzeptmodell.html")
+                path = concept if concept.is_file() else detailed
+                print("Datenmodell-HTML und vorhandene Konzeptgrafiken neu erzeugt.")
+                display(FileLink(path.relative_to(root).as_posix(), result_html_prefix="Datenmodell öffnen: "))
             except (OSError, ValueError) as exc:
                 print(f"HTML konnte nicht erzeugt werden: {exc}")
             finally:
@@ -815,7 +775,9 @@ def main() -> int:
     parser.add_argument("--source", type=Path, default=SOURCE, help="Markdown-Quelle; HTML wird daneben erzeugt")
     args = parser.parse_args()
     try:
-        print(generate_simple_html(args.source))
+        detailed = generate_html(args.source)
+        concept = detailed.with_name("GaSi_Konzeptmodell.html")
+        print(concept if concept.is_file() else detailed)
     except ImportError:
         parser.exit(1, "HTML-Export benötigt: python -m pip install -r requirements-docs.txt\n")
     except (OSError, ValueError) as exc:

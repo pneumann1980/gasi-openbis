@@ -10,7 +10,7 @@ import unittest
 import xml.etree.ElementTree as ET
 from unittest.mock import patch
 
-from gasi_model_html import SOURCE, flowchart_svg, generate_html, generate_simple_html, render_html, show_model_export_button
+from gasi_model_html import SOURCE, flowchart_svg, generate_html, render_html, show_model_export_button
 
 
 class Page(HTMLParser):
@@ -164,31 +164,29 @@ class HtmlModelTests(unittest.TestCase):
                 widget = show_model_export_button(root)
                 button = widget.children[0]
                 button.click()
-                output = source.with_name(source.stem + "_einfach.html")
+                output = source.with_suffix(".html")
                 self.assertIn("First click", output.read_text(encoding="utf-8"))
                 source.write_text("# Second click\n\nNew source content.", encoding="utf-8")
                 button.click()
                 self.assertIn("Second click", output.read_text(encoding="utf-8"))
                 self.assertIn("New source content.", source.with_suffix(".html").read_text(encoding="utf-8"))
                 self.assertFalse(button.disabled)
+                self.assertFalse(source.with_name(source.stem + "_einfach.html").exists())
             widget.close()
 
-    def test_simple_file_contains_only_overview_and_links_to_separate_full_text(self):
+    def test_generation_keeps_full_reference_without_additional_overview_file(self):
         with tempfile.TemporaryDirectory() as temp:
             source = Path(temp) / "GaSi_Datenmodell.md"
             source.write_bytes(SOURCE.read_bytes())
-            output = generate_simple_html(source)
-            self.assertEqual(output.name, "GaSi_Datenmodell_einfach.html")
-            simple = output.read_text(encoding="utf-8")
-            full = source.with_suffix(".html").read_text(encoding="utf-8")
-            self.assertEqual(Page(simple).diagrams, 2)
-            self.assertEqual(Page(simple).tables, 0)
-            self.assertNotIn("Ziel und Beleggrenzen", simple)
-            self.assertIn('href="GaSi_Datenmodell.html#details"', simple)
-            self.assertIn('name="gasi-view" content="simple"', simple)
+            output = generate_html(source)
+            self.assertEqual(output.name, "GaSi_Datenmodell.html")
+            full = output.read_text(encoding="utf-8")
+            self.assertEqual(Page(full).diagrams, 4)
+            self.assertGreaterEqual(Page(full).tables, 5)
+            self.assertIn('name="gasi-view" content="full"', full)
             self.assertIn('class="expert-view" open', full)
             self.assertIn("Ziel und Beleggrenzen", full)
-            self.assertLess(len(simple), len(full) / 2)
+            self.assertEqual(list(Path(temp).glob("*.html")), [output])
 
     def test_notebook_generation_cell_reloads_even_with_cached_old_generator(self):
         import nbformat
@@ -204,13 +202,13 @@ class HtmlModelTests(unittest.TestCase):
             source.write_text("# Current model\n\nCurrent content.", encoding="utf-8")
             namespace = {}
             stale = Mock(side_effect=AssertionError("Cached generator must not be called"))
-            generate = gasi_workflow.generate_model
-            with patch.object(gasi_model_html, "generate_simple_html", stale), \
-                 patch.object(gasi_workflow, "generate_model", side_effect=lambda: generate(Path(temp))), \
+            with patch.object(gasi_model_html, "generate_html", stale), \
+                 patch.object(Path, "cwd", return_value=Path(temp)), \
                  redirect_stdout(io.StringIO()):
                 exec(notebook.cells[-1].source, namespace)
             stale.assert_not_called()
-            self.assertTrue(source.with_name("GaSi_Datenmodell_einfach.html").is_file())
+            self.assertTrue(source.with_suffix(".html").is_file())
+            self.assertFalse(source.with_name("GaSi_Datenmodell_einfach.html").exists())
 
     def test_unsupported_mermaid_remains_visible_instead_of_a_wrong_graph(self):
         html = render_html("# Model\n\n```mermaid\nsequenceDiagram\nA->>B: New syntax\n```\n")
@@ -228,7 +226,7 @@ class HtmlModelTests(unittest.TestCase):
         self.assertEqual(edges, {("IC", "TI"), ("LC", "TR"), ("LC", "TD"), ("TI", "TR"), ("TR", "TD"), ("TD", "TF")})
         self.assertIn("Parent → Child", "".join(svg.itertext()))
         self.assertIn("GASI_TEST_RUN_01", "".join(svg.itertext()))
-        html = render_html(source, details_href="GaSi_Datenmodell.html#details")
+        html = render_html(source)
         self.assertIn('<details class="relations-view"><summary>openBIS-Beziehungen', html)
         self.assertNotIn('<details class="relations-view" open', html)
         self.assertIn("Erstellungsplan", html)
