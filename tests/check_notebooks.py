@@ -47,6 +47,10 @@ def execute(name, cwd, spec_dir, *, write=False, fake=False, repeat=False):
                 cell.source = cell.source.replace('subprocess.run(', '_simulate_pip(')
             if name == SESSION and write:
                 cell.source = cell.source.replace('SCHREIBEN = False', 'SCHREIBEN = True')
+            if name == SESSION:
+                # ipykernel replaces getpass between cells; stub only this in-memory test copy.
+                cell.source = cell.source.replace('from getpass import getpass',
+                    'getpass = lambda prompt: "SYNTHETIC_NOTEBOOK_TOKEN"')
     preamble = f'''
 import socket, os, sys, subprocess
 from pathlib import Path
@@ -124,6 +128,8 @@ originals = {{p: p.read_bytes() for p in (root / 'data/measurements').glob('*.cs
 '''
     nb.cells.insert(0, nbformat.v4.new_code_cell(preamble))
     assertions = f'assert session.writes_enabled() is {write!r}\nassert not network_attempts\n'
+    if name == SESSION:
+        assertions += "assert session.session_value(session.TOKEN_ENV) == 'SYNTHETIC_NOTEBOOK_TOKEN'\nassert 'token' not in globals()\n"
     if name == SETUP:
         assertions += "assert len(pip_calls) == 1\nassert Path('docs/GaSi_Datenmodell_einfach.html').is_file()\nassert len(list(Path('docs').glob('GaSi_Konzeptmodell_*.svg'))) == 4\n"
     if fake:
@@ -144,6 +150,9 @@ originals = {{p: p.read_bytes() for p in (root / 'data/measurements').glob('*.cs
     client = NotebookClient(nb, timeout=180, kernel_name='gasi-test', kernel_manager_class=KernelManager,
                             resources={'metadata': {'path': str(cwd)}})
     client.execute()
+    if name == SESSION:
+        output = ''.join(item.get('text', '') for cell in nb.cells if cell.cell_type == 'code' for item in cell.outputs)
+        assert 'SYNTHETIC_NOTEBOOK_TOKEN' not in output
     print('PASS', name, 'synthetic' if fake else 'empty/default', 'write' if write else 'preview', flush=True)
 
 

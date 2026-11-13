@@ -138,26 +138,3 @@ def mode_status():
     if writes_enabled():
         return "SCHREIBEN = True: Ausgeführte Arbeitsnotebooks schreiben in den BAM-Playground."
     return "SCHREIBEN = False: Vorschau; keine Änderungen in openBIS."
-
-
-def show_token_button():
-    """getpass is invoked only on an explicit click; Run All never waits for input."""
-    from getpass import getpass
-    import ipywidgets as widgets
-    from IPython.display import display
-    button = widgets.Button(description="Token eingeben / erneuern", layout=widgets.Layout(width="240px"))
-    output = widgets.Output()
-    def save(_):
-        with output:
-            output.clear_output()
-            try:
-                token = getpass("Playground Session Token: ").strip()
-                print(save_playground_token(token))
-                if token:
-                    os.environ.pop(TOKEN_ENV, None)  # This kernel must not keep an older token.
-                del token
-            except (SessionConfigError, EOFError, KeyboardInterrupt):
-                print("Token nicht geändert; verdeckte Eingabe und lokale .env prüfen.")
-    button.on_click(save)
-    display(widgets.VBox([button, output]))
-    return button

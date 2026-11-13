@@ -32,8 +32,10 @@ Er bleibt bis zur nächsten Änderung in der Session bestehen. Zum Abschalten di
 Zelle wieder mit `False` ausführen. Fehlende oder ungültige Einstellungen bedeuten Vorschau.
 Es gibt keine weiteren Freigabeschalter und keine Confirmation-Strings.
 
-Der Token wird über den Knopf **Token eingeben / erneuern** mit `getpass` abgefragt
-und in derselben lokalen `.env` abgelegt. Er erscheint weder im Notebook noch im Git.
+Die Token-Zelle fragt direkt und verdeckt mit `getpass` nach dem Token und legt ihn
+in derselben lokalen `.env` ab. Leere Eingabe behält den vorhandenen Token.
+Zum Ändern des Schreibmodus genügt die separate Schalterzelle.
+Der Token erscheint weder im Notebook noch im Git.
 Ein vorhandenes `OPENBIS_PLAYGROUND_TOKEN` aus der Prozessumgebung hat beim Token Vorrang;
 der Schreibmodus wird ausschließlich aus der lokalen `.env` gelesen.
 
