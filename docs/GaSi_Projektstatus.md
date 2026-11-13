@@ -19,28 +19,66 @@ Der lokale Modus in `.env` wird von jedem Arbeitsaufruf neu gelesen; er gilt auc
 Confirmation-Strings oder weiteren lokalen Schreibfreigaben. Fachliche Belege,
 Pflichtfelder, Zielgrenzen und serverseitige Rechte bleiben erforderlich.
 
-**Bestanden:** 128 Unit-Tests, alle fünf verbleibenden Notebooks in 17 frischen
+**Bestanden:** 137 Unit-Tests, alle fünf verbleibenden Notebooks in 21 frischen
 Kernels mit gesperrtem Netzwerk. Paketinstallation simuliert, echte Paketimports;
 Schreiben nur gegen synthetische Testclients. Einrichtung, Prüfling und Upload
-einschließlich Wiederholung geprüft. Zwei zusätzliche Kernel-Prüfungen testen
-den fertigen Formularablauf mit False/True und Wiederholung. 31 Original-CSVs unverändert.
-Die neue gebündelte Einrichtung wurde in diesem Schritt nicht live schreibend
-ausgeführt. Die folgenden Live-Befunde stammen aus dem vorherigen lesenden Abgleich.
+einschließlich Wiederholung geprüft. Sensorprüfung, Anlagenlauf und ungeklärter
+Prüflingsbezug wurden mit False/True geprüft. Zwei weitere frische Kernels prüfen
+die tatsächlichen Upload-/Prüflingsnotebooks mit gesperrter Verbindung; der
+Vier-Dateien-Entwurf besteht die lokale Vorschau. 31 Original-CSVs und die
+Sessiondatei unverändert. Echte Messdateien wurden nicht hochgeladen.
+
+## Formularfehler und Anlagenlauf ohne Prüfling: 13.11.2026
+
+Die vier Originale waren zugeordnet. Eine unaufgelöste Prüflingsbezeichnung war
+jedoch noch keine openBIS-ID; dadurch fehlte auch die abgeleitete Laufkennung.
+Die bisherige Meldung forderte irreführend erneut die Dateiauswahl. Das Formular
+zeigt jetzt die konkrete Ursache dauerhaft an und kann bestehende Prüflinge
+lesend nach Name, Code, PermID oder Objektlink auflösen.
+
+Laut Nutzer war vermutlich kein externer Prüfling beteiligt. Der lokale Entwurf
+ist deshalb vorsichtig als `measurement_subject=unresolved` gespeichert, mit
+stabiler Laufkennung und ohne erfundene Sensor-ID. Die vier Dateien, ihre
+Record-/Zeitzonenzuordnung und Hashbindung bleiben erhalten. `system` ist die
+Wahl für einen bestätigten Anlagenlauf ohne externen Prüfling; `sensor` benötigt
+eine tatsächliche Sensoridentität. Kontext, Quellmanifest und spätere Auswertung
+führen diese Unterscheidung mit. Die grüne Sensorbox im Modell ist optional.
+
+**Live bestätigt:** `GASI_TEST_SYSTEM_CAPTURE_V1`, ausschließlich synthetisch,
+ein `EXPERIMENTAL_STEP` ohne Sensor-Parent in
+`/8.1_PNEUMANN/GASI_TEST/RUNS`. RAW_DATA, Plan, Kontext und Server-Quellmanifest
+wurden heruntergeladen und per SHA-256 geprüft. Der nach Objekterstellung
+unterbrochene Versuch wurde mit derselben Kennung vervollständigt; ein weiterer
+Durchlauf verwendet Objekt und Datasets unverändert wieder.
+
+Beim Rücklesen zeigte sich ein echter Zeitstempelfehler: ISO-Eingaben wurden
+als lokale Uhrzeit interpretiert, und das Serverformat ließ sich nicht einlesen.
+Der getestete Übertragungswert `2026-11-13 10:00:00 +0000` kommt korrekt als
+`2026-11-13 11:00:00 +0100` zurück. Messung und Auswertung verwenden jetzt dieses
+explizite Offsetformat; Rücklesen vergleicht den Zeitpunkt. Subsekunden in den
+openBIS-Zeitfeldern bleiben bis zur Bestätigung gesperrt und werden nicht gerundet.
+
+Synthetischer Browsernachweis:
+[Messlauf](https://playground.datastore.bam.de/openbis/webapp/eln-lims/?viewName=showViewSamplePageFromPermId&viewData=20261113161936642-19376),
+[RAW_DATA](https://playground.datastore.bam.de/openbis/webapp/eln-lims/?viewName=showViewDataSetPageFromPermId&viewData=20261113163118651-19380).
+Lokale Prüfdetails: `.local_playground_test/upload-diagnosis/` (ignoriert).
 
 ## Geführte Laufvorbereitung: erster Entwurf
 
 Notebook 03 öffnet ein Formular. Dateien einlesen, Records/Zeitbasis auswählen,
-Prüfling/Zweck/Person angeben und die Zugehörigkeit der Originale festlegen.
+Laufart, gegebenenfalls Prüfling, Zweck/Person und Zugehörigkeit der Originale festlegen.
 Geräte, Aufbauhinweis und Prüflingskanal lassen sich optional zuordnen.
-Ein leeres Kennungsfeld wird aus Prüfling und ausgewählten Daten stabil befüllt.
+Ein leeres Kennungsfeld wird aus Laufart, gegebenenfalls Prüfling und ausgewählten Daten stabil befüllt.
 Speichern bleibt lokal und sichert den vorherigen Konfigurationsstand;
 gleichzeitige Änderungen werden erkannt. Erst **Messung ausführen** verwendet
 den zentralen Sessionmodus. Run All öffnet auch bei True lediglich das Formular.
 
 Das Profil `raw_capture` dokumentiert unbekannte Aufnahmeversion, Ressourcen,
 Kanäle und Messbedingungen als `metadata_gaps` im Kontext und Quellmanifest.
-Der openBIS-Name kennzeichnet die Rohdatenerfassung. Sensoridentität, tatsächliche
-Record-Zuordnung, UTC-Offsets und exklusive Originalzugehörigkeit bleiben nötig.
+Der openBIS-Name kennzeichnet die Rohdatenerfassung. Sensoridentität bleibt für
+Sensorprüfungen nötig; Anlagenläufe und ungeklärter Bezug erhalten keinen
+Sensor-Parent. Tatsächliche Record-Zuordnung, UTC-Offsets und exklusive
+Originalzugehörigkeit bleiben nötig.
 CSV-Profile und Logabschnitte sind Vorschläge; es entstehen keine erfundenen Stufen.
 Bei bereits beschriebenen Läufen bleiben bekannte Stufen, Referenzen, Kanäle und
 Zeitgrenzen bei unveränderter Quellzuordnung erhalten.
@@ -66,22 +104,23 @@ Der aktuelle Stand ist **für einen eindeutig zugeordneten Pilotlauf lokal gepr�
 aber noch nicht als Forschungsupload in der Instanz abgenommen**.
 Ein echter Messdaten-Upload wurde in diesem Auftrag nicht ausgeführt.
 
-## Letzter dokumentierter Live-Lesebefund
+## Letzter dokumentierter Live-Befund
 
 | Befund | Status |
 |---|---|
 | Playground-Verbindung | In diesem Auftrag erfolgreich; vorherige Verbindungsfehler sind kein aktueller Befund mehr |
 | `/8.1_EQUIPMENT/GASI/INSTRUMENTS` | Sichtbar, zehn Objekte |
 | `/8.1_EQUIPMENT/GASI_TEST/INSTRUMENTS` | Sichtbar, ein Objekt |
-| `/8.1_PNEUMANN/GASI_TEST/RUNS` | Aktuell nicht lesbar und nicht im sichtbaren Collection-Katalog |
-| Aktuelle Forschungs-Schreibrechte | Nicht bewiesen; Sichtbarkeit/lesendes Schema reichen nicht |
-| Native Dataset-Parents | API dokumentiert und Testclient geprüft; Live-Probe vor jeder Mutation am fehlenden Laborbuchziel gesperrt |
+| `/8.1_PNEUMANN/GASI_TEST/RUNS` | Jetzt lesend und schreibend mit dem synthetischen Anlagenlauf bestätigt |
+| Aktuelle Forschungs-Schreibrechte | EXPERIMENTAL_STEP, RAW_DATA und ATTACHMENT im genannten Testziel bestätigt; kein echter Forschungsupload ausgeführt |
+| Native Dataset-Parents | API dokumentiert und Testclient geprüft; separate Live-Abnahme noch offen |
 | Gemeinsame Originaldatei für mehrere Läufe | Vorschlag dokumentiert, Schreiben bis vollständiger Live-Abnahme gesperrt |
 
-Es ist nicht geklärt, ob die Laborbuchcollection entfernt wurde oder mit der
-aktuellen Session nicht sichtbar ist. Sie wurde nicht automatisch neu angelegt.
-Die alten synthetischen Live-Erfolge sind historische Nachweise.
-Lesende Details liegen lokal unter
+Der frühere Befund einer fehlenden Laborbuchcollection ist durch den aktuellen
+Test überholt. Die begrenzte Testbereichseinrichtung wurde beim synthetischen
+Versuch idempotent verwendet; im abschließenden Durchlauf waren keine neuen
+Ziele nötig. Die getrennten Zusatzfälle mit nativen Dataset-Parents oder
+geteilten Originalen sind damit nicht live abgenommen. Ältere lesende Details liegen lokal unter
 `.local_playground_test/prompt-review/schema_status.json`,
 `inventory_status.json` und `native_parent_probe.json`.
 
@@ -128,11 +167,10 @@ von Rezept-Sollwerten getrennt.
 
 ## Noch nötig für den ersten echten Pilot
 
-1. **Laborbuchziel:** Testcollection-Lesbarkeit klären oder konkrete freigegebene
-   Mess- und später Auswertungscollection auswählen. Ziele zentral konfigurieren;
-   Vorbereitung nur bei eigenständiger Registrierung.
-2. **Prüfling:** den tatsächlichen Gas-/Gasfeuchtesensor identifizieren, vorhandene
-   Objekt-ID verwenden oder ihn einmalig mit fachlich passendem Typ registrieren.
+1. **Laborbuchziel:** Der Testbereich ist bestätigt. Für echte Forschungseinträge
+   die gewünschte fachliche Ablage prüfen; die spätere Auswertung hat ein eigenes Ziel.
+2. **Laufart:** Anlagenlauf ohne Prüfling oder noch ungeklärter Bezug. Nur bei
+   Sensorprüfungen den tatsächlichen Sensor identifizieren und registrieren/wiederverwenden.
 3. **Aufbau/Kanäle:** bekannte Positionen, Sensorantwort, Referenz, Messorte und
    Bezugsbedingungen zuordnen; ungeklärte Angaben im Rohdatenprofil offen halten.
    Vor einer fachlichen Bewertung klären. Die Inventarregistrierung bestätigt keinen Einbau.
@@ -140,8 +178,8 @@ von Rezept-Sollwerten getrennt.
    Dateien, Datenbereiche und belegten UTC-Offset festlegen; Messstufen nur übernehmen, wenn belegt.
 5. **Ressourcen:** tatsächliche Geräte/Referenzen, Gasflaschen/Chargen und
    verwendete Nachweise samt Geltungsbereich auswählen.
-6. **Messung abnehmen:** zunächst ein synthetischer Lauf im nun bestätigten
-   Ziel; anschließend bewusst ausgelöster echter Pilot. Run All bleibt Vorschau.
+6. **Messung abnehmen:** Synthetischer Anlagenlauf bestanden. Den gespeicherten
+   echten Entwurf bewusst über Messung ausführen hochladen. Run All öffnet nur das Formular.
 7. **Spätere Auswertung:** eigenes Ziel, analysis_id, Code/Version, echte Eingabeauswahl
    und Ergebnisse; fachlich nötige stabile Fenster, Unsicherheit und Entscheidungsregel.
 8. **Zusatzfälle:** native Dataset-Parents und gemeinsame Dateibesitzer separat
@@ -151,7 +189,7 @@ von Rezept-Sollwerten getrennt.
 
 Der vorherige Stand war mit 109 Tests / 13 Notebooks geprüft. Die aktuellen
 Zahlen der Vereinfachung stehen oben. Alle
-Notebook-Schreibaufrufe liefen ausschließlich gegen Testclients. Die 31
+Notebook-Schreibaufrufe der isolierten Abnahme liefen ausschließlich gegen Testclients. Die 31
 Original-CSVs blieben laut SHA-256 unverändert.
 
 Lokal: unabhängige Messung ohne Vorbereitung/Auswertung, optional neue/benutzte

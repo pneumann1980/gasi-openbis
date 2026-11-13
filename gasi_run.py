@@ -1,12 +1,12 @@
 """Record a measurement and optional released preparation on the Playground.
 
-The DUT/resources must already have verified inventory identities. No types,
+Claimed DUT/resources must already have verified inventory identities. No types,
 spaces, collections or duplicate sensor identities are created here. Later
 analysis has its independent entry point in gasi_analysis.
 """
 from contextlib import redirect_stderr, redirect_stdout
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timezone
 import hashlib
 import io
 import json
@@ -48,8 +48,25 @@ def _reference(value):
 
 
 def _time(value):
+    # openBIS readback separates the numeric UTC offset with a space.
+    if isinstance(value, str):
+        value = re.sub(r"\s+([+-]\d{4})$", r"\1", value)
     # Python 3.10's fromisoformat does not yet accept the UTC suffix Z.
     return datetime.fromisoformat(value[:-1]+"+00:00" if isinstance(value,str) and value.endswith("Z") else value)
+
+
+def server_timestamp(value):
+    """Preserve the instant using the explicitly zoned format confirmed live.
+
+    The Playground interprets an ISO string containing T/colon offset as local
+    wall time. Source ISO timestamps remain untouched in manifests.
+    """
+    instant = _time(value)
+    if instant.utcoffset() is None:
+        raise ValueError("Zeitstempel benötigt einen UTC-Offset.")
+    if instant.microsecond:
+        raise ValueError("openBIS-Zeitfelder unterstützen hier nur ganze Sekunden; keine Rundung.")
+    return instant.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S %z")
 
 
 def _offset(value):
@@ -106,6 +123,9 @@ def validate_run(run, root=ROOT):
     if run.get("schema_version") != 1:
         issues.append("Laufschema muss Version 1 haben.")
     raw_capture = run.get("metadata_profile") == "raw_capture"
+    subject = run.get("measurement_subject", "sensor")
+    if subject not in ("sensor", "system", "unresolved") or subject != "sensor" and not raw_capture:
+        issues.append("Laufart wählen: Sensorprüfung, Anlagenlauf oder ungeklärter Prüflingsbezug (Rohdatenerfassung).")
     if run.get("metadata_profile") not in (None, "described_run", "raw_capture"):
         issues.append("Unbekanntes Profil für die Metadaten.")
     active=activities(run)
@@ -119,10 +139,12 @@ def validate_run(run, root=ROOT):
         if not raw_capture and not str((run.get("software_versions") or {}).get(key) or "").strip():
             issues.append(f"Softwareversion fehlt: {key}.")
     dut = run.get("dut") or {}
-    if not _reference(dut.get("identifier")) or dut.get("identity_confirmed") is not True:
+    if subject == "sensor" and (not _reference(dut.get("identifier")) or dut.get("identity_confirmed") is not True):
         issues.append("Identität und vorhandene openBIS-ID des Sensor-Prüflings bestätigen.")
-    if dut.get("kind") not in ("gas_sensor","gas_humidity_sensor"):
+    if subject == "sensor" and dut.get("kind") not in ("gas_sensor","gas_humidity_sensor"):
         issues.append("Prüflingsart: gas_sensor oder gas_humidity_sensor angeben.")
+    if subject != "sensor" and (dut.get("identifier") or dut.get("identity_confirmed") is True):
+        issues.append("Anlagenlauf/ungeklärter Prüflingsbezug darf keinen Sensor als bestätigt zugeordnet enthalten.")
     for flag, evidence in (("setup_confirmed","setup_evidence"),("source_association_confirmed","source_association_evidence")):
         if ((not raw_capture or flag == "source_association_confirmed") and run.get(flag) is not True or run.get(flag) is True and not str(run.get(evidence) or "").strip()):
             issues.append(f"Bestätigung mit Beleg fehlt: {flag}.")
@@ -148,6 +170,8 @@ def validate_run(run, root=ROOT):
             start,end = [_time(entry[k]) for k in ("start","end")]
             if start.utcoffset() is None or end.utcoffset() is None or end < start:
                 raise ValueError
+            if start.microsecond or end.microsecond:
+                issues.append(f"{LABELS[activity]}: openBIS-Zeitfelder benötigen ganze Sekunden; Quellzeiten werden nicht gerundet.")
         except (ValueError, TypeError, KeyError):
             issues.append(f"{LABELS[activity]}: Beginn/Ende mit UTC-Offset und gültiger Reihenfolge fehlen.")
     stages = run.get("stages")
@@ -214,6 +238,8 @@ def validate_run(run, root=ROOT):
             issues.append("Ein Kanal darf nicht mehrfach oder mit widersprüchlichen Rollen zugeordnet werden.")
         seen_columns.add(channel["column"])
         if channel["role"] == "dut_signal":
+            if subject != "sensor":
+                issues.append("Prüflingssignal erst bei bestätigter Sensorprüfung zuordnen.")
             dut_channels.append(channel)
             if channel["object_identifier"] != dut.get("identifier"):
                 issues.append("Ein Prüflingssignal muss dem Sensor-Prüfling zugeordnet sein.")
@@ -221,7 +247,7 @@ def validate_run(run, root=ROOT):
             issues.append("Feuchtereferenz benötigt eine konkrete Feuchtegröße und passende Einheit.")
         if channel["role"].startswith("reference_") and channel["object_identifier"]==dut.get("identifier"):
             issues.append("Der zu prüfende Sensor darf nicht seine eigene unabhängige Referenz sein.")
-    if not dut_channels and not raw_capture:
+    if not dut_channels and not raw_capture and subject == "sensor":
         issues.append("Mindestens ein bestätigter Sensorsignalkanal fehlt.")
     if later and dut.get("kind") == "gas_humidity_sensor" and not any(c.get("role") == "reference_humidity" for c in channels if isinstance(c,dict)):
         issues.append("Für die Feuchtebewertung den Referenzkanal und seine Größe dokumentieren.")
@@ -307,7 +333,8 @@ def metadata_gaps(run):
         (not (run.get("resources") or {}).get("instruments"), "Beteiligte Geräte noch nicht zugeordnet."),
         (not (run.get("resources") or {}).get("gas_sources"), "Gasflaschen/Chargen noch nicht zugeordnet."),
         (not run.get("stages"), "Fachliche Messstufen und ihre Gas-, Temperatur-, Feuchte- und Druckbedingungen noch offen."),
-        (not any(c.get("role") == "dut_signal" for c in run.get("channels", [])), "Prüflingskanal noch nicht fachlich zugeordnet; Originalspalten bleiben erhalten."),
+        (run.get("measurement_subject", "sensor") == "sensor" and not any(c.get("role") == "dut_signal" for c in run.get("channels", [])), "Prüflingskanal noch nicht fachlich zugeordnet; Originalspalten bleiben erhalten."),
+        (run.get("measurement_subject") == "unresolved", "Prüflingsbezug ungeklärt; es wird keine Sensoridentität behauptet."),
         ((run.get("reference_assessment") or {}).get("confirmed") is not True, "Referenz- und Kalibriergrundlage noch nicht bewertet."),
     ):
         if missing:
@@ -398,7 +425,9 @@ def prepare_bundle(run, root=ROOT):
             "times":data["times"]["measurement"],"source_ranges":data["source_ranges"],"stage_ranges":data["stage_ranges"],
             "software_version":data["software_versions"]["acquisition"],
             **({"metadata_profile":"raw_capture", "metadata_gaps":data["metadata_gaps"],
-                "setup_snapshot":data.get("setup_snapshot"), "draft_provenance":data.get("draft_provenance")}
+                "setup_snapshot":data.get("setup_snapshot"), "draft_provenance":data.get("draft_provenance"),
+                **({"measurement_subject":data["measurement_subject"], "subject_evidence":data.get("subject_evidence")}
+                   if "measurement_subject" in data else {})}
                if data.get("metadata_profile")=="raw_capture" else {})}),
     ):
         content = _json(payload)
@@ -468,7 +497,7 @@ def preflight(client, bundle, config):
         if activity in ACTIVITIES and ob.identifier(client.get_experiment(ob.target_path(target))) != ob.target_path(target):
             raise ob.CheckFailed("Laborbuch-Collection nicht eindeutig lesbar.")
     run = bundle["manifest"]["run"]
-    refs = {run["dut"]["identifier"]} | {v for key,values in run["resources"].items() if key!="software" or "analysis" in active for v in values}
+    refs = {v for v in [run["dut"]["identifier"]] if v} | {v for key,values in run["resources"].items() if key!="software" or "analysis" in active for v in values}
     preparation=run.get("preparation") or {}
     if preparation.get("mode")=="reuse":
         refs.add(preparation["identifier"])
@@ -499,8 +528,10 @@ def preflight(client, bundle, config):
     for activity in active:
         suffix = f" – {run['analysis_id']}" if activity=="analysis" else ""
         capture_label = " [Rohdatenerfassung]" if run.get("metadata_profile") == "raw_capture" else ""
-        values = {"$NAME":f"GaSi {run['run_id']} – {LABELS[activity]}{suffix}{capture_label}",
-            "START_DATE":run["times"][activity]["start"],"END_DATE":run["times"][activity]["end"],
+        label = "Anlagenaufzeichnung" if activity == "measurement" and run.get("measurement_subject", "sensor") != "sensor" else LABELS[activity]
+        values = {"$NAME":f"GaSi {run['run_id']} – {label}{suffix}{capture_label}",
+            "START_DATE":server_timestamp(run["times"][activity]["start"]),
+            "END_DATE":server_timestamp(run["times"][activity]["end"]),
             "NOTES":_json({"gasi_workflow":1,"key":bundle["manifest"]["key"],"activity":activity,
                           "content_sha256":bundle["manifest"]["analysis_sha256" if activity=="analysis" else "acquisition_sha256"],"purpose":run["purpose"],
                           "responsible_person":run["responsible_person"],
@@ -552,7 +583,7 @@ def ensure_workflow(client, bundle, config):
         if not obj:
             continue
         expected = set(run["resources"]["sop"] if activity=="preparation" else
-            [run["dut"]["identifier"],*run["resources"]["instruments"],*run["resources"]["gas_sources"]]
+            [v for v in [run["dut"]["identifier"],*run["resources"]["instruments"],*run["resources"]["gas_sources"]] if v]
             if activity=="measurement" else run["resources"]["software"])
         if activity=="measurement" and "preparation" not in active and run.get("preparation",{}).get("mode","inline")=="inline":
             expected.update(run["resources"].get("sop",[]))
@@ -576,7 +607,7 @@ def ensure_workflow(client, bundle, config):
         if activity == "preparation":
             parents = run["resources"]["sop"]
         elif activity == "measurement":
-            parents = [run["dut"]["identifier"],*run["resources"]["instruments"],*run["resources"]["gas_sources"]]
+            parents = [v for v in [run["dut"]["identifier"],*run["resources"]["instruments"],*run["resources"]["gas_sources"]] if v]
             if "preparation" in objects:
                 parents.append(ob.identifier(objects["preparation"]))
             elif run.get("preparation",{}).get("mode")=="reuse":
@@ -614,7 +645,9 @@ def ensure_workflow(client, bundle, config):
             results["datasets"].append({"activity":activity,"identifier":ob.identifier(dataset),
                 "sha256":digest,"filename":entry["filename"],"slot":entry["slot"],
                 "created":created,**ob.browser_reference(dataset,"dataset")})
-    results["dut"] = {"identifier":run["dut"]["identifier"],"reused":True}
+    results["dut"] = {"identifier":run["dut"]["identifier"],"reused":bool(run["dut"]["identifier"])}
+    if "measurement_subject" in run:
+        results["measurement_subject"] = run["measurement_subject"]
     if run.get("upload_scope")=="measurement":
         _save_source_receipt(client,gateway,bundle,targets["measurement"],objects["measurement"],results)
     return results
@@ -661,6 +694,8 @@ def _save_source_receipt(client,gateway,bundle,target,measurement,results):
         "resources":run["resources"],"channels":run["channels"],"stages":run["stages"]}
     if run.get("metadata_profile") == "raw_capture":
         receipt.update(metadata_profile="raw_capture", metadata_gaps=run["metadata_gaps"])
+        if "measurement_subject" in run:
+            receipt.update(measurement_subject=run["measurement_subject"], subject_evidence=run.get("subject_evidence"))
     content=_json(receipt);digest=_hash(content)
     path=bundle["path"]/"source_receipt.json";path.write_bytes(content)
     stable=bundle["manifest"]["key"]+"_SOURCE_RECEIPT"

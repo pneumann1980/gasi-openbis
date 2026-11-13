@@ -37,7 +37,7 @@ def copy_repo(path):
         shutil.copy2(source, path / 'docs')
 
 
-def execute(name, cwd, spec_dir, *, write=False, fake=False, repeat=False, guided=False):
+def execute(name, cwd, spec_dir, *, write=False, fake=False, repeat=False, guided=False, subject='sensor'):
     nb = nbformat.read(ROOT / name, as_version=4)
     nbformat.validate(nb)
     for cell in nb.cells:
@@ -128,9 +128,10 @@ originals = {{p: p.read_bytes() for p in (root / 'data/measurements').glob('*.cs
 '''
     nb.cells.insert(0, nbformat.v4.new_code_cell(preamble))
     if name == MEASUREMENT and fake:
-        form_action = ''
+        # Executing the notebook itself only opens the form, even in write mode.
+        form_action = 'assert before == (len(client.saved), len(client.created))\n'
         if guided:
-            form_action = '''
+            form_action += '''
 editor.new_run()
 editor.files.value = tuple(run['files']['raw_data'])
 editor.load_sources()
@@ -139,6 +140,10 @@ editor.dut.value = run['dut']['identifier']
 editor.purpose.value = run['purpose']
 editor.person.value = run['responsible_person']
 editor.ownership.value = 'exclusive'
+'''+f'''
+editor.subject.value = {subject!r}
+editor.subject_note.value = 'Synthetic notebook subject evidence'
+'''+'''
 draft = editor.save()
 assert not draft['issues'], draft['issues']
 assert draft['config']['metadata_profile'] == 'raw_capture'
@@ -157,6 +162,8 @@ assert draft['config']['metadata_profile'] == 'raw_capture'
             assertions += "assert result, message\n"
         if write and name == MEASUREMENT:
             assertions += "assert result.get('verification'), message\n"
+            if subject != 'sensor':
+                assertions += f"assert result['verification']['measurement_subject'] == {subject!r}\nassert result['verification']['dut']['identifier'] is None\n"
         if repeat:
             method = {SETUP:'app.setup_project(root)', MEASUREMENT:'app.upload_measurement(root)', DUT:'dut.manage_dut(root)',
                       ANALYSIS:'gasi_analysis.upload_analysis(expected_manifest_sha=preview_sha256, root=root)'}[name]
@@ -184,18 +191,21 @@ def main():
                  (MEASUREMENT, False, False), (MEASUREMENT, False, True), (MEASUREMENT, True, True),
                  (DUT, False, False), (DUT, False, True), (DUT, True, True),
                  (ANALYSIS, False, False), (ANALYSIS, False, True), (ANALYSIS, True, True)]
-    scenarios = [(*scenario, False) for scenario in scenarios] + [
-        (MEASUREMENT, False, True, True), (MEASUREMENT, True, True, True), (MEASUREMENT, True, False, False)]
+    scenarios = [(*scenario, False, 'sensor') for scenario in scenarios] + [
+        (MEASUREMENT, False, True, True, 'sensor'), (MEASUREMENT, True, True, True, 'sensor'),
+        (MEASUREMENT, True, False, False, 'sensor')]
+    scenarios += [(MEASUREMENT, write, True, True, subject)
+                  for subject in ('system', 'unresolved') for write in (False, True)]
     with tempfile.TemporaryDirectory(prefix='simple-notebooks-', dir=runtime) as temp:
         base = Path(temp)
         spec = base / 'kernels/gasi-test'
         spec.mkdir(parents=True)
         (spec / 'kernel.json').write_text(json.dumps(dict(argv=[sys.executable, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             display_name='GaSi test', language='python')), encoding='utf-8')
-        for index, (name, write, fake, guided) in enumerate(scenarios):
+        for index, (name, write, fake, guided, subject) in enumerate(scenarios):
             cwd = base / str(index)
             copy_repo(cwd)
-            execute(name, cwd, spec.parent, write=write, fake=fake, repeat=write and fake, guided=guided)
+            execute(name, cwd, spec.parent, write=write, fake=fake, repeat=write and fake, guided=guided, subject=subject)
     assert all(hashlib.sha256(p.read_bytes()).hexdigest() == digest for p, digest in originals.items())
     print(f'PASS: 5 notebooks, {len(scenarios)} fresh kernels; {len(originals)} original CSVs unchanged.')
 

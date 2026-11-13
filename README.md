@@ -104,11 +104,11 @@ Notebook **Messdaten hochladen** öffnet ein lokales Formular:
 
 1. Dateien auswählen und **Dateiauswahl einlesen** anklicken.
 2. Den zu diesem Lauf gehörenden Record-Bereich und die tatsächliche Zeitbasis wählen.
-3. Sensor-ID, Prüfzweck und verantwortliche Person eintragen. Angeben, ob die Originale ausschließlich diesem Lauf gehören.
+3. Laufart wählen: Sensorprüfung, Anlagenlauf ohne externen Prüfling oder noch ungeklärter Prüflingsbezug. Nur bei Sensorprüfungen den Prüfling suchen/übernehmen. Zweck/Person und die Zugehörigkeit der Originale angeben.
 4. Optional beteiligte Geräte, Aufbauhinweis und Prüflingskanal zuordnen.
 5. **Entwurf lokal speichern**, anschließend **Messung ausführen**.
 
-Die Laufkennung wird bei leerem Feld aus Prüfling und ausgewählten Daten stabil
+Die Laufkennung wird bei leerem Feld aus Laufart, gegebenenfalls Prüfling und ausgewählten Daten stabil
 erzeugt. CSV-Zeiten, Hashes, Record-Anzahl, vorhandene Profile und Logabschnitte werden
 eingelesen. Die Vorlage steht anschließend lokal in `config/gasi_run.json`;
 vorherige Versionen bleiben unter `.local_playground_test/run_drafts/` erhalten.
@@ -122,11 +122,18 @@ True führt den Upload mit Rückleseprüfung aus. Ungespeicherte Änderungen wer
 
 Das Profil **Rohdatenerfassung** erlaubt ausdrücklich offene Aufnahmeversion,
 Geräte-/Gaszuordnungen, Messbedingungen und Kanäle. Die Lücken bleiben im Kontext
-und im Server-Quellmanifest dokumentiert. Eindeutiger Prüfling, Datenzuordnung,
-Zeitbasis, Originalhashes und unveränderte CSVs bleiben erforderlich.
+und im Server-Quellmanifest dokumentiert. Datenzuordnung, Zeitbasis, Originalhashes
+und unveränderte CSVs bleiben erforderlich. Für Sensorprüfungen ist die tatsächliche
+Sensoridentität nötig. Anlagenläufe erhalten keinen erfundenen Prüfling; Unsicherheit
+wird über **Prüflingsbezug noch ungeklärt** ausdrücklich im Laufkontext festgehalten.
 CSV-Sollwerte oder Logabschnitte bestätigen keine physikalischen Messstufen.
 Vollständig beschriebene Läufe behalten die bisherigen fachlichen Prüfungen.
 Eine Auswertung ist für die Erfassung nicht erforderlich.
+Ein Prüflingsname allein ist noch keine registrierte Identität. **Prüfling suchen**
+liest ausschließlich openBIS und übernimmt die tatsächliche Objekt-ID. Bei keinem
+passenden sichtbaren Eintrag den Sensor zuerst im Prüflingsnotebook registrieren.
+Der Status über den Knöpfen zeigt dauerhaft, ob gespeichert wurde und was fehlt.
+Nach Änderungen durch das Prüflingsnotebook die Formularzelle erneut ausführen.
 Bereits hochgeladene Läufe werden mit diesem ersten Formularentwurf nicht
 nachträglich geändert. Geänderte Metadaten derselben Kennung führen zum Konflikt;
 eine spätere Ergänzung bestehender Laufmetadaten benötigt noch einen eigenen Ablauf.
@@ -150,13 +157,21 @@ und Auswahlbereiche; die Rohdaten werden nicht erneut hochgeladen.
 
 Die Notebook-Prüfung startet isolierte frische Kernels mit gesperrtem Netzwerk.
 Die Paketinstallation wird simuliert; Schreibabläufe verwenden synthetische Testclients.
-Aktuell bestanden: **128 Unit-Tests**, fünf Notebooks in **17 frischen Kernels**
-plus zwei gezielte Kernel-Prüfungen des fertigen Formularablaufs. Geprüft sind
-Rohdatenerfassung mit offenen Metadaten, Hashbindung, Wiederholung, Teilfehler,
-Erhalt bereits beschriebener Läufe und spätere Auswertung ohne erfundene Messstufen.
-31 Original-CSVs unverändert. Formular und eine reale lokale CSV wurden zusätzlich
-lesend geprüft; Konfiguration und Sessiondatei blieben unverändert. In diesem
-Schritt wurde nicht live geschrieben.
+Aktuell bestanden: **137 Unit-Tests**, fünf Notebooks in **21 frischen Kernels**
+mit gesperrtem Netzwerk. Geprüft sind Sensorprüfungen, Anlagenläufe ohne Sensor
+und ungeklärter Prüflingsbezug, Vorschau/Schreiben, Hashbindung, Wiederholung,
+Teilfehler und spätere Auswertung. Run All im Messdaten-Notebook schreibt auch
+bei zentralem True nichts. Zusätzlich liefen das tatsächliche Messdaten- und
+Prüflingsnotebook mit frischen Kernels und gesperrter Verbindung; der gespeicherte
+Vier-Dateien-Entwurf besteht die lokale Uploadvorschau. 31 Original-CSVs und die
+Sessiondatei blieben unverändert.
+
+**Live am 13.11.2026:** Ein rein synthetischer Anlagenlauf ohne Prüfling wurde im
+konfigurierten Playground-Testziel gespeichert und nach einem Teilfehler
+vervollständigt. Rücklesen von Objekt/Beziehungen, Downloads, SHA-256 und
+Wiederholung ohne Dubletten bestanden. Das dabei gefundene Zeitstempelproblem
+ist korrigiert: expliziter numerischer UTC-Offset bei Übertragung, Vergleich
+des Zeitpunkts beim Rücklesen. Echte GaSi-Messdateien wurden nicht hochgeladen.
 Prüfstand, Live-Befunde und noch fehlende Pilotangaben stehen im
 [Projektstatus](docs/GaSi_Projektstatus.md).
 

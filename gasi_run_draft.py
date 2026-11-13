@@ -33,6 +33,24 @@ def readable_issue(message):
     return labels.get(message, message)
 
 
+def readable_issues(issues, config):
+    """Explain the primary missing selection instead of its missing generated run ID."""
+    config = config or {}
+    ref = (config.get("dut") or {}).get("identifier")
+    labels = []
+    for issue in issues:
+        if issue == "Pflichtangabe fehlt: run_id." and (config.get("measurement_subject", "sensor") == "sensor" and not runs._reference(ref) or not (config.get("files") or {}).get("raw_data")):
+            continue
+        if issue == "Identität und vorhandene openBIS-ID des Sensor-Prüflings bestätigen.":
+            text = ("Prüflingsbezeichnung noch keinem openBIS-Objekt zugeordnet. 'Prüfling suchen' verwenden oder den Sensor im Prüflingsnotebook anlegen."
+                    if ref and not runs._reference(ref) else "Prüfling noch nicht ausgewählt. Gültige openBIS-ID übernehmen und den Entwurf speichern.")
+        else:
+            text = readable_issue(issue)
+        if text not in labels:
+            labels.append(text)
+    return labels
+
+
 def _load(path, fallback=None):
     if not path.exists():
         return deepcopy(fallback)
@@ -110,7 +128,8 @@ def source_summary(root, name, first=1, last=None):
 
 
 def build_draft(*, root=ROOT, selections, dut_id, purpose, responsible_person, run_id="", dut_kind="gas_humidity_sensor",
-                instruments=(), ownership="unknown", setup_evidence="", signal=None, acquisition_version="", base=None):
+                instruments=(), ownership="unknown", setup_evidence="", signal=None, acquisition_version="", base=None,
+                measurement_subject="sensor", subject_evidence=""):
     """Explicit user choices become the factual record; unknown conditions remain unknown."""
     root = Path(root).resolve()
     template = _load(root / "config/gasi_run.example.json")
@@ -130,8 +149,9 @@ def build_draft(*, root=ROOT, selections, dut_id, purpose, responsible_person, r
     ranges = [{"file": s["file"], "first_record": d["first_record"], "last_record": d["last_record"],
                "utc_offset": s.get("utc_offset") or None, "confirmed": True}
               for s, d in zip(selections, source_details)]
-    if not run_id.strip() and source_details and runs._reference(dut_id.strip()):
-        identity = {"dut": dut_id.strip(), "sources": sorted(
+    sensor = measurement_subject == "sensor"
+    if not run_id.strip() and source_details and (not sensor or runs._reference(dut_id.strip())):
+        identity = {**({"dut": dut_id.strip()} if sensor else {"measurement_subject":measurement_subject}), "sources": sorted(
             [{"sha256": d["sha256"], "first": d["first_record"], "last": d["last_record"]} for d in source_details], key=lambda d: json.dumps(d))}
         run_id = "GASI_" + source_details[0]["first_local"][:10].replace("-", "") + "_" + runs._hash(runs._json(identity))[:12].upper()
     starts, ends = [], []
@@ -149,11 +169,12 @@ def build_draft(*, root=ROOT, selections, dut_id, purpose, responsible_person, r
                                   "reference_temperature_C", "reference_pressure_hPa_abs")} for d in used],
                     applies_to_this_run=bool(setup_evidence.strip()))
     channels = []
-    if signal and signal.get("column"):
+    if sensor and signal and signal.get("column"):
         channels = [{**signal, "role": "dut_signal", "object_identifier": dut_id.strip(), "confirmed": True}]
     data.update(metadata_profile="raw_capture", upload_scope="measurement", run_id=run_id.strip() or None, purpose=purpose.strip() or None,
                 responsible_person=responsible_person.strip() or None,
-                dut=dict(identifier=dut_id.strip() or None, kind=dut_kind, identity_confirmed=bool(dut_id.strip())),
+                dut=dict(identifier=dut_id.strip() or None if sensor else None, kind=dut_kind if sensor else None,
+                         identity_confirmed=sensor and runs._reference(dut_id.strip())),
                 resources=dict(instruments=list(instruments), gas_sources=[], sop=[], software=[]),
                 stages=[], channels=channels, stage_ranges=[], source_ranges=ranges,
                 source_file_sha256={s["file"]: s["sha256"] for s in source_details},
@@ -167,8 +188,13 @@ def build_draft(*, root=ROOT, selections, dut_id, purpose, responsible_person, r
                     shared_sources=[dict(file=s["file"], run_ids=[run_id] if run_id else []) for s in source_details] if ownership == "shared" else []),
                 draft_provenance=dict(source="GaSi_03_Messdaten_hochladen.ipynb", source_observations=source_details,
                     interpretation="CSV-Profile und Logabschnitte sind Vorschläge, keine bestätigten Messstufen."))
+    if measurement_subject != "sensor" or base and "measurement_subject" in base:
+        data.update(measurement_subject=measurement_subject, subject_evidence=subject_evidence.strip() or
+                    {"system":"Als Anlagenlauf ohne externen Sensor angegeben.",
+                     "unresolved":"Prüflingsbezug noch ungeklärt."}.get(measurement_subject))
     # Retain an already described run only when its source/record/DUT association is unchanged.
-    same_binding = base and base.get("dut", {}).get("identifier") == data["dut"]["identifier"] and base.get("source_ranges") == ranges
+    old_ref = (base or {}).get("dut", {}).get("identifier")
+    same_binding = base and (old_ref == data["dut"]["identifier"] or not sensor and not runs._reference(old_ref)) and base.get("source_ranges") == ranges
     if same_binding:
         if (base.get("setup_evidence") == data["setup_evidence"] and
                 set(base.get("resources", {}).get("instruments", [])) == set(instruments)):
@@ -182,7 +208,7 @@ def build_draft(*, root=ROOT, selections, dut_id, purpose, responsible_person, r
         data["files"]["preparation"] = deepcopy(base.get("files", {}).get("preparation", []))
         owners = {dut_id.strip(), *instruments, *data["resources"]["gas_sources"], *data["resources"]["sop"]}
         data["channels"] += [deepcopy(c) for c in base.get("channels", []) if c.get("role") != "dut_signal" and c.get("object_identifier") in owners]
-        if base.get("metadata_profile") != "raw_capture" and not runs.validate_run(base, root):
+        if sensor and base.get("metadata_profile") != "raw_capture" and not runs.validate_run(base, root):
             data["metadata_profile"] = "described_run"
             data["times"] = {k: deepcopy(v) for k, v in base["times"].items() if k != "analysis"}
     data["metadata_gaps"] = runs.metadata_gaps(data)
@@ -225,12 +251,20 @@ class RunPreparation:
         def text(label, value="", placeholder=""):
             return w.Text(description=label, value=value or "", placeholder=placeholder, style=style, layout=layout)
         self.files = w.SelectMultiple(options=file_choices(self.root), description="Originaldateien", rows=7, style=style, layout=layout)
-        self.purpose = text("Prüfzweck", self.base.get("purpose"), "Was wurde mit dem Sensor untersucht?")
+        self.purpose = text("Prüfzweck", self.base.get("purpose"), "Was wurde mit GaSi oder dem Sensor untersucht?")
         self.person = text("Verantwortliche Person", self.base.get("responsible_person"))
-        self.run_id = text("Laufkennung", self.base.get("run_id"), "Leer lassen: aus ausgewählten Daten und Prüfling erzeugen")
-        self.dut = text("Prüfling: openBIS-ID", self.base.get("dut", {}).get("identifier") or dut.get("identifier"), "Zuerst Prüfling verwalten, falls noch keine ID vorhanden")
+        self.run_id = text("Laufkennung", self.base.get("run_id"), "Leer lassen: aus ausgewählten Daten und Laufart erzeugen")
+        self.subject = w.Dropdown(options=[("Sensorprüfung", "sensor"), ("Anlagenlauf ohne externen Prüfling", "system"),
+                    ("Prüflingsbezug noch ungeklärt", "unresolved")], value=self.base.get("measurement_subject", "sensor"),
+                    description="Art der Aufzeichnung", style=style, layout=layout)
+        self.subject_note = text("Hinweis zur Laufart", self.base.get("subject_evidence"), "Optional: Grundlage oder noch bestehende Unsicherheit")
+        self.dut = text("Prüfling: ID oder Suche", self.base.get("dut", {}).get("identifier") or dut.get("identifier"), "Name/Code eingeben und suchen oder vollständige openBIS-ID einsetzen")
+        self.search_button = w.Button(description="Prüfling suchen (lesend)", layout=w.Layout(width="210px"))
+        self.dut_matches = w.Dropdown(options=[("Noch kein Prüfling aus der Suche übernommen", "")],
+                                     description="Gefundene Prüflinge", style=style, layout=layout)
+        self.dut_matches.observe(self._pick_dut, names="value")
         self.kind = w.Dropdown(options=[("Gasfeuchtesensor", "gas_humidity_sensor"), ("Gassensor", "gas_sensor")],
-                               value=self.base.get("dut", {}).get("kind", "gas_humidity_sensor"), description="Sensorart", style=style)
+                               value=self.base.get("dut", {}).get("kind") or "gas_humidity_sensor", description="Sensorart", style=style)
         choices = [(str(d.get("position")) + " · " + str(d.get("model") or "Gerät"), d["openbis_identifier"])
                    for d in setup.get("devices", []) if d.get("openbis_identifier")]
         known = {v for _, v in choices}
@@ -251,6 +285,7 @@ class RunPreparation:
         self.ranges = w.VBox()
         self.summary = w.HTML()
         self.output = w.Output()
+        self.status = w.HTML()
         self.load_button = w.Button(description="Dateiauswahl einlesen", layout=w.Layout(width="210px"))
         self.save_button = w.Button(description="Entwurf lokal speichern", button_style="info", layout=w.Layout(width="210px"))
         self.execute_button = w.Button(description="Messung ausführen", button_style="primary", layout=w.Layout(width="210px"))
@@ -259,20 +294,27 @@ class RunPreparation:
         self.save_button.on_click(lambda _: self._callback(self.save))
         self.execute_button.on_click(lambda _: self._callback(self.execute))
         self.new_button.on_click(lambda _: self._callback(self.new_run))
+        self.search_button.on_click(lambda _: self._callback(self.search_dut))
         extra = w.Accordion(children=[w.VBox([self.devices, self.setup_evidence, self.version,
                      self.signal, self.quantity, self.unit, self.location])], titles=("Aufbau und Signalkanal zuordnen – offene Angaben sind möglich",))
         extra.selected_index = None
         self.widget = w.VBox([w.HTML("<h3>1 · Originale und Datenbereich wählen</h3>"), self.files, self.load_button,
             self.ranges, self.summary, self.ownership, w.HTML("<h3>2 · Messlauf beschreiben</h3>"),
-            self.dut, self.kind, self.purpose, self.person, self.run_id, extra,
+            self.subject, self.subject_note, self.dut, self.search_button, self.dut_matches, self.kind, self.purpose, self.person, self.run_id, extra,
             w.HTML("<p>Speichern ordnet die gewählten Records diesem Lauf zu. Unbekannte Messbedingungen bleiben offen. "
                    "Die Zeitbasis und die Zugehörigkeit der Originale müssen für den Upload geklärt sein.</p>"),
-            w.HBox([self.new_button, self.save_button, self.execute_button]), self.output])
+            self.status, w.HBox([self.new_button, self.save_button, self.execute_button]), self.output])
         existing = tuple(v for v in self.base.get("files", {}).get("raw_data", []) if v in self.files.options)
         self.files.value = existing
         if existing:
             self.load_sources()
         self.saved_state = self._state()
+        self.subject.observe(self._subject_changed, names="value")
+        self._subject_changed(None)
+        for field in (self.files, self.subject, self.subject_note, self.dut, self.kind, self.purpose, self.person, self.run_id, self.devices,
+                      self.ownership, self.setup_evidence, self.version, self.signal, self.quantity, self.unit, self.location):
+            field.observe(lambda _: self._refresh_status(), names="value")
+        self._refresh_status()
 
     def _callback(self, action):
         with self.output:
@@ -283,6 +325,48 @@ class RunPreparation:
                 print(str(exc))
             except Exception:
                 print("Vorbereitung unvollständig; Dateien, lokale Konfiguration und Eingaben prüfen. Details bleiben lokal.")
+            finally:
+                self._refresh_status()
+
+    def _refresh_status(self):
+        if not hasattr(self, "saved_state"):
+            return
+        if config_hash(self.root) != self.expected_hash:
+            self.status.value = '<p><b>Laufkonfiguration außerhalb dieses Formulars geändert.</b> Formularzelle erneut ausführen, um die gespeicherten Angaben zu laden.</p>'
+            return
+        if self._state() == self.saved_state and not (self.base.get("files") or {}).get("raw_data"):
+            self.status.value = '<p><b>Noch kein Messlauf vorbereitet.</b> Originale auswählen, Laufart beschreiben und den Entwurf lokal speichern.</p>'
+            return
+        if self._state() != self.saved_state:
+            text = "Eingaben noch nicht gespeichert. Entwurf lokal speichern; danach die angezeigten offenen Punkte prüfen."
+            color = "#805600"
+        else:
+            issues = readable_issues(runs.validate_run(self.base, self.root), self.base)
+            if issues:
+                text = "Noch nicht uploadbereit:<ul>" + "".join("<li>" + escape(v) + "</li>" for v in issues) + "</ul>"
+                self.status.value = '<div style="border-left:4px solid #a32b20;padding:8px 12px">' + text + '</div>'
+                return
+            text, color = "Entwurf gespeichert; lokale Mindestangaben vorhanden. Offene Fachangaben bleiben gekennzeichnet. Messung ausführen verwendet den Sessionmodus.", "#216239"
+        self.status.value = '<div style="border-left:4px solid ' + color + ';padding:8px 12px">' + escape(text) + '</div>'
+
+    def _pick_dut(self, change):
+        if change["new"]:
+            self.dut.value = change["new"]
+
+    def _subject_changed(self, change):
+        enabled = self.subject.value == "sensor"
+        for field in (self.dut, self.search_button, self.dut_matches, self.kind, self.signal, self.quantity, self.unit, self.location):
+            field.disabled = not enabled
+
+    def search_dut(self):
+        import gasi_dut
+        matches, message = gasi_dut.find_duts(self.dut.value)
+        self.dut_matches.options = [("Passenden Eintrag auswählen", "")] + [
+            (m["name"] + " · " + m["identifier"], m["identifier"]) for m in matches]
+        if len(matches) == 1:
+            self.dut_matches.value = matches[0]["identifier"]
+        print(message)
+        return matches
 
     def _signal_changed(self, change):
         if change["new"].endswith("_mV"):
@@ -305,6 +389,8 @@ class RunPreparation:
                 options.append((offset, offset))
             zone = self.w.Dropdown(options=options, value=offset, description="Zeitbasis")
             self.file_rows[name] = dict(detail=detail, first=first, last=last, offset=zone)
+            for field in (first, last, zone):
+                field.observe(lambda _: self._refresh_status(), names="value")
             rows.append(self.w.VBox([self.w.HTML("<b>" + escape(name) + "</b> · " + str(detail["records"]) + " Records"),
                                     self.w.HBox([first, last, zone])]))
             available = set(detail["numeric_columns"])
@@ -327,6 +413,7 @@ class RunPreparation:
         return dict(files=list(self.files.value), ranges=[dict(file=n, first=r["first"].value, last=r["last"].value,
                     offset=r["offset"].value) for n, r in self.file_rows.items()], purpose=self.purpose.value,
                     person=self.person.value, run_id=self.run_id.value, dut=self.dut.value, kind=self.kind.value,
+                    subject=self.subject.value, subject_note=self.subject_note.value,
                     instruments=list(self.devices.value), ownership=self.ownership.value, setup=self.setup_evidence.value,
                     version=self.version.value, signal=self.signal.value, quantity=self.quantity.value,
                     unit=self.unit.value, location=self.location.value)
@@ -340,7 +427,8 @@ class RunPreparation:
         draft = build_draft(root=self.root, selections=selections, dut_id=self.dut.value, purpose=self.purpose.value,
                   responsible_person=self.person.value, run_id=self.run_id.value, dut_kind=self.kind.value,
                   instruments=self.devices.value, ownership=self.ownership.value, setup_evidence=self.setup_evidence.value,
-                  signal=signal, acquisition_version=self.version.value, base=self.base)
+                  signal=signal, acquisition_version=self.version.value, base=self.base,
+                  measurement_subject=self.subject.value, subject_evidence=self.subject_note.value)
         self.expected_hash = save_draft(draft, root=self.root, expected_hash=self.expected_hash)
         self.base = draft["config"]
         self.run_id.value = self.base["run_id"] or ""
@@ -348,25 +436,25 @@ class RunPreparation:
         print("Entwurf lokal gespeichert. Keine openBIS-Abfrage, kein Upload.")
         if draft["issues"]:
             print("Vor dem Upload ergänzen:")
-        for message in draft["issues"]:
-            print("-", readable_issue(message))
+        for message in readable_issues(draft["issues"], self.base):
+            print("-", message)
         if draft["metadata_gaps"]:
             print("Als offen dokumentiert:")
         for message in draft["metadata_gaps"]:
             print("-", message)
         if not draft["issues"]:
             print("Lokale Angaben bereit. Messung ausführen verwendet den zentralen Sessionmodus.")
+        self._refresh_status()
         return draft
 
     def execute(self):
         if self._state() != self.saved_state or config_hash(self.root) != self.expected_hash:
             raise ob.CheckFailed("Eingaben geändert; Entwurf vor der Ausführung lokal speichern oder Formular neu öffnen.")
-        if not self.base.get("run_id") or not self.base.get("files", {}).get("raw_data"):
-            raise ob.CheckFailed("Zuerst Originale und Prüfling auswählen und den Laufentwurf lokal speichern.")
         import gasi_workflow as app
         self.result, self.message = app.upload_measurement(self.root)
-        shown = {**self.result, "issues": [readable_issue(v) for v in self.result.get("issues", [])]}
+        shown = {**self.result, "issues": readable_issues(self.result.get("issues", []), self.base)}
         app.show_result(shown, self.message)
+        self._refresh_status()
         return self.result, self.message
 
     def new_run(self):
@@ -377,6 +465,7 @@ class RunPreparation:
         self.ownership.value = "unknown"
         self.devices.value = ()
         self.setup_evidence.value = self.version.value = ""
+        self.subject_note.value = ""
         self.saved_state = None
         print("Neuer Lauf vorbereitet. Vorherige Konfiguration bleibt bis zum Speichern erhalten und wird dabei gesichert.")
 

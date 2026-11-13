@@ -149,6 +149,8 @@ class ConceptTests(unittest.TestCase):
             rect=next(n for n in node.iter() if n.attrib.get("class")=="node-box")
             self.assertEqual(rect.attrib["fill"],color)
         self.assertIn("Gas- oder Gasfeuchtesensor"," ".join(svg.itertext()))
+        sensor=next(n for n in svg.iter() if n.attrib.get("data-node")=="D")
+        self.assertEqual(sensor.attrib.get("data-optional"), "true")
         edges={(n.attrib.get("data-source"),n.attrib.get("data-target")) for n in svg.iter() if "data-source" in n.attrib}
         self.assertIn(("D","M"),edges)
         self.assertFalse(any(end=="D" for start,end in edges),"GaSi does not manufacture another sensor")

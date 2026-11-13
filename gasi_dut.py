@@ -3,6 +3,8 @@ from contextlib import redirect_stdout, redirect_stderr
 import io
 import json
 from pathlib import Path
+import re
+from urllib.parse import urlparse, parse_qs
 
 import gasi_openbis_playground as ob
 import gasi_session as session
@@ -11,6 +13,55 @@ from gasi_inventory_openbis import _atomic_json
 
 ROOT = Path(__file__).resolve().parent
 ALLOWED = ("SAMPLE", "TEST_OBJECT", "INSTRUMENT")
+
+
+def find_duts(query, client=None):
+    """Resolve a name/code, permId or browser link with read-only calls only."""
+    query = str(query or "").strip()
+    if not query:
+        return [], "Prüflingsname, Code oder openBIS-ID eingeben."
+    try:
+        if query == session.session_value(session.TOKEN_ENV).strip():
+            return [], "Zugangsdaten ausschließlich im Session-Notebook eingeben."
+    except session.SessionConfigError as exc:
+        return [], str(exc)
+    if query.startswith(("http://", "https://")):
+        link = urlparse(query)
+        params = parse_qs(link.query)
+        if (link.scheme != "https" or link.hostname != urlparse(ob.PLAYGROUND_HOST).hostname or
+                link.username or link.password or any("token" in k.lower() or "session" in k.lower() for k in params)):
+            return [], "Einen Playground-Objektlink ohne Zugangsdaten verwenden."
+        query = next((params[k][0] for k in ("identifier", "permId", "viewData") if params.get(k)), "")
+        if not query:
+            return [], "Der Objektlink enthält keine erkennbare Prüflings-ID."
+    if client is None:
+        client, message = ob.connect_playground()
+        if client is None:
+            return [], message
+    if str(client.url).rstrip("/") != ob.PLAYGROUND_HOST:
+        return [], "Prüflingssuche nur auf dem BAM-Playground."
+    try:
+        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            if runs._reference(query) or re.fullmatch(r"\d{14,20}-\d+", query):
+                rows = [client.get_sample(query)]
+            else:
+                args = dict(attrs=["identifier", "permId", "code", "type"], props=["$NAME"])
+                rows = [*ob.table_records(client.get_samples(code=query, **args)),
+                        *ob.table_records(client.get_samples(where={"$NAME": query}, **args))]
+                rows = [row for row in rows if query.casefold() in
+                        {str(ob.field(row, "code", "")).casefold(), ob.name(row).casefold()}]
+        found = {}
+        for row in rows:
+            kind = ob.code(ob.field(row, "type"))
+            ref = ob.identifier(row)
+            if runs._reference(ref) and any(kind == t or kind.startswith(t + ".") for t in ALLOWED):
+                found[ref] = dict(identifier=ref, name=ob.name(row), type=kind, **ob.browser_reference(row, "object"))
+        if not found:
+            return [], ("Kein passender Prüfling gefunden. Den tatsächlichen Sensor zuerst in "
+                        "GaSi_Pruefling_verwalten.ipynb registrieren; die Sensorangaben dort ausfüllen.")
+        return list(found.values()), "Prüflinge ausschließlich gelesen; passenden Eintrag auswählen und den Laufentwurf speichern."
+    except Exception:
+        return [], "Prüfling nicht eindeutig lesbar; Eingabe und Zugriffsrechte prüfen. Serverdetails unterdrückt."
 
 
 def _matches(obj, expected):
@@ -87,7 +138,9 @@ def manage_dut(root=ROOT):
         assignment = "Laufvorlage nicht vorhanden."
         if run is not None:
             old = (run.get("dut") or {}).get("identifier")
-            if not old or old == config["identifier"]:
+            if run.get("measurement_subject", "sensor") != "sensor":
+                assignment = "Anlagenaufzeichnung bleibt unverändert; für eine Sensorprüfung im Formular die passende Laufart wählen."
+            elif not old or old == config["identifier"] or not runs._reference(old):
                 run["dut"] = dict(identifier=config["identifier"], kind=config.get("kind", "gas_humidity_sensor"), identity_confirmed=True)
                 _atomic_json(runpath, run, ".gasi-setup-")
                 assignment = "Prüfling in config/gasi_run.json eingetragen."

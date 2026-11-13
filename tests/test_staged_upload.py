@@ -68,6 +68,23 @@ class StagedUploadTests(unittest.TestCase):
     def capture(self):
         return r.ensure_workflow(self.client,r.prepare_bundle(self.run,self.root),self.targets)
 
+    def test_timestamp_write_format_preserves_instant_and_readback_compares_offsets(self):
+        self.assertEqual(r.server_timestamp('2026-11-13T11:00:00+01:00'), '2026-11-13 10:00:00 +0000')
+        self.assertEqual(r.server_timestamp('2026-07-13T12:00:00+02:00'), '2026-07-13 10:00:00 +0000')
+        self.assertEqual(r._time('2026-11-13 11:00:00 +0100'), r._time('2026-11-13T10:00:00Z'))
+        result=self.capture()
+        obj=self.client.get_sample(result['objects']['measurement']['identifier'])
+        expected={k.upper():v for k,v in ob.props(obj).items()}
+        obj.props['start_date']='2026-11-13 10:00:00 +0100'
+        obj.props['end_date']='2026-11-13 11:00:00 +0100'
+        self.assertTrue(r._object_matches(obj, expected))
+        obj.props['start_date']='2026-11-13 09:00:00 +0100'
+        self.assertFalse(r._object_matches(obj, expected))
+
+    def test_timestamp_boundary_rejects_unknown_timezone_and_unconfirmed_precision(self):
+        for value in ('2026-11-13T10:00:00', '2026-11-13T10:00:00.123456Z'):
+            with self.assertRaises(ValueError):r.server_timestamp(value)
+
     def test_measurement_needs_no_preparation_analysis_metadata_or_targets(self):
         self.run.pop("upload_scope")  # Measurement is the library default as well.
         self.run["resources"].pop("software")

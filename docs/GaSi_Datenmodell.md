@@ -76,7 +76,7 @@ Es wird kein Änderungsjournal und keine Rekonstruktion früherer Umbauten aufge
 
 | Ebene | GaSi-Bedeutung | Ablage |
 |---|---|---|
-| Messlauf | Fachlich zusammengehörige Aufnahme mit Zweck, Prüfling, Aufbau, Referenzen, Verfahren/Softwarestand und Messplan. | Ein `EXPERIMENTAL_STEP` im Laborbuch; eindeutige Laufkennung, Beginn/Ende mit Zeitzone, verantwortliche Person. |
+| Messlauf | Fachlich zusammengehörige Anlagenaufzeichnung oder Sensorprüfung mit Zweck, gegebenenfalls Prüfling, Aufbau und Referenzen. | Ein `EXPERIMENTAL_STEP` im Laborbuch; eindeutige Laufkennung, Beginn/Ende mit Zeitzone, verantwortliche Person. |
 | Messstufe | Schritt oder Plateau innerhalb eines Laufs. | Messplan/Datensatz mit Stufenkennung, Sollwerten, Dauer und Wiederholung. |
 | Messpunkt | Zeitlich zugeordneter Snapshot der Kanäle. | CSV-Zeile im Dataset; kein Objekt pro Zeile. |
 | Datei | Loggerexport, Konfiguration oder Ergebnis. | Dataset an der erzeugenden Tätigkeit; Inhalt und Hash bleiben erhalten. |
@@ -90,8 +90,12 @@ zusätzliches Vorbereitungsobjekt.
 
 Eine erste **Rohdatenerfassung** darf offene fachliche Angaben enthalten:
 Aufnahmeversion, Ressourcen, Kanalbelegung und Messbedingungen werden als
-`metadata_gaps` dokumentiert. Eindeutiger Prüfling, Zweck/Person, Datenbereich,
+`metadata_gaps` dokumentiert. Laufart, Zweck/Person, Datenbereich,
 bekannte Zeitbasis und Zuordnung unveränderter Originale bleiben erforderlich.
+Nur bei `measurement_subject=sensor` muss ein realer Sensor als Parent zugeordnet
+sein. `system` bezeichnet einen Anlagenlauf ohne externen Prüfling. `unresolved`
+hält ausdrücklich offen, ob ein externer Prüfling beteiligt war. Beide Varianten
+erzeugen keine Ersatz-Sensorobjekte; bekannte verwendete Geräte bleiben Parents.
 Das Formular in Notebook 03 erzeugt die lokale Laufkonfiguration aus diesen
 Auswahlen. Loggerprofile und Logabschnitte bleiben Rohbeobachtungen und bestätigen
 keine fachlichen Messstufen. Bei fehlender Stufenzuordnung erfolgt die spätere
@@ -111,9 +115,9 @@ Mehrere Messungen können eine Auswertung speisen. Geteilte Originaldateien blei
 bis zur Live-Abnahme ihrer einmaligen Ablage schreibgesperrt.
 Aktuelle Instanzbefunde: [Projektstatus](GaSi_Projektstatus.md).
 
-### Das „Sample“ ist der zu prüfende Sensor
+### Bei Sensorprüfungen: Das „Sample“ ist der zu prüfende Sensor
 
-Das fachliche Prüfobjekt ist ein Gas- oder Gasfeuchtesensor. Ein vorhandener Sensor
+Bei einer Sensorprüfung ist das fachliche Prüfobjekt ein Gas- oder Gasfeuchtesensor. Ein vorhandener Sensor
 wird nicht in einer GaSi-Materialsynthese erzeugt. Er behält vor und nach der
 Beaufschlagung dieselbe physische Identität; auch Messstufen erzeugen keine neuen
 Sensorobjekte. Das Wort „Sample“ in der BAM-Forschungsgrafik legt keinen
@@ -157,6 +161,14 @@ Der aktuelle Betriebscode interpretiert A5B_CH11 als MGK-Eingang zur Temperaturu
 
 `RAW_DATA` bedeutet unveränderter Loggerexport; der Export kann bereits softwarekorrigierte Werte enthalten. Korrekturmodell und Auswerteversion sind mitzuführen. Leere Felder, Null, Statusinformationen und Sentinelwerte nicht gleichsetzen. Neue Zeitstempel benötigen UTC oder UTC-Offset; eine lokale Uhr-Rückstellung wird nicht automatisch aufgelöst.
 
+Die openBIS-Zeitfelder werden mit explizitem numerischem UTC-Offset übertragen
+(`YYYY-MM-DD HH:MM:SS +0000`). Der Playground-Live-Test vom 13.11.2026 hat gezeigt,
+dass ISO-Eingaben mit `T` und Doppelpunkt im Offset als lokale Uhrzeit übernommen
+wurden. Der Rücklesevergleich prüft deshalb den tatsächlichen Zeitpunkt, auch bei
+abweichender Anzeigezeitzone. Quellzeiten und ihre Offsets bleiben im Manifest
+unverändert. Die hier geprüften openBIS-Zeitfelder verwenden ganze Sekunden;
+feinere Zeitauflösungen werden vor dem Schreiben abgewiesen und niemals gerundet.
+
 ## 5. Grafische Ordnung
 
 Die Grafik erklärt die Aufbausicht auf eine Messung, nicht den vollständigen
@@ -168,6 +180,8 @@ die Setup-Datei bleibt unabhängig davon am Messlauf erhalten.
 Die Setup-Parent-Kante ist nur bei einem tatsächlich angelegten und geeigneten
 Setup-Objekt vorgesehen. Für einen Prüfling wird ein vorhandenes Geräteobjekt
 wiederverwendet; sonst ist ein geeigneter Prüflingstyp zu prüfen.
+Die Prüflingskante gilt nur für Sensorprüfungen. Anlagenläufe beziehungsweise
+Aufnahmen mit ungeklärtem Prüflingsbezug enthalten keinen bestätigten Sensor-Parent.
 
 ```mermaid
 flowchart LR

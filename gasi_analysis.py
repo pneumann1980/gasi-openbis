@@ -23,6 +23,7 @@ def validate_analysis(config,root=ROOT):
     try:
         start,end=[runs._time(config["times"][k]) for k in ("start","end")]
         if start.utcoffset() is None or end.utcoffset() is None or end<start:raise ValueError
+        if start.microsecond or end.microsecond:issues.append("openBIS-Auswertungszeiten benötigen ganze Sekunden; keine Rundung.")
     except (KeyError,TypeError,ValueError):issues.append("Auswertungszeiten mit UTC-Offset fehlen.")
     if not isinstance(config.get("parameters"),dict):issues.append("Auswerteparameter als JSON-Objekt dokumentieren.")
     assessment=config.get("reference_assessment") or {}
@@ -171,6 +172,8 @@ def resolve_inputs(client,config):
             "record_windows":windows,
             "source_receipt":receipt["_server_source"],
             **({"recorded_metadata_gaps":receipt["metadata_gaps"]} if "metadata_gaps" in receipt else {}),
+            **({"recorded_measurement_subject":receipt["measurement_subject"], "recorded_subject_evidence":receipt.get("subject_evidence")}
+               if "measurement_subject" in receipt else {}),
             "recorded_reference_evidence":receipt.get("reference_evidence",[]),
             "recorded_reference_assessment":receipt.get("reference_assessment")})
     all_resources={x for receipt in cache.values() for values in receipt.get("resources",{}).values() for x in values}
@@ -224,8 +227,8 @@ def ensure_analysis(client,bundle,targets_config):
     marker=runs._json({"gasi_analysis":2,"configuration_sha256":bundle["sha256"],"manifest_sha256":digest}).decode("utf-8")
     key="GASI_ANALYSIS_"+runs._hash(config["analysis_id"].encode())[:20].upper()
     schema=report["object_types"]["EXPERIMENTAL_STEP"]
-    values={"$NAME":"GaSi Auswertung "+config["analysis_id"],"START_DATE":config["times"]["start"],
-            "END_DATE":config["times"]["end"],"NOTES":marker}
+    values={"$NAME":"GaSi Auswertung "+config["analysis_id"],"START_DATE":runs.server_timestamp(config["times"]["start"]),
+            "END_DATE":runs.server_timestamp(config["times"]["end"]),"NOTES":marker}
     assignments={a["code"] for a in schema["assignments"]}
     for prop,value in (("REFERENCE",config["analysis_id"]),("EXPERIMENTAL_STEP.EXPERIMENTAL_GOALS",config["purpose"])):
         if prop in assignments:values[prop]=value

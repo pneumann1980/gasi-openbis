@@ -11,7 +11,7 @@ Schreibschalter oder Bestätigungsphrasen.
 
 | Schritt | Pflichtziel | Dateien / Beziehungen |
 |---|---|---|
-| Messdaten hochladen | `gasi_workflow.targets.measurement` | RAW_DATA; Plan, Kontext und Server-Quellmanifest als ATTACHMENT. Sensor, Ressourcen und ggf. vorhandene Vorbereitung sind Parents. |
+| Messdaten hochladen | `gasi_workflow.targets.measurement` | RAW_DATA; Plan, Kontext und Server-Quellmanifest als ATTACHMENT. Tatsächlich zugeordnete Ressourcen, bei Sensorprüfungen der Sensor und ggf. vorhandene Vorbereitung sind Parents. |
 | Vorbereitung, optional | `targets.preparation` nur bei Neuanlage | Eigenständig freigegebener/wiederverwendbarer Plan; Vorbereitung ist Parent der Messung. |
 | Optionale Auswertung | `targets.analysis` | Ergebnisse und Auswertemanifest als ATTACHMENT. Verwendete Messungen und Software sind Parents. |
 
@@ -22,7 +22,7 @@ Typen oder Wertelisten automatisch angelegt.
 
 ## Fachliche Zuordnung
 
-Das Prüfobjekt („Sample“) ist ein vorhandener Gas-/Gasfeuchtesensor. Es behält
+Bei einer Sensorprüfung ist das Prüfobjekt („Sample“) ein vorhandener Gas-/Gasfeuchtesensor. Es behält
 seine Identität über die Beaufschlagung und Messstufen. Vorhandenes INSTRUMENT
 wiederverwenden oder SAMPLE/TEST_OBJECT anhand ihrer Pflichtfelder auswählen.
 Gasquellen sind Materialien; Gaszusammensetzung, T, Feuchtegröße, Druck und Dauer
@@ -36,15 +36,24 @@ Die farbige [Konzeptansicht](GaSi_Konzeptmodell.html) zeigt diese Unterscheidung
 ## Messung konfigurieren
 
 Das Formular in [Notebook 03](../GaSi_03_Messdaten_hochladen.ipynb) bereitet die lokale
-`config/gasi_run.json` vor. Dateien und Records auswählen, Sensor-ID, Zweck, Person
+`config/gasi_run.json` vor. Dateien und Records auswählen, Laufart, gegebenenfalls Sensor-ID, Zweck, Person
 und tatsächliche Zeitbasis angeben; die eindeutige Zugehörigkeit der Originale
 auswählen. Speichern ist lokal. Frühere Konfigurationen werden vor Änderung gesichert.
+Eine Bezeichnung wird erst über **Prüfling suchen** einem vorhandenen Objekt
+zugeordnet. Die Suche akzeptiert Namen/Codes, PermIDs und Playground-Objektlinks
+und führt ausschließlich lesende Abfragen aus. Der dauerhafte Formularstatus
+erklärt fehlende Angaben; eine nicht erzeugte Laufkennung wird dabei nicht als
+zusätzliches Problem einer bereits erkannten fehlenden Prüflingsidentität gezeigt.
 Für einen neuen Lauf gibt es **Neuen Lauf vorbereiten**. Die Laufkennung wird bei
-leerem Feld stabil aus Sensor und ausgewählten Daten erzeugt.
+leerem Feld stabil aus Laufart, gegebenenfalls Sensor und ausgewählten Daten erzeugt.
 
-**Rohdatenerfassung (`metadata_profile=raw_capture`):** Prüfling, Zweck, Person,
+**Rohdatenerfassung (`metadata_profile=raw_capture`):** Laufart, Zweck, Person,
 ausgewählte Originale/Records, bekannte UTC-Offsets und exklusiver Dateibesitz
 bleiben erforderlich. Hashes binden die Auswahl an unveränderte Originale.
+`measurement_subject=sensor` benötigt einen identifizierten Sensor.
+`system` erfasst Anlagenläufe ohne externen Prüfling; `unresolved` dokumentiert
+einen noch ungeklärten Prüflingsbezug. Beide erzeugen keine künstliche Sensoridentität.
+Laufart und ihre Grundlage bleiben im Kontext und Server-Quellmanifest erhalten.
 Aufnahmeversion, beteiligte Geräte/Gaschargen, Kanalbelegung und fachliche
 Messbedingungen dürfen unbekannt bleiben. `metadata_gaps` hält sie im Kontext
 und Server-Quellmanifest fest. Leere Stufenlisten bedeuten **nicht dokumentiert**.
