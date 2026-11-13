@@ -311,6 +311,8 @@ def _plain_caption(label):
         return "Messwerte", "Die unveränderte Messdatei."
     if "Konfigurationssnapshot" in label:
         return "Einstellungen", "Die für diesen Lauf gespeicherten Einstellungen."
+    if "Messprotokoll" in label:
+        return "Messprotokoll", "Das während der Aufnahme erzeugte Protokoll."
     if "Auswertung" in label:
         return "Auswertung", "Ergebnisse und Bericht zur Messung."
     if "CALIBRATION" in label:
@@ -654,7 +656,8 @@ def _document_sections(body):
     return "".join(sections)
 
 
-def render_html(source: str, source_name: str = "GaSi_Datenmodell.md", *, details_href: str | None = None) -> str:
+def render_html(source: str, source_name: str = "GaSi_Datenmodell.md", *, details_href: str | None = None,
+                concept_href: str | None = None) -> str:
     import markdown
 
     md = markdown.Markdown(extensions=["tables", "fenced_code", "toc", "sane_lists"],
@@ -711,6 +714,8 @@ Die Markdown-Datei bleibt die maßgebliche Quelle. Die Ansicht benötigt keine I
         details = f'<p><a href="{escape(details_href, quote=True)}">Mehr wissen: Technik und Quellen →</a></p>'
     view = "simple" if details_href is not None else "full"
     style, script = (SIMPLE_STYLE, SIMPLE_SCRIPT) if details_href is not None else (STYLE, SCRIPT)
+    concept_link = (f'<p><a href="{escape(concept_href, quote=True)}">Forschungsablauf: die vier BAM-Schritte ansehen →</a></p>'
+                    if concept_href else "")
     return f'''<!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="gasi-view" content="{view}"><meta name="gasi-model-sha256" content="{digest}">
@@ -719,7 +724,7 @@ Die Markdown-Datei bleibt die maßgebliche Quelle. Die Ansicht benötigt keine I
 <header class="toolbar"><span class="brand">GaSi · BAM / FB 8.1</span>
 <button id="print" type="button">Drucken</button></header>
 <div class="layout"><main id="model"><div class="hero"><h1>{escape(short_title)}</h1>{status}</div>
-<article><section id="diagram" aria-label="Modellübersicht">{diagram_view}</section>{details}</article>
+<article>{concept_link}<section id="diagram" aria-label="Modellübersicht">{diagram_view}</section>{details}</article>
 </main></div><script>{script}</script></body></html>
 '''
 
@@ -731,10 +736,22 @@ def _read_model(source_path):
     return source_path, source_path.read_bytes().decode("utf-8")
 
 
+def _generate_concept_view(source_path):
+    """Keep notebook/CLI regeneration in one place; no second command required."""
+    concept_source = source_path.with_name("GaSi_Konzeptmodell.md")
+    if not concept_source.is_file():
+        return None
+    import importlib
+    import gasi_concept_html
+    current = importlib.reload(gasi_concept_html)
+    return current.generate_concept_html(concept_source).name
+
+
 def generate_html(source_path: str | Path = SOURCE) -> Path:
     """Full reference view; kept for callers that need the complete document."""
     source_path, source = _read_model(source_path)
-    document = render_html(source, source_path.name)
+    concept_href = _generate_concept_view(source_path)
+    document = render_html(source, source_path.name, concept_href=concept_href)
     output = source_path.with_suffix(".html")
     output.write_text(document, encoding="utf-8", newline="\n")
     return output
@@ -743,11 +760,12 @@ def generate_html(source_path: str | Path = SOURCE) -> Path:
 def generate_simple_html(source_path: str | Path = SOURCE) -> Path:
     """Create a genuinely small overview and keep the full text in a separate file."""
     source_path, source = _read_model(source_path)
+    concept_href = _generate_concept_view(source_path)
     full_output = source_path.with_suffix(".html")
     simple_output = source_path.with_name(source_path.stem + "_einfach.html")
-    full_document = render_html(source, source_path.name).replace(
+    full_document = render_html(source, source_path.name, concept_href=concept_href).replace(
         '<details id="details" class="expert-view">', '<details id="details" class="expert-view" open>')
-    simple_document = render_html(source, source_path.name, details_href=full_output.name + "#details")
+    simple_document = render_html(source, source_path.name, details_href=full_output.name + "#details", concept_href=concept_href)
     full_output.write_text(full_document, encoding="utf-8", newline="\n")
     simple_output.write_text(simple_document, encoding="utf-8", newline="\n")
     return simple_output

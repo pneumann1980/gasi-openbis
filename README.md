@@ -40,7 +40,7 @@ Empfohlene Reihenfolge; jedes Notebook funktioniert unabhängig mit einem frisch
 |---|---|---|
 | [GaSi_Projekt_einrichten.ipynb](GaSi_Projekt_einrichten.ipynb) | Projektpakete im ausgewählten Python-Kernel installieren und prüfen | Installiert `requirements-dev.txt`; kein openBIS-Zugriff |
 | [GaSi_00_Session_einrichten.ipynb](GaSi_00_Session_einrichten.ipynb) | Session-Token zentral und verdeckt speichern | Nur lokale `.env`; keine Verbindung zu openBIS |
-| [GaSi_01_Datenmodell_HTML_erzeugen.ipynb](GaSi_01_Datenmodell_HTML_erzeugen.ipynb) | Das Modell als verständliche HTML-Grafik erzeugen | Offline; schreibt nur die beiden Modell-HTML-Dateien |
+| [GaSi_01_Datenmodell_HTML_erzeugen.ipynb](GaSi_01_Datenmodell_HTML_erzeugen.ipynb) | Modellübersicht und die vier BAM-Konzeptschritte erzeugen | Offline; schreibt Modell-/Konzept-HTML und drei Konzept-SVGs |
 | [GaSi_02_Aktuelles_Setup_pruefen.ipynb](GaSi_02_Aktuelles_Setup_pruefen.ipynb) | Aktuelle Gerätepositionen und Kanalzuordnungen lokal prüfen | Liest die lokale Setup-Datei; erzeugt einen lokalen Bericht |
 | [GaSi_03_Messdateien_pruefen.ipynb](GaSi_03_Messdateien_pruefen.ipynb) | CSV-Dateien prüfen und eine lokale Vorschau erzeugen | Offline; Originale unverändert; kein Upload |
 | [GaSi_04_Playground_Bestand_lesen.ipynb](GaSi_04_Playground_Bestand_lesen.ipynb) | Sichtbare Bereiche, Typen und Pflichtfelder aus openBIS lesen | Ausschließlich lesend |
@@ -98,6 +98,19 @@ Variablen aus einem vorherigen Notebook werden nicht benötigt.
 
 ## Modellgrafik
 
+**Neu: [GaSi-Konzeptmodell in vier Schritten](docs/GaSi_Konzeptmodell.html)**:
+Forschungsablauf zeichnen, Entitäten und Typen bestimmen, in Laborbuch/Inventar
+einordnen und Objekte verbinden. Die HTML zeigt einen Schritt pro Ansicht;
+Tabellen und Fachfragen lassen sich bei Bedarf aufklappen. Die
+[Markdown-Quelle](docs/GaSi_Konzeptmodell.md) enthält die Entscheidungen und Fundstellen.
+
+**Neu erzeugen:** Notebook **01** mit frischem Kernel öffnen und **Run All**
+ausführen. Den erzeugten Link **Einfache Grafik öffnen** anklicken und dort
+**Forschungsablauf: die vier BAM-Schritte ansehen** wählen. Derselbe Aufruf
+aktualisiert die neue Konzeptansicht und die drei separat nutzbaren SVGs
+`GaSi_Konzeptmodell_workflow.svg`, `_mapping.svg` und `_relations.svg` in `docs/`.
+Kein zusätzliches Notebook und kein BAM-Zugang erforderlich.
+
 Quelle: [docs/GaSi_Datenmodell.md](docs/GaSi_Datenmodell.md).
 Notebook 01 erzeugt und verlinkt ausdrücklich
 [docs/GaSi_Datenmodell_einfach.html](docs/GaSi_Datenmodell_einfach.html).
@@ -107,6 +120,22 @@ Erstellungsplan: Collection-Zuordnung, Instrument als Parent des Messlaufs,
 Dataset am Messlauf und CSV im Dataset. Er ist von der vorgeschlagenen fachlichen
 Ordnung getrennt. Die Grafik behauptet keine bereits angelegten Einträge.
 Technische Details bleiben separat in [docs/GaSi_Datenmodell.html](docs/GaSi_Datenmodell.html).
+
+Der Konzeptabgleich vom 13.11.2026 folgt der
+[aktuellen BAM-Anleitung](https://datastore.bam.de/en/openbis_20-10-12/how-to_guides/user_ui/represent_research_data)
+und dem [EuVSOP-Beispiel](https://datastore.bam.de/en/use_cases/euvsop).
+Das Zielmodell trennt **Vorbereitung → Messung → Auswertung**. Forschungsdateien
+gehören an ihre erzeugende Tätigkeit; Auswerteergebnisse damit an die Auswertung.
+Die Geräteübersicht zeigt ergänzend nur Aufbau und Messung.
+Eigene Anlagen-/Modulobjekte sind zunächst nicht erforderlich; ein Prüfling
+ist eine Rolle und bekommt keinen zweiten Eintrag neben seiner Geräteidentität.
+Die [Parserübersicht](https://datastore.bam.de/en/parsers) dient als Ausgangspunkt
+für einen späteren GaSi-Importer, sobald Laufgrenzen und Kanalzuordnungen feststehen.
+
+Dieser Schritt ändert die **lokale Modelldokumentation und ihre Visualisierung**.
+Die drei Forschungsaktivitäten, echte Laborbuch-Collections sowie Gas-/SOP- und
+Softwareobjekte wurden damit noch nicht live angelegt. Das vorhandene Geräteinventar
+und der synthetische Test bleiben die separat bestätigten Instanzbefunde.
 
 Nach einer Modelländerung Notebook 01 erneut ausführen. Der Generator wird auch beim
 erneuten Ausführen nur der Erzeugungszelle frisch geladen. Die HTML-Datei funktioniert
@@ -353,6 +382,15 @@ Das Workshop-Notebook und seine synthetischen Bilddaten werden nicht automatisch
 oder hochgeladen; GaSi verwendet weiterhin seine eigene kleine synthetische CSV.
 
 ## Prüfung: lokal und live getrennt
+
+**Konzeptabgleich 13.11.2026:** 89 lokale Tests bestanden. Notebook 01 wurde
+zusätzlich mit frischem Kernel und gesperrtem Netzwerk ausgeführt: beide
+Markdown-Quellen unverändert, alle drei HTML-Dateien und die drei Konzept-SVGs
+erzeugt. Die vier Ansichten wurden in Edge geprüft; je Auswahl ist genau ein
+Schritt sichtbar. Alle neuen Diagrammkanten und Beschriftungen stammen aus der
+Konzeptquelle; Boxen und Verbindungslinien überschneiden sich in den geprüften
+Layouts nicht. Die verlinkten BAM-Seiten wurden gelesen. Es fand für diesen
+Konzeptabgleich kein neuer Live-Schreibtest statt.
 
 ```powershell
 .\.venv\Scripts\python -m unittest discover -s tests -v

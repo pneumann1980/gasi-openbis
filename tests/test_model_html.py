@@ -99,7 +99,7 @@ class HtmlModelTests(unittest.TestCase):
         html = render_html(source)
         visible = " ".join(VisibleText(html).text)
         self.assertLess(len(visible.split()), 105)
-        for term in ("GaSi-Anlage", "Module", "Geräte", "Aktueller Aufbau", "Prüfgas", "Prüfling", "Messung", "Messwerte", "Einstellungen", "Auswertung"):
+        for term in ("GaSi-Anlage", "Module", "Geräte", "Aktueller Aufbau", "Prüfgas", "Prüfling", "Messung", "Messwerte", "Einstellungen", "Messprotokoll"):
             self.assertIn(term, visible)
         for term in ("EXPERIMENTAL_STEP", "RAW_DATA", "Dataset", "Parent", "OBJECT", "DUT", "SOP"):
             self.assertNotIn(term, visible)

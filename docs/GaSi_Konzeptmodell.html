@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="gasi-concept-sha256" content="3c3d5503a68d76bc03de2bec8c499b6023809ac48b6beda41ec8b441d15931a4"><title>GaSi: Konzeptmodell in vier Schritten</title>
+<style>
+:root{font:18px/1.5 system-ui,sans-serif;color:#183a4b;background:#f4f7f8}
+*{box-sizing:border-box}body{margin:0}header,main,footer{max-width:1400px;margin:auto;padding:16px 26px}
+header{display:flex;justify-content:space-between;gap:12px;align-items:center}a{color:#075e82}
+h1{font-size:1.65rem;margin:8px 0}h2{font-size:1.35rem;margin:12px 0}p{max-width:85ch}
+.intro{font-size:.9rem}nav{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+nav a{padding:10px 18px;background:white;border:1px solid #b6ccd7;border-radius:8px;text-decoration:none}
+nav a[aria-current=step]{background:#163f50;color:white}
+.step{background:white;padding:18px 24px;border:1px solid #d4e0e6;border-radius:12px}
+.step[hidden]{display:none}figure{margin:8px 0 16px}figure .drawing{overflow:auto}
+svg{display:block;width:100%;min-width:850px;max-height:62vh}figcaption{font-size:.85rem}
+details{margin:12px 0;border-top:1px solid #d9e5ea;padding:10px 0}
+summary{cursor:pointer;color:#125570}table{border-collapse:collapse;font-size:.88rem;width:100%}
+td,th{padding:9px 11px;border-bottom:1px solid #d9e5ea;text-align:left;vertical-align:top}
+th{background:#edf5f8}.table-scroll{overflow:auto}code{font-size:.9em;overflow-wrap:anywhere}
+footer{font-size:.85rem}button{font:inherit;cursor:pointer;padding:5px 12px}
+figure:fullscreen{background:white;padding:24px;overflow:auto}figure:fullscreen svg{max-height:85vh}
+@media(max-width:650px){header,main,footer{padding:12px}.step{padding:12px}h1{font-size:1.3rem}}
+@media print{nav,button{display:none}.step[hidden]{display:block}.step{break-before:page}svg{min-width:0;max-height:none}details>*{display:block!important}}
+</style></head><body>
+<header><a href="GaSi_Datenmodell_einfach.html">Geräteübersicht</a><span>BAM · FB 8.1</span><button type="button" data-print>Drucken</button></header>
+<main><div class="intro"><h1>GaSi: vom Prüfauftrag zum nachvollziehbaren Ergebnis</h1>
+<p>Dieses Konzept folgt den vier Schritten der <a href="https://datastore.bam.de/en/openbis_20-10-12/how-to_guides/user_ui/represent_research_data">BAM-Anleitung</a>.
+Es beschreibt den <strong>aktuellen Aufbau und künftige Messläufe</strong>. Es erzeugt keine
+Einträge in openBIS. Geräteidentität, bestätigter Einbau und Eignung als Referenz
+sind getrennte Aussagen.</p></div><nav aria-label="Die vier BAM-Schritte">
+<a href="#schritt-1">1 · Ablauf</a><a href="#schritt-2">2 · Bausteine</a>
+<a href="#schritt-3">3 · Ablage</a><a href="#schritt-4">4 · Verbindungen</a></nav>
+<section class="step" id="schritt-1"><h2>1. Draw the research workflow</h2><p><strong>Vorbereiten → Messen → Auswerten.</strong> Jeder Arbeitsschritt erzeugt eigene Dateien.
+Geräte, Prüfling, Gase und Verfahren werden dafür wiederverwendet.</p>
+<figure><button type="button" data-fullscreen>Größer ansehen</button><div class="drawing"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 390" role="img" aria-labelledby="workflow-title"><title id="workflow-title">GaSi: Forschungsablauf</title><defs><marker id="workflow-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#527889"/></marker></defs><path class="connection" data-source="P" data-target="M" data-relation="danach" d="M360 95 H490" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#workflow-arrow)"><title>danach</title></path><text x="425" y="83.0" text-anchor="middle" font-size="14" fill="#496777">danach</text><path class="connection" data-source="M" data-target="E" data-relation="danach" d="M810 95 H940" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#workflow-arrow)"><title>danach</title></path><text x="875" y="83.0" text-anchor="middle" font-size="14" fill="#496777">danach</text><path class="connection" data-source="P" data-target="DP" data-relation="erzeugt" d="M200 145 V255" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#workflow-arrow)"><title>erzeugt</title></path><text x="240.0" y="200" text-anchor="middle" font-size="14" fill="#496777">erzeugt</text><path class="connection" data-source="M" data-target="DM" data-relation="erzeugt" d="M650 145 V255" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#workflow-arrow)"><title>erzeugt</title></path><text x="690.0" y="200" text-anchor="middle" font-size="14" fill="#496777">erzeugt</text><path class="connection" data-source="E" data-target="DE" data-relation="erzeugt" d="M1100 145 V255" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#workflow-arrow)"><title>erzeugt</title></path><text x="1140.0" y="200" text-anchor="middle" font-size="14" fill="#496777">erzeugt</text><g data-node="P"><title>Vorbereiten / Prüfaufgabe und Messplan</title><rect class="node-box" x="40" y="45" width="320" height="100" rx="10" fill="#163f50" stroke="#b3cbd6"/><text x="200.0" y="89.5" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#ffffff">Vorbereiten</text><text x="200.0" y="110.5" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#ffffff">Prüfaufgabe und Messplan</text></g><g data-node="M"><title>Messen / Einen Messlauf aufnehmen</title><rect class="node-box" x="490" y="45" width="320" height="100" rx="10" fill="#163f50" stroke="#b3cbd6"/><text x="650.0" y="89.5" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#ffffff">Messen</text><text x="650.0" y="110.5" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#ffffff">Einen Messlauf aufnehmen</text></g><g data-node="E"><title>Auswerten / Ergebnisse beurteilen</title><rect class="node-box" x="940" y="45" width="320" height="100" rx="10" fill="#163f50" stroke="#b3cbd6"/><text x="1100.0" y="89.5" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#ffffff">Auswerten</text><text x="1100.0" y="110.5" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#ffffff">Ergebnisse beurteilen</text></g><g data-node="DP"><title>Prüfplan / Startkonfiguration</title><rect class="node-box" x="40" y="255" width="320" height="100" rx="10" fill="#edf5f8" stroke="#b3cbd6"/><text x="200.0" y="299.5" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Prüfplan</text><text x="200.0" y="320.5" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">Startkonfiguration</text></g><g data-node="DM"><title>Unveränderte Logger-CSV / Tatsächlicher Aufbau</title><rect class="node-box" x="490" y="255" width="320" height="100" rx="10" fill="#edf5f8" stroke="#b3cbd6"/><text x="650.0" y="299.5" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Unveränderte Logger-CSV</text><text x="650.0" y="320.5" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">Tatsächlicher Aufbau</text></g><g data-node="DE"><title>Ausgewertete Daten / Diagramme und Bericht</title><rect class="node-box" x="940" y="255" width="320" height="100" rx="10" fill="#edf5f8" stroke="#b3cbd6"/><text x="1100.0" y="299.5" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Ausgewertete Daten</text><text x="1100.0" y="320.5" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">Diagramme und Bericht</text></g></svg></div></figure>
+<details>
+<summary>Was gehört zu den drei Arbeitsschritten?</summary>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Tätigkeit</th>
+<th>Was geschieht bei GaSi?</th>
+<th>Eigene Ergebnisse / Dateien</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Vorbereiten</td>
+<td>Prüfzweck und Prüfling festlegen; eingesetzte Geräte, Gasquellen, Kanal- und Messortzuordnung prüfen; Messstufen und Bezugsbedingungen festlegen.</td>
+<td>Prüfplan, Sollprofil und geprüfte Startkonfiguration. Nur wenn diese eigenständig aufbewahrt werden, eigener Arbeitsschritt. Sonst Teil der Messung.</td>
+</tr>
+<tr>
+<td>Messen</td>
+<td>Gasströme und gegebenenfalls Feuchte einstellen; Stufen durchlaufen; Referenz-, Prozess- und Prüflingssignale aufzeichnen.</td>
+<td>Unveränderte Loggerdateien, tatsächlich verwendeter Lauf-Snapshot und gegebenenfalls Messprotokoll.</td>
+</tr>
+<tr>
+<td>Auswerten</td>
+<td>Gültige Zeitbereiche/Stufen auswählen; Soll, Referenz und Prüfling vergleichen; Korrekturen, Bedingungen und Unsicherheit dokumentieren.</td>
+<td>Ergebnisdateien, Diagramme, Bericht sowie verwendeter Auswertecode mit Version.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Ein Messlauf kann mehrere Dateien und Messstufen haben. Eine CSV-Zeile ist ein
+Messpunkt, kein eigenes openBIS-Objekt. Wiederholte Auswertungen erhalten eigene
+Auswertungsschritte und überschreiben weder Messdateien noch frühere Ergebnisse.</p>
+<p>Die Gasmischung ist hier ein zeitabhängiger Prozesszustand im Lauf. Es wird kein
+zusätzliches Probenobjekt für jedes Mischverhältnis oder Plateau erfunden. Ein
+physisch entnommenes, weiterverwendetes Gas-/Materialmuster wäre ein neuer Fall.</p>
+<p>Das Wiki, Abschnitt <strong>1 Verfahrensprinzip</strong>, belegt Prüfplan, Gasmischung,
+Feuchteeinstellung und Signalerfassung. Die <a href="../data/paper/tg5c00105_si_001.pdf">Paper-SI</a>,
+Abschnitt <strong>1 Humidification unit</strong>, belegt die methodische Trennung von Dosierung,
+Befeuchtung und Referenzmessung; sie belegt keinen heutigen Einbau.
+Der Logger und seine lokalen CSVs begründen die Trennung von Lauf, Stufe und Datei;
+Feld- und Zeitregeln stehen im <a href="GaSi_Datenmodell.md">detaillierten Datenmodell</a>.</p>
+</details></section><section class="step" id="schritt-2"><h2>2. Identify Entities and Entity types</h2><p><strong>Tätigkeiten:</strong> Vorbereitung, Messung, Auswertung.<br>
+<strong>Verwendete Dinge:</strong> Geräte, Prüfling, Gasquellen und versionierte Verfahren.<br>
+<strong>Ergebnisse:</strong> Plan, Messdateien und Auswerteergebnisse.</p>
+<details>
+<summary>Entitäten, Typen und notwendige Angaben anzeigen</summary>
+<p>„Bestätigt“ meint den dokumentierten Playground-Abgleich vom 12.11.2026,
+keine erneute Live-Prüfung bei dieser HTML-Erzeugung. „Katalog“ bestätigt nur
+die Sichtbarkeit eines Typcodes; Properties und Schreibrechte bleiben offen.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Fachliche Entität</th>
+<th>openBIS-Ebene / Typ</th>
+<th>Minimalangaben und Belegstand</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Vorbereitung, Messlauf, Auswertung</td>
+<td>Je ein Objekt <code>EXPERIMENTAL_STEP</code></td>
+<td>Typ und Properties bestätigt. Fachlich: stabile Kennung, Zweck, Person, Beginn/Ende mit Zeitzone, verwendete Ressourcen. Drei Tätigkeiten benötigen keine drei neuen Typen.</td>
+</tr>
+<tr>
+<td>MFC, MFM, Druckregler, Feuchtereferenz, Erfassung, weitere einzeln verwaltete Geräte</td>
+<td>Inventarobjekt <code>INSTRUMENT</code></td>
+<td>Bestätigt; Hersteller, Modell, Seriennummer als belegte Identität; OE und Standort. Rolle und Position gehören zur Verwendung im Aufbau. Ein MFC ist kein MFM.</td>
+</tr>
+<tr>
+<td>Prüfling / DUT</td>
+<td>Vorhandenes <code>INSTRUMENT</code> wiederverwenden, wenn er ein verwaltetes Gerät ist; sonst <code>TEST_OBJECT</code> oder geeigneter <code>SAMPLE</code>-Typ prüfen</td>
+<td>Letztere nur im Katalog bestätigt. Identität und Art klären. „Prüfling“ ist eine Rolle; das gleiche Gerät nicht zusätzlich als zweites DUT-Objekt anlegen.</td>
+</tr>
+<tr>
+<td>Gasquelle / Flasche / Referenzmaterial</td>
+<td><code>GAS_BOTTLE</code>, gegebenenfalls passender Materialtyp</td>
+<td><code>GAS_BOTTLE</code> im Katalog; Properties noch nicht geprüft. Quelle/Charge, Zusammensetzung, Zertifikat und Gültigkeit bei Bedarf. Gasflasche, Betriebsmedium und dynamische Mischung unterscheiden.</td>
+</tr>
+<tr>
+<td>Verfahrensvorschrift</td>
+<td><code>SOP</code></td>
+<td>Im Katalog; konkrete Version, Gültigkeit und Properties prüfen. Beim Vorbereiten referenzieren.</td>
+</tr>
+<tr>
+<td>Softwareversion</td>
+<td><code>SOFTWARE_CODE</code> als wiederverwendbare Ressource</td>
+<td>Im Katalog, Properties offen. Loggerstand zusätzlich im Mess-Snapshot, Auswertecode bei der Auswertung sichern; keine ausführbaren Geheimnisse einbetten.</td>
+</tr>
+<tr>
+<td>Aktueller Aufbau</td>
+<td>Zunächst Setup-Datei; <code>SETUP.TEST</code> nur als späterer Objektkandidat</td>
+<td>Typ bestätigt, aber keine Geräte-/Kanalproperties. Geräteposition, Messort, Signalrolle und Gasweg im Snapshot; kein künstliches Gerüst aus neuen Typen.</td>
+</tr>
+<tr>
+<td>Anlagen- und Modulübersicht</td>
+<td>Gliederung des Aufbaus</td>
+<td>Noch keine eigenen Objekte nötig. Physische Teil-von-Beziehungen sind keine automatisch festgelegten Parent-Beziehungen.</td>
+</tr>
+<tr>
+<td>Geräte-Kalibriernachweis</td>
+<td><code>CALIBRATION</code>, soweit Pflichtangaben belegt</td>
+<td>Typ und Pflichtfelder bestätigt. Verweis <code>INSTRUMENT</code> hat API-Datentyp <code>SAMPLE</code>. Nicht mit dem GaSi-Prüflingstest gleichsetzen.</td>
+</tr>
+<tr>
+<td>Plan, Snapshot, Messprotokoll, Bericht</td>
+<td>Dataset <code>ATTACHMENT</code> an der erzeugenden Tätigkeit</td>
+<td>Typ/Assignments bestätigt. Datensatz kann mehrere zusammengehörige Dateien enthalten.</td>
+</tr>
+<tr>
+<td>Unveränderte Loggerdateien</td>
+<td>Dataset <code>RAW_DATA</code> an der Messung</td>
+<td>Typ bestätigt. „Unverändert“ bedeutet Loggerexport; dieser kann bereits Softwarekorrekturen enthalten.</td>
+</tr>
+<tr>
+<td>Berechnete Daten / Auswertecode / Diagramme</td>
+<td>An der Auswertung; zunächst <code>ATTACHMENT</code> möglich</td>
+<td><code>ANALYZED_DATA</code>, <code>SOURCE_CODE</code> und <code>FIGURE</code> sind Katalogkandidaten. Vor Nutzung Assignments prüfen. Kein neuer Typ erforderlich, um den Ablauf zu besprechen.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Herstellerunterlagen sind vorhandene Ressourcenbelege, keine von GaSi erzeugten
+Messdaten. Sie bleiben in diesem Projekt lokal. Dafür wird kein erfundener
+Forschungsschritt angelegt.</p>
+<p>Finanzielle Anlagen-Inventarnummer, physische Geräteidentität, Geräteposition und
+openBIS-ID werden getrennt geführt. Die Registrierung einer Identität bestätigt
+weder ihren aktuellen Einbau noch Kalibriergültigkeit.</p>
+</details></section><section class="step" id="schritt-3"><h2>3. Map the research workflow</h2><p><strong>Laborbuch:</strong> die Tätigkeiten und ihre Dateien.<br>
+<strong>Inventar:</strong> wiederverwendbare Geräte und Materialien.</p>
+<figure><button type="button" data-fullscreen>Größer ansehen</button><div class="drawing"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 540" role="img" aria-labelledby="mapping-title"><title id="mapping-title">GaSi: Ablage in openBIS</title><defs><marker id="mapping-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#527889"/></marker></defs><path class="connection" data-source="LS" data-target="LP" data-relation="enthält" d="M245 92.5 H285" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#mapping-arrow)"><title>enthält</title></path><path class="connection" data-source="LP" data-target="LC" data-relation="enthält" d="M505 92.5 H545" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#mapping-arrow)"><title>enthält</title></path><path class="connection" data-source="LC" data-target="LO" data-relation="enthält" d="M765 92.5 H805" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#mapping-arrow)"><title>enthält</title></path><path class="connection" data-source="LO" data-target="LD" data-relation="Dateien zugeordnet" d="M1025 92.5 H1065" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#mapping-arrow)"><title>Dateien zugeordnet</title></path><path class="connection" data-source="IS" data-target="IP" data-relation="enthält" d="M245 272.5 H285" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#mapping-arrow)"><title>enthält</title></path><path class="connection" data-source="IP" data-target="IC" data-relation="enthält" d="M505 272.5 H545" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#mapping-arrow)"><title>enthält</title></path><path class="connection" data-source="IC" data-target="IO" data-relation="enthält" d="M765 272.5 H805" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#mapping-arrow)"><title>enthält</title></path><path class="connection" data-source="GS" data-target="GP" data-relation="enthält" d="M245 452.5 H285" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#mapping-arrow)"><title>enthält</title></path><path class="connection" data-source="GP" data-target="GC" data-relation="enthält" d="M505 452.5 H545" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#mapping-arrow)"><title>enthält</title></path><path class="connection" data-source="GC" data-target="GO" data-relation="enthält" d="M765 452.5 H805" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#mapping-arrow)"><title>enthält</title></path><g data-node="LS"><title>Laborbuch-Space / FB 8.1</title><rect class="node-box" x="25" y="35" width="220" height="115" rx="10" fill="#e9eef5" stroke="#b3cbd6"/><text x="135.0" y="87.0" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Laborbuch-Space</text><text x="135.0" y="108.0" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">FB 8.1</text></g><g data-node="LP"><title>Projekt / GASI</title><rect class="node-box" x="285" y="35" width="220" height="115" rx="10" fill="#e8f4e9" stroke="#b3cbd6"/><text x="395.0" y="87.0" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Projekt</text><text x="395.0" y="108.0" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">GASI</text></g><g data-node="LC"><title>Collections / Vorbereitung, Messläufe, Auswertung</title><rect class="node-box" x="545" y="35" width="220" height="115" rx="10" fill="#fff4d6" stroke="#b3cbd6"/><text x="655.0" y="76.5" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Collections</text><text x="655.0" y="97.5" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">Vorbereitung, Messläufe,</text><text x="655.0" y="118.5" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">Auswertung</text></g><g data-node="LO"><title>Objekte / EXPERIMENTAL_STEP</title><rect class="node-box" x="805" y="35" width="220" height="115" rx="10" fill="#e4effb" stroke="#b3cbd6"/><text x="915.0" y="87.0" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Objekte</text><text x="915.0" y="108.0" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">EXPERIMENTAL_STEP</text></g><g data-node="LD"><title>Datasets / Plan, CSV, Ergebnis</title><rect class="node-box" x="1065" y="35" width="220" height="115" rx="10" fill="#f2eafb" stroke="#b3cbd6"/><text x="1175.0" y="87.0" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Datasets</text><text x="1175.0" y="108.0" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">Plan, CSV, Ergebnis</text></g><g data-node="IS"><title>Inventar-Space / 8.1_EQUIPMENT</title><rect class="node-box" x="25" y="215" width="220" height="115" rx="10" fill="#e9eef5" stroke="#b3cbd6"/><text x="135.0" y="267.0" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Inventar-Space</text><text x="135.0" y="288.0" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">8.1_EQUIPMENT</text></g><g data-node="IP"><title>Projekt / GASI</title><rect class="node-box" x="285" y="215" width="220" height="115" rx="10" fill="#e8f4e9" stroke="#b3cbd6"/><text x="395.0" y="267.0" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Projekt</text><text x="395.0" y="288.0" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">GASI</text></g><g data-node="IC"><title>Collection / INSTRUMENTS</title><rect class="node-box" x="545" y="215" width="220" height="115" rx="10" fill="#fff4d6" stroke="#b3cbd6"/><text x="655.0" y="267.0" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Collection</text><text x="655.0" y="288.0" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">INSTRUMENTS</text></g><g data-node="IO"><title>Objekte / INSTRUMENT</title><rect class="node-box" x="805" y="215" width="220" height="115" rx="10" fill="#e4effb" stroke="#b3cbd6"/><text x="915.0" y="267.0" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Objekte</text><text x="915.0" y="288.0" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">INSTRUMENT</text></g><g data-node="GS"><title>Materialinventar / Ziel noch offen</title><rect class="node-box" x="25" y="395" width="220" height="115" rx="10" fill="#e9eef5" stroke="#b3cbd6"/><text x="135.0" y="447.0" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Materialinventar</text><text x="135.0" y="468.0" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">Ziel noch offen</text></g><g data-node="GP"><title>Projekt / Ziel noch offen</title><rect class="node-box" x="285" y="395" width="220" height="115" rx="10" fill="#e8f4e9" stroke="#b3cbd6"/><text x="395.0" y="447.0" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Projekt</text><text x="395.0" y="468.0" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">Ziel noch offen</text></g><g data-node="GC"><title>Collection / Gasquellen</title><rect class="node-box" x="545" y="395" width="220" height="115" rx="10" fill="#fff4d6" stroke="#b3cbd6"/><text x="655.0" y="447.0" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Collection</text><text x="655.0" y="468.0" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">Gasquellen</text></g><g data-node="GO"><title>Objekte / GAS_BOTTLE als Kandidat</title><rect class="node-box" x="805" y="395" width="220" height="115" rx="10" fill="#e4effb" stroke="#b3cbd6"/><text x="915.0" y="447.0" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Objekte</text><text x="915.0" y="468.0" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">GAS_BOTTLE als Kandidat</text></g></svg></div></figure>
+<details>
+<summary>Konkrete Ablage, Benennung und bestehende Ziele anzeigen</summary>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Bereich</th>
+<th>Geplante oder bestehende Ablage</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dokumentierte Geräte</td>
+<td><code>/8.1_EQUIPMENT/GASI/INSTRUMENTS</code></td>
+<td>Bereits angelegt; zehn belegte Identitäten registriert. Kein Nachweis, dass alle aktuell eingebaut sind.</td>
+</tr>
+<tr>
+<td>Echte Vorbereitung</td>
+<td><code>/&lt;FB81_LAB&gt;/GASI/PREPARATION</code></td>
+<td>Vorschlag, nicht angelegt; gemeinsames Laborbuchziel verbindlich auswählen.</td>
+</tr>
+<tr>
+<td>Echte Messläufe</td>
+<td><code>/&lt;FB81_LAB&gt;/GASI/RUNS</code></td>
+<td>Vorschlag, nicht angelegt; keine Übernahme des persönlichen Testziels ohne Entscheidung.</td>
+</tr>
+<tr>
+<td>Echte Auswertungen</td>
+<td><code>/&lt;FB81_LAB&gt;/GASI/ANALYSIS</code></td>
+<td>Vorschlag, nicht angelegt. Mehrere Auswertungen können dieselbe Messung verwenden.</td>
+</tr>
+<tr>
+<td>Gasquellen</td>
+<td>Freigegebenes BAM-/FB-Materialinventar, zunächst vorhandene Objekte suchen</td>
+<td>Ziel und Pflichtfelder offen. Keine Space-/Collection-Codes erraten.</td>
+</tr>
+<tr>
+<td>SOP / Software</td>
+<td>Passendes bestehendes gemeinsames Inventar</td>
+<td>Ablage und vorhandene Versionseinträge prüfen; keine Kopie pro Lauf.</td>
+</tr>
+<tr>
+<td>Synthetischer Test</td>
+<td><code>/8.1_PNEUMANN/GASI_TEST/RUNS</code> und <code>/8.1_EQUIPMENT/GASI_TEST/INSTRUMENTS</code></td>
+<td>Bestehend und schreibend getestet; getrennt von echten Forschungsdaten.</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>&lt;FB81_LAB&gt;</code> ist ausdrücklich ein Platzhalter, kein ausführbarer Zielpfad.
+Die bestehende Testfreigabe gilt nur für die konfigurierten Ziele; sie entscheidet
+nicht über die Ablage echter Messläufe.</p>
+<p>Eine Collection gruppiert Objekte; ihre Zugehörigkeit ist keine Parent-Beziehung.
+Vorbereitung, Messung und Auswertung sind <strong>Objekte</strong>, keine Projects oder
+Collections für einzelne Aufnahmen. Für einen anderen Prüfauftrag ist je nach
+Umfang ein neues Projekt oder eine gemeinsame Projektgliederung möglich.</p>
+<p>Anzeigenamen beispielsweise <code>GaSi – Messung – &lt;Laufkennung&gt;</code>; Codes sind davon
+getrennte stabile Kennungen. Geräte behalten ihre Identität unabhängig von Position
+und Bezeichnung. Eine Auswertung erhält eine eigene Kennung und referenziert die
+unveränderten Eingabedatasets mit PermID und SHA-256.</p>
+</details></section><section class="step" id="schritt-4"><h2>4. Connect Entities</h2><p><strong>Pfeile zwischen Objekten bedeuten Parent → Child.</strong>
+Die Dateien bleiben bei dem Arbeitsschritt, der sie erzeugt hat.</p>
+<figure><button type="button" data-fullscreen>Größer ansehen</button><div class="drawing"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1340 490" role="img" aria-labelledby="relations-title"><title id="relations-title">GaSi: Objektbeziehungen</title><defs><marker id="relations-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#527889"/></marker></defs><path class="connection" data-source="Q" data-target="P" data-relation="Parent" d="M160 155 V350" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#relations-arrow)"><title>Parent</title></path><path class="connection" data-source="P" data-target="M" data-relation="Parent" d="M260 400 H590" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#relations-arrow)"><title>Parent</title></path><text x="425.0" y="386.0" text-anchor="middle" font-size="16" fill="#496777">Parent → Child</text><path class="connection" data-source="M" data-target="E" data-relation="Parent" d="M810 400 H1080" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#relations-arrow)"><title>Parent</title></path><text x="945.0" y="386.0" text-anchor="middle" font-size="16" fill="#496777">Parent → Child</text><path class="connection" data-source="I" data-target="M" data-relation="Parent" d="M440 155 V225 H630 V350" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#relations-arrow)"><title>Parent</title></path><path class="connection" data-source="G" data-target="M" data-relation="Parent" d="M670 155 V350" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#relations-arrow)"><title>Parent</title></path><path class="connection" data-source="D" data-target="M" data-relation="Parent" d="M900 155 V250 H750 V350" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#relations-arrow)"><title>Parent</title></path><path class="connection" data-source="W" data-target="E" data-relation="Parent" d="M1180 155 V350" fill="none" stroke="#527889" stroke-width="2" marker-end="url(#relations-arrow)"><title>Parent</title></path><g data-node="Q"><title>Verfahren / SOP als Kandidat</title><rect class="node-box" x="60" y="45" width="200" height="110" rx="10" fill="#edf5f8" stroke="#b3cbd6"/><text x="160.0" y="94.5" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Verfahren</text><text x="160.0" y="115.5" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">SOP als Kandidat</text></g><g data-node="P"><title>Vorbereitung / EXPERIMENTAL_STEP</title><rect class="node-box" x="60" y="350" width="200" height="100" rx="10" fill="#163f50" stroke="#b3cbd6"/><text x="160.0" y="394.5" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#ffffff">Vorbereitung</text><text x="160.0" y="415.5" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#ffffff">EXPERIMENTAL_STEP</text></g><g data-node="M"><title>Messung / EXPERIMENTAL_STEP</title><rect class="node-box" x="590" y="350" width="220" height="100" rx="10" fill="#163f50" stroke="#b3cbd6"/><text x="700.0" y="394.5" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#ffffff">Messung</text><text x="700.0" y="415.5" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#ffffff">EXPERIMENTAL_STEP</text></g><g data-node="E"><title>Auswertung / EXPERIMENTAL_STEP</title><rect class="node-box" x="1080" y="350" width="200" height="100" rx="10" fill="#163f50" stroke="#b3cbd6"/><text x="1180.0" y="394.5" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#ffffff">Auswertung</text><text x="1180.0" y="415.5" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#ffffff">EXPERIMENTAL_STEP</text></g><g data-node="I"><title>Verwendete Geräte / INSTRUMENT</title><rect class="node-box" x="340" y="45" width="200" height="110" rx="10" fill="#edf5f8" stroke="#b3cbd6"/><text x="440.0" y="94.5" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Verwendete Geräte</text><text x="440.0" y="115.5" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">INSTRUMENT</text></g><g data-node="G"><title>Verwendete Gasquelle / GAS_BOTTLE als Kandidat</title><rect class="node-box" x="570" y="45" width="200" height="110" rx="10" fill="#edf5f8" stroke="#b3cbd6"/><text x="670.0" y="94.5" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Verwendete Gasquelle</text><text x="670.0" y="115.5" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">GAS_BOTTLE als Kandidat</text></g><g data-node="D"><title>Prüfling / Vorhandenes Objekt</title><rect class="node-box" x="800" y="45" width="200" height="110" rx="10" fill="#edf5f8" stroke="#b3cbd6"/><text x="900.0" y="94.5" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Prüfling</text><text x="900.0" y="115.5" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">Vorhandenes Objekt</text></g><g data-node="W"><title>Auswertesoftware / SOFTWARE_CODE als Kandidat</title><rect class="node-box" x="1080" y="45" width="200" height="110" rx="10" fill="#edf5f8" stroke="#b3cbd6"/><text x="1180.0" y="84.0" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600" fill="#173b4c">Auswertesoftware</text><text x="1180.0" y="105.0" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">SOFTWARE_CODE als</text><text x="1180.0" y="126.0" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="400" fill="#173b4c">Kandidat</text></g></svg></div></figure>
+<p>Die Kästen für Geräte und Gasquellen fassen mehrere mögliche Objekte zusammen.
+Jedes tatsächlich verwendete Objekt wird einzeln verknüpft. Die Grafik zeigt
+das Zielmodell; Notebook 05 testet bislang nur Instrument → Messlauf samt Dataset.</p>
+<details>
+<summary>Verbindungsregeln und Mehrfachverwendung anzeigen</summary>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Verbindung</th>
+<th>Umsetzung und Bedeutung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Vorbereitung → Messung → Auswertung</td>
+<td>Parent-/Child-Verknüpfungen zwischen <code>EXPERIMENTAL_STEP</code>-Objekten: Voraussetzungen und Datenherkunft. Falls Vorbereitung keine eigenen Ergebnisse erzeugt, in die Messung integrieren.</td>
+</tr>
+<tr>
+<td>Gerät / Referenz / Gasquelle / Prüfling → Messung</td>
+<td>Ressourcen sind Parents des Laufs. Nur tatsächlich verwendete Identitäten auswählen. Rolle, Messort, Kanal und Einsatzzeit im Snapshot dokumentieren; eine Parent-Kante enthält diese Angaben nicht.</td>
+</tr>
+<tr>
+<td>SOP → Vorbereitung; Softwareversion → Auswertung</td>
+<td>Versionierte Ressourcen als Parents. Die Messsoftwareversion wird im Lauf-Snapshot festgehalten; ein eigener geprüfter Softwareeintrag kann zusätzlich Parent der Messung sein.</td>
+</tr>
+<tr>
+<td>Mehrere Messungen → eine Auswertung</td>
+<td>Alle verwendeten Messungen als Parents; die exakten Eingabedatasets und ausgewählten Bereiche zusätzlich im Auswertemanifest. Parent-Beziehung allein identifiziert keine Datei oder Messstufe.</td>
+</tr>
+<tr>
+<td>Eine Messung → mehrere Auswertungen</td>
+<td>Jedes eigenständig gespeicherte Ergebnis hat seinen erzeugenden Auswertungsschritt. Keine Rohdatenkopie als neues Messergebnis.</td>
+</tr>
+<tr>
+<td>Tätigkeit → Dataset → Datei(en)</td>
+<td>Dataset-Zuordnung, keine Parent-/Child-Beziehung. Ein Ergebnisbericht hängt an der Auswertung; ein während der Aufnahme erzeugtes Messprotokoll an der Messung.</td>
+</tr>
+<tr>
+<td>Collection → Objekt</td>
+<td>Ablagezugehörigkeit, keine Objektkante.</td>
+</tr>
+<tr>
+<td>CALIBRATION → Gerät</td>
+<td>Typisierter Objektverweis <code>INSTRUMENT</code>, keine Parent-Kante. Ein Verweis ist im Hierarchiegraphen nicht automatisch wie eine Parent-Kante sichtbar.</td>
+</tr>
+<tr>
+<td>Anlage / Modul / Position → Gerät</td>
+<td>Fachliche Gliederung und Zuordnung im Setup. Noch keine festgelegte openBIS-Relation; nicht als bestätigte Parent-Kante darstellen.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Mehrere Parents und mehrere Children sind zulässig (N:N). Pfeile beschreiben hier
+Datenherkunft beziehungsweise Ressourcennutzung, nicht Gasströmungsrichtung,
+Kabelverlauf oder zeitliche Rückkopplung. Der physische Aufbauplan ist eine andere Sicht.</p>
+<p>Die BAM-Anleitung empfiehlt verbundene Objekte. Bereits registrierte Geräte ohne
+Messlauf bleiben vorerst ohne Nutzungskante; dafür keinen künstlichen Messlauf
+erzeugen. Beim ersten echten Lauf werden die verwendeten Geräte verbunden.</p>
+</details>
+<details>
+<summary>Was wurde korrigiert, was ist noch zu entscheiden?</summary>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Punkt</th>
+<th>Entscheidung / noch fehlende Information</th>
+<th>Fundstelle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Auswerteergebnisse bisher direkt am Messlauf</td>
+<td>Eigener Auswertungsschritt, wenn eigene Ergebnisse erzeugt werden. Ein bloßes Messprotokoll bleibt an der Messung.</td>
+<td>BAM-Anleitung: <strong>Core Concepts</strong>, <strong>1. Draw the research workflow</strong>.</td>
+</tr>
+<tr>
+<td>Hardwareübersicht als gesamter Forschungsablauf</td>
+<td>Als ergänzende Aufbausicht behalten; Forschungsablauf separat aus Tätigkeiten und ihren Ergebnissen entwickeln.</td>
+<td>BAM-Anleitung: Schritte <strong>1–3</strong>; Wiki: <strong>1 Verfahrensprinzip</strong>.</td>
+</tr>
+<tr>
+<td>DUT pauschal als INSTRUMENT</td>
+<td>Vorhandenes Geräteobjekt wiederverwenden oder Typ entsprechend Prüflingsart prüfen.</td>
+<td>BAM-Anleitung: <strong>2.2 Define Entity Types</strong>; Katalogbefund <code>TEST_OBJECT</code> / <code>SAMPLE</code>.</td>
+</tr>
+<tr>
+<td>Anlage, Module und Setup als zwingende neue Objekte</td>
+<td>Zunächst Gliederung/Snapshot; eigene Objekte erst bei belegtem Nutzen und geeigneten Properties.</td>
+<td>BAM-Anleitung: <strong>Simplify your diagram</strong>, <strong>2.3 Reuse Existing BAM Object Types</strong>; <code>SETUP.TEST</code>-Assignments.</td>
+</tr>
+<tr>
+<td>Echte Laborbuchablage</td>
+<td>Gemeinsam nutzbaren Space und Projektverantwortung auswählen; Vorschlags-Collections bestätigen.</td>
+<td>Testbereich ist persönlich, nicht automatisch das Forschungsziel.</td>
+</tr>
+<tr>
+<td>Prüfling, Gasflaschen, SOP und Software</td>
+<td>Konkrete Identitäten/Versionen, vorhandene Einträge, Pflichtfelder und Rechte prüfen. Typkatalog reicht nicht.</td>
+<td>Lokaler Playground-Befund; Notebook 04.</td>
+</tr>
+<tr>
+<td>Aktueller Einbau und Kanalplan</td>
+<td>Vor Ort bestätigen, welches Gerät an welcher Position bzw. welchem Messort betrieben wird. Sieben Identitäten bleiben offen.</td>
+<td>Lokaler Gerätebericht; Notebook 02/06.</td>
+</tr>
+<tr>
+<td>Erster echter Lauf</td>
+<td>Laufgrenze, Zeitbasis, Messplan, zulässige Eingabewerte und Auswerteziel gemeinsam festlegen. Einbauenachweis und Referenzstatus sind laufbezogen zu bestätigen.</td>
+<td>Detailliertes Modell: Messlauf und Messwerte.</td>
+</tr>
+<tr>
+<td>Parser</td>
+<td>Erst nach verbindlicher Lauf-/Datei-/Kanalzuordnung spezifizieren; kein bereits vorhandener GaSi-Parser aus dem Katalog ableitbar.</td>
+<td>BAM-Parserseite verlinkt Beispiele und eine ETL-Anleitung; sie liefert keine GaSi-Feldzuordnung.</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Stand:</strong> Konzeptabgleich am 13.11.2026, offline gegen lokale Nachweise.
+Keine neuen Live-Einträge und kein Upload echter Messdaten in diesem Schritt.
+Die bestehenden Inventar- und synthetischen Testbefunde sind getrennt dokumentiert.</p>
+</details>
+<details>
+<summary>Quellen und weiterführende Links</summary>
+<ul>
+<li><a href="https://datastore.bam.de/en/openbis_20-10-12/how-to_guides/user_ui/represent_research_data">BAM: Conceptual Data Model, Schritte 1–4</a>, gelesen am 13.11.2026.</li>
+<li><a href="https://datastore.bam.de/en/use_cases/euvsop">BAM: EuVSOP</a>, Abschnitte <strong>Register data in the Lab Notebook</strong> und <strong>Connect Inventory and ELN</strong>: getrennte Tätigkeiten mit Datasets, Ressourcen als Parents. Als Strukturvorbild verwendet, ohne dessen Forschungsobjekte oder Sondertypen auf GaSi zu übertragen.</li>
+<li><a href="https://datastore.bam.de/en/parsers">BAM: Parsers</a>, Einstieg zu Beispielen, Workshop und ETL-Pipeline. Weitere Umsetzung nach Bestätigung der GaSi-Semantik.</li>
+<li><a href="../data/wiki/home.txt">GaSi-Wiki</a>, <strong>1 Verfahrensprinzip</strong>, <strong>Aufbau</strong>.</li>
+<li><a href="../data/paper/tg5c00105_si_001.pdf">GaSi-Paper, Supporting Information</a>, <strong>1 Humidification unit</strong>, insbesondere Figure S1 und Referenzmessung auf Seite 3.</li>
+<li>Betriebscode <code>logger/measurement_logger.py</code>, <code>communication/a5b.py</code> und <code>config/gas_flow_config.json</code>; nur lesend abgeglichener Betriebscode außerhalb dieses Repositorys.</li>
+<li><a href="GaSi_Datenmodell.md">Detailliertes Datenmodell und Instanzbefund</a>, <a href="GaSi_Playground_Testnachweis.md">synthetischer Live-Testnachweis</a>. Gerätebelege, konkrete Kanalzuordnungen und Seriennummern bleiben lokal.</li>
+</ul>
+</details></section></main><footer>Offline erzeugt aus <a href="GaSi_Konzeptmodell.md">GaSi_Konzeptmodell.md</a>.
+Neu erzeugen: Notebook 01 → Run All. <a href="GaSi_Datenmodell.html#details">Fachliche Details und Instanzbefund</a>.</footer>
+<script>
+const links = [...document.querySelectorAll('nav a')];
+const panels = [...document.querySelectorAll('.step')];
+function select() {
+  const id = panels.some(p => '#'+p.id === location.hash) ? location.hash : '#schritt-1';
+  panels.forEach(p => { p.hidden = '#'+p.id !== id; });
+  links.forEach(a => {
+    if (a.hash === id) a.setAttribute('aria-current','step');
+    else a.removeAttribute('aria-current');
+  });
+}
+window.addEventListener('hashchange',select);select();
+document.querySelectorAll('[data-fullscreen]').forEach(b => {
+  if (!document.fullscreenEnabled) { b.hidden = true; return; }
+  b.addEventListener('click',() => b.closest('figure').requestFullscreen().catch(()=>{}));
+});
+document.querySelector('[data-print]').addEventListener('click',() => {
+  const states = [...document.querySelectorAll('details')].map(d => [d,d.open]);
+  document.querySelectorAll('details').forEach(d => { d.open = true; });
+  window.print();states.forEach(([d,open]) => { d.open = open; });
+});
+</script></body></html>

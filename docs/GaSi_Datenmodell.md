@@ -1,15 +1,22 @@
 # GaSi-Datenmodell: aktueller Aufbau und Messlauf
 
+Der Forschungsablauf, seine Entitäten, Ablage und Beziehungen sind im
+[GaSi-Konzeptmodell nach den vier BAM-Schritten](GaSi_Konzeptmodell.md)
+zusammengeführt. Die [HTML-Ansicht](GaSi_Konzeptmodell.html) zeigt einen Schritt
+nach dem anderen. Dieses Dokument ergänzt die fachlichen Feldregeln und den
+bisherigen Instanzbefund.
+
 ## Ziel und Beleggrenzen
 
 Das Modell beschreibt **das aktuelle GaSi-Setup** der BAM, FB 8.1. Es ist kein in openBIS registriertes Schema. Frühere Gerätebestände und Umbauhistorien sind nicht Teil dieses Schritts. Ein Messlauf hält fest, welcher Aufbaustand bei seiner Aufnahme verwendet wurde.
 
 Die Grundlage sind Wiki, Betriebscode, Loggerdateien und lokale Geräteunterlagen. Originalunterlagen, Seriennummern und gerätespezifische Befunde bleiben unter `data/datasheets/` beziehungsweise in der ignorierten `config/gasi_setup.json`. Die öffentliche Modellgrafik enthält diese Informationen nicht.
 
-Die unten genannten Standardtypen wurden am 12.11.2026 lesend im Playground geprüft;
-die fachliche Zuordnung und die konkreten Testziele benötigen weiterhin die Bestätigung
-des Data Store Stewards. Ein sichtbarer Typ bestätigt weder Schreibrechte noch eine
-fachliche Freigabe. Die allgemeinen Anlagen-/Modulbeziehungen bleiben ein Vorschlag.
+Die unten genannten Standardtypen wurden am 12.11.2026 lesend im Playground geprüft.
+Der synthetische Testbereich und das Geräteinventar wurden anschließend im beauftragten
+Umfang angelegt und geprüft. Das ist keine Freigabe einer Ablage echter Messläufe.
+Ein sichtbarer Typ allein bestätigt weder Schreibrechte noch fachliche Eignung.
+Die allgemeinen Anlagen-/Modulbeziehungen bleiben eine fachliche Gliederung.
 
 ## 1. Anlage, Module und Geräte
 
@@ -72,7 +79,27 @@ Es wird kein Änderungsjournal und keine Rekonstruktion früherer Umbauten aufge
 | Messlauf | Fachlich zusammengehörige Aufnahme mit Zweck, Prüfling, Aufbau, Referenzen, Verfahren/Softwarestand und Messplan. | Ein `EXPERIMENTAL_STEP` im Laborbuch; eindeutige Laufkennung, Beginn/Ende mit Zeitzone, verantwortliche Person. |
 | Messstufe | Schritt oder Plateau innerhalb eines Laufs. | Messplan/Datensatz mit Stufenkennung, Sollwerten, Dauer und Wiederholung. |
 | Messpunkt | Zeitlich zugeordneter Snapshot der Kanäle. | CSV-Zeile im Dataset; kein Objekt pro Zeile. |
-| Datei | Loggerexport, Konfiguration oder Ergebnis. | Dataset am Lauf; Inhalt und Hash bleiben erhalten. |
+| Datei | Loggerexport, Konfiguration oder Ergebnis. | Dataset an der erzeugenden Tätigkeit; Inhalt und Hash bleiben erhalten. |
+
+### Vorbereiten, messen und auswerten
+
+Die BAM-Anleitung verlangt die Zuordnung von Forschungsdateien zur Tätigkeit,
+die sie erzeugt. Deshalb umfasst der vollständige GaSi-Ablauf drei mögliche
+`EXPERIMENTAL_STEP`-Objekte: Vorbereitung mit Prüfplan/Startkonfiguration,
+Messung mit Loggerdateien und tatsächlich verwendetem Setup-Snapshot sowie
+Auswertung mit berechneten Daten, Diagrammen und Bericht. Erzeugt die Vorbereitung
+keine eigenständig aufbewahrten Dateien, wird sie in die Messung integriert.
+
+Auswertung ist ein eigener Schritt, sobald sie eigene Ergebnisse erzeugt.
+Die Messung ist Parent der Auswertung; der Auswertungsschritt benennt die
+verwendeten Eingabedatasets, Bereiche und Hashes. Ein während der Aufnahme
+erzeugtes Messprotokoll gehört hingegen direkt zur Messung. Mehrere Auswertungen
+können denselben Lauf verwenden, eine Auswertung kann mehrere Läufe vergleichen.
+Die bisherigen Notebooks erzeugen noch keinen solchen echten Forschungsablauf.
+
+Fundstelle: [BAM Conceptual Data Model](https://datastore.bam.de/en/openbis_20-10-12/how-to_guides/user_ui/represent_research_data),
+**Core Concepts**, **1. Draw the research workflow**, insbesondere die Zuordnung
+von Datasets zur erzeugenden Tätigkeit und die Vereinfachung von Schritten ohne Dataset.
 
 **Datei ist nicht gleich Messlauf.** Ein Lauf kann mehrere Dateien erzeugen; ein Export kann mehr als eine Aufnahme enthalten. Die lokale Vorschau erfindet weder Laufkennung noch Start-/Stopzeiten oder Setup-Zuordnung. Ein aktuelles Setup beweist nicht, mit welchem Aufbau eine vorhandene Datei erzeugt wurde. Es erscheint in der Vorschau ausschließlich als noch nicht zugewiesener Kontext. Alte Dateien müssen für diesen Schritt nicht rekonstruiert werden.
 
@@ -93,20 +120,28 @@ Der aktuelle Betriebscode interpretiert A5B_CH11 als MGK-Eingang zur Temperaturu
 
 ## 5. Grafische Ordnung
 
-Die Grafik erklärt die fachliche Ordnung. „umfasst“ und „Position / Kanal“ legen noch keine openBIS-Property fest. Für den aktuellen Aufbau ist `SETUP.TEST` ein zu prüfender Kandidat; die Setup-Datei bleibt unabhängig davon am Messlauf erhalten.
+Die Grafik erklärt die Aufbausicht auf eine Messung, nicht den vollständigen
+Forschungsablauf. Diesen zeigt Schritt 1 des [Konzeptmodells](GaSi_Konzeptmodell.md).
+„umfasst“ und „Position / Kanal“ legen noch keine openBIS-Property fest.
+Anlage und Module sind zunächst Gliederung, keine anzulegenden Objekte.
+Für einen gesonderten Aufbau-Eintrag ist `SETUP.TEST` ein zu prüfender Kandidat;
+die Setup-Datei bleibt unabhängig davon am Messlauf erhalten.
+Die Setup-Parent-Kante ist nur bei einem tatsächlich angelegten und geeigneten
+Setup-Objekt vorgesehen. Für einen Prüfling wird ein vorhandenes Geräteobjekt
+wiederverwendet; sonst ist ein geeigneter Prüflingstyp zu prüfen.
 
 ```mermaid
 flowchart LR
-    A[Inventar: Anlage / GaSi-Anlage] -->|umfasst| M[Inventar: Modul / Module]
+    A[Gliederung: Anlage / GaSi-Anlage] -->|umfasst| M[Gliederung: Modul / Module]
     M -->|umfasst| I[Inventar: INSTRUMENT / Geräte]
     I -->|Position / Kanal| S[Inventar: SETUP.TEST / Aktueller Aufbau]
     S -->|Parent| R[Lab Notebook: EXPERIMENTAL_STEP / Messlauf]
     I -->|Parent| R
     G[FB Inventory: GAS_BOTTLE / Prüfgas] -->|Parent| R
-    D[FB Inventory: INSTRUMENT / DUT] -->|Parent| R
+    D[FB Inventory: vorhandenes Objekt / DUT] -->|Parent| R
     R -->|Dataset attachment| CSV[RAW_DATA / unveränderte CSV]
     R -->|Dataset attachment| CFG[ATTACHMENT / Lauf-Konfigurationssnapshot]
-    R -->|Dataset attachment| RES[ATTACHMENT / Auswertung und Bericht]
+    R -->|Dataset attachment| RES[ATTACHMENT / Messprotokoll]
     C[CALIBRATION / Gerätekalibrierung] -->|OBJECT property INSTRUMENT| I
 ```
 
@@ -149,18 +184,26 @@ ist im [Playground-Testnachweis](GaSi_Playground_Testnachweis.md) dokumentiert.
 
 | Inhalt | Kandidat / Ort | In der Instanz zu prüfen |
 |---|---|---|
-| Anlage, Module und Geräte | Passender Inventartyp; `INSTRUMENT` oder `TESTING_EQUIPMENT` für Geräte | Zielbereich, Pflichtfelder, vorhandene Einträge und Zugehörigkeitsbeziehung |
+| Geräte | `INSTRUMENT`; `TESTING_EQUIPMENT` nicht im sichtbaren Katalog | Vorhandene Identität wiederverwenden; Einbau und Rolle gesondert bestätigen |
+| Anlage und Module | Zunächst Gliederung des Setup-Snapshots | Eigene Inventarobjekte nur bei belegtem Bedarf und geeignetem Typ |
 | Aktueller Aufbau | `SETUP.TEST`, falls geeignet; sonst vereinbarte Zuordnung plus Setup-Datei | Typ, Objektverweise und Positionen |
 | Messlauf | `EXPERIMENTAL_STEP` in einer Laborbuch-Collection | Zielpfad, Namen-/Zeitfelder, Zweck, Verantwortlichkeit und Ressourcen |
+| Vorbereitung / Auswertung | Ebenfalls `EXPERIMENTAL_STEP`, wenn eigene Dateien erzeugt werden | Echte Laborbuchziele offen; Tätigkeit mit ihren Ergebnissen und Parents dokumentieren |
+| Prüfling | Vorhandenes `INSTRUMENT` oder geeigneter `TEST_OBJECT`-/`SAMPLE`-Typ | Geräteidentität und Prüflingsrolle unterscheiden; Typ-Assignments bei neuen Kandidaten offen |
 | Gas / Referenzmaterial | `GAS_BOTTLE` oder geeigneter Materialtyp | Flasche/Charge, zertifizierter Wert, Bedingungen und Nachweis |
 | Gerätekalibrierung | `CALIBRATION` mit Gerätebezug | Pflichtfelder, Zertifikatsnummer und Geltungsbereich |
-| Dateien | `RAW_DATA` und `ATTACHMENT` am Lauf | Dataset-Typen und Rechte |
+| Dateien | `RAW_DATA` an der Messung; `ATTACHMENT` an der erzeugenden Tätigkeit | Für Auswertungen `ANALYZED_DATA` / `FIGURE` / `SOURCE_CODE` erst nach Schemaabgleich nutzen |
 
 Ressourcen sind gemäß BAM-Laborbuchkonvention Parents des Messlaufs; Dateien sind Datasets am Lauf und keine Child-Objekte. Fachliche Zugehörigkeit im Inventar wird davon unterschieden. Nur tatsächlich beteiligte Geräte werden dem Lauf zugeordnet.
 
 Ein Dataset kann mehrere zugehörige Dateien enthalten. `RAW_DATA`, `ATTACHMENT` und das optional zu prüfende `ELN_PREVIEW` sind Dataset-Typen; CSV, PNG und ZIP sind Dateiformate. Anzeigenamen (`$name`) werden von stabilen Codes und Identifiern unterschieden.
 
-Geräteunterlagen gehören zum Gerät, Kalibrierscheine zum Gerät beziehungsweise Kalibrierobjekt. Beim Lauf werden die verwendeten Nachweise referenziert. Zielpfade folgen `Space → Project → Collection → Object → Dataset`; exakte Codes werden aus der Instanz übernommen.
+Geräteunterlagen gehören fachlich zum Gerät, Kalibrierscheine zum Gerät
+beziehungsweise Kalibrierobjekt. Diese vorhandenen Ressourcenbelege bleiben hier
+lokal; für sie wird keine fiktive Forschungstätigkeit erzeugt. Forschungsoutputs
+werden an ihrer erzeugenden Tätigkeit abgelegt. Beim Lauf werden die verwendeten
+Nachweise referenziert. Zielpfade folgen `Space → Project → Collection → Object → Dataset`;
+exakte Codes werden aus der Instanz übernommen.
 
 ### Lesender Instanzabgleich vom 12.11.2026
 
@@ -192,7 +235,12 @@ physischer Standort erforderlich; dieser Test legt keine echten Geräte an.
 
 ## 7. Umsetzung und Quellen
 
-Die Notebooks haben einzelne Aufgaben: **01 Modellgrafik erzeugen**, **02 aktuelles Setup prüfen**, **03 CSVs lokal prüfen**, **04 Playground-Bestand lesen**, **05 synthetischen Schreibtest ausführen**. Die Anlage echter Geräte folgt erst nach Bestätigung der aktuellen Zuordnungen und Inventarziele. Der Schreibtest importiert weder echte Geräte noch Messdaten.
+Die Notebooks haben einzelne Aufgaben: **01 Modellgrafiken erzeugen**,
+**02 aktuelles Setup prüfen**, **03 CSVs lokal prüfen**, **04 Playground-Bestand lesen**,
+**05 synthetischen Schreibtest ausführen**, **06 Gerätebelege abgleichen** und
+**07 belegte Geräteidentitäten registrieren**. Zehn Identitäten sind im beauftragten
+Geräteinventar registriert; sieben bleiben offen. Einbau und Referenzstatus sind
+weiterhin gesondert zu bestätigen. Notebook 05 importiert weder echte Geräte noch Messdaten.
 
 **Notebook 00** richtet davor bei Bedarf die zentrale lokale Session ein. Der [Abgleich mit dem bereitgestellten pyBIS-Beispiel](pybis_Beispielabgleich.md) bestätigt die technische Grundstruktur und dokumentiert die übernommenen Ergänzungen.
 
@@ -205,4 +253,5 @@ Notebook 04 und 05. Sie ist unabhängig von `.env` (Zugang) und `config/gasi_set
 - Betriebscode-Projekt: `logger/measurement_logger.py`, `communication/a5b.py`, `communication/keller.py`, `gui/main_window.py`, `config/gas_flow_config.json` und `docs/GASI_Handbuch.html`; ausschließlich lesend verwendet.
 - Gerätebelege und konkrete Restfragen: lokale Setup-Konfiguration und `data/datasheets/`, außerhalb von Git.
 - [BAM Forschungsdaten](https://bamresearch.github.io/openBIS-data-store-tutorials/represent-data-research-data/), [Laborbuch](https://bamresearch.github.io/openBIS-data-store-tutorials/lab-notebook/), [Inventar](https://bamresearch.github.io/openBIS-data-store-tutorials/inventory-data-stewards/), [Verknüpfungen](https://bamresearch.github.io/openBIS-data-store-tutorials/connect-data/).
+- [Aktuelle BAM-Anleitung zum Konzeptmodell](https://datastore.bam.de/en/openbis_20-10-12/how-to_guides/user_ui/represent_research_data), [EuVSOP-Strukturbeispiel](https://datastore.bam.de/en/use_cases/euvsop) und [BAM-Parserübersicht](https://datastore.bam.de/en/parsers), gelesen am 13.11.2026. Umsetzung und offene Entscheidungen: [GaSi in vier Schritten](GaSi_Konzeptmodell.md).
 - [BAM Objektverweise](https://bamresearch.github.io/bam-masterdata/howtos/object_references/) und [öffentliche Typdefinitionen](https://github.com/BAMresearch/bam-masterdata/blob/main/bam_masterdata/datamodel/v0/object_types.py). Öffentlicher Quellcode bestätigt kein Deployment im Playground.

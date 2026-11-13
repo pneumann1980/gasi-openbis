@@ -156,9 +156,13 @@ def check_html_notebook(base, spec_dir):
     isolated = base / "model-repo"
     (isolated / "docs").mkdir(parents=True)
     shutil.copy(ROOT / "gasi_model_html.py", isolated)
+    shutil.copy(ROOT / "gasi_concept_html.py", isolated)
     shutil.copy(ROOT / "gasi_session.py", isolated)
     source = isolated / "docs/GaSi_Datenmodell.md"
     shutil.copy(ROOT / "docs/GaSi_Datenmodell.md", source)
+    concept = isolated / "docs/GaSi_Konzeptmodell.md"
+    shutil.copy(ROOT / "docs/GaSi_Konzeptmodell.md", concept)
+    concept_digest = hashlib.sha256(concept.read_bytes()).hexdigest()
     digest = hashlib.sha256(source.read_bytes()).hexdigest()
     execute(ROOT / "GaSi_01_Datenmodell_HTML_erzeugen.ipynb", isolated, spec_dir)
     assert digest in source.with_suffix(".html").read_text(encoding="utf-8")
@@ -166,7 +170,11 @@ def check_html_notebook(base, spec_dir):
     assert 'name="gasi-view" content="simple"' in simple
     assert digest in simple and "<table>" not in simple
     assert hashlib.sha256(source.read_bytes()).hexdigest() == digest
-    print("PASS HTML notebook: generates current source, Markdown unchanged")
+    assert concept_digest in concept.with_suffix(".html").read_text(encoding="utf-8")
+    assert 'href="GaSi_Konzeptmodell.html"' in simple
+    assert hashlib.sha256(concept.read_bytes()).hexdigest() == concept_digest
+    assert len(list(isolated.glob("docs/GaSi_Konzeptmodell_*.svg"))) == 3
+    print("PASS HTML notebook: both current sources, four BAM steps, three SVGs, Markdown unchanged")
 
 
 def check_session_notebook(base, spec_dir):
