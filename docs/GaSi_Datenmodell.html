@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="gasi-view" content="full"><meta name="gasi-model-sha256" content="062d2f7e2cd6a03c22979571bf0aa845e33da1f7f7f3e8cec57b2caf9eeebfa5">
+<meta name="gasi-view" content="full"><meta name="gasi-model-sha256" content="7ff02e7d1385da12c70dca0eb90038c8209fbf9b63873562865dbcab48b3921c">
 <title>GaSi-Datenmodell: aktueller Aufbau und Messlauf</title><style>
 :root { color-scheme: light; --ink:#183448; --muted:#526b7b; --blue:#126b88;
   --line:#d9e4e9; --paper:#fff; --wash:#f0f5f7; }
@@ -287,21 +287,21 @@ bleiben getrennt vom <code>openbis_identifier</code>. Die API-Properties <code>I
 </tbody>
 </table></div>
 <h3 id="vorbereiten-messen-und-auswerten">Vorbereiten, messen und auswerten<a class="headerlink" href="#vorbereiten-messen-und-auswerten" title="Permanent link">&para;</a></h3>
-<p>Die BAM-Anleitung verlangt die Zuordnung von Forschungsdateien zur Tätigkeit,
-die sie erzeugt. Deshalb umfasst der vollständige GaSi-Ablauf drei mögliche
-<code>EXPERIMENTAL_STEP</code>-Objekte: Vorbereitung mit Prüfplan/Startkonfiguration,
-Messung mit Loggerdateien und tatsächlich verwendetem Setup-Snapshot sowie
-Auswertung mit berechneten Daten, Diagrammen und Bericht. Erzeugt die Vorbereitung
-keine eigenständig aufbewahrten Dateien, wird sie in die Messung integriert.</p>
-<p>Auswertung ist ein eigener Schritt, sobald sie eigene Ergebnisse erzeugt.
-Die Messung ist Parent der Auswertung; der Auswertungsschritt benennt die
-verwendeten Eingabedatasets, Bereiche und Hashes. Ein während der Aufnahme
-erzeugtes Messprotokoll gehört hingegen direkt zur Messung. Mehrere Auswertungen
-können denselben Lauf verwenden, eine Auswertung kann mehrere Läufe vergleichen.
-Notebook 08 kann diesen Ablauf nach vollständiger lokaler Konfiguration und
-bewusster Aktivierung schreiben. Der vollständige Ablauf ist bisher nur mit einem
-synthetischen Testclient bestätigt; für echte Daten fehlen noch die unten
-dokumentierten fachlichen Zuordnungen und ein erfolgreicher Instanzabgleich.</p>
+<p>Die Messung ist ein eigenständig registrierbarer <code>EXPERIMENTAL_STEP</code> mit
+Original-RAW_DATA und Laufkontext. Prüfplan und Sollprofil gehören standardmäßig
+als ATTACHMENT zu diesem Lauf. Eine automatisch erzeugte Datei begründet kein
+zusätzliches Vorbereitungsobjekt.</p>
+<p>Eine unabhängig freigegebene oder laufübergreifend wiederverwendete Vorbereitung
+kann als eigener EXPERIMENTAL_STEP registriert bzw. als vorhandener Parent benutzt
+werden. Die spätere Auswertung ist ein eigener Schritt mit eigener analysis_id,
+eigenen Ergebnisdateien und den tatsächlich verwendeten Messungen als Parents.
+Notebook 08 erfasst die Messung ohne Auswertungsziel oder Ergebnisse; Notebook 09
+ergänzt die Auswertung unabhängig in einem frischen Kernel.</p>
+<p>Das Auswertemanifest speichert tatsächliche Server-Dataset-IDs, Dateipfade, Hashes,
+ausgewählte Records/Stufen, Zeitbezug, Codeversion, Parameter und Referenznachweise.
+Mehrere Messungen können eine Auswertung speisen. Geteilte Originaldateien bleiben
+bis zur Live-Abnahme ihrer einmaligen Ablage schreibgesperrt.
+Aktuelle Instanzbefunde: <a href="GaSi_Projektstatus.md">Projektstatus</a>.</p>
 <h3 id="das-sample-ist-der-zu-prufende-sensor">Das „Sample“ ist der zu prüfende Sensor<a class="headerlink" href="#das-sample-ist-der-zu-prufende-sensor" title="Permanent link">&para;</a></h3>
 <p>Das fachliche Prüfobjekt ist ein Gas- oder Gasfeuchtesensor. Ein vorhandener Sensor
 wird nicht in einer GaSi-Materialsynthese erzeugt. Er behält vor und nach der
@@ -583,7 +583,7 @@ Notebook 04 und 05. Sie ist unabhängig von <code>.env</code> (Zugang) und <code
 <li><a href="https://bamresearch.github.io/bam-masterdata/howtos/object_references/">BAM Objektverweise</a> und <a href="https://github.com/BAMresearch/bam-masterdata/blob/main/bam_masterdata/datamodel/v0/object_types.py">öffentliche Typdefinitionen</a>. Öffentlicher Quellcode bestätigt kein Deployment im Playground.</li>
 </ul></div></details></section>
 <footer class="source-note">Quelle: <a href="GaSi_Datenmodell.md">GaSi_Datenmodell.md</a> · Neu erzeugen: GaSi_01_Datenmodell_HTML_erzeugen.ipynb → Run All.
-<details><summary>Quellstand und Offline-Ansicht</summary>SHA-256: 062d2f7e2cd6a03c22979571bf0aa845e33da1f7f7f3e8cec57b2caf9eeebfa5<br>
+<details><summary>Quellstand und Offline-Ansicht</summary>SHA-256: 7ff02e7d1385da12c70dca0eb90038c8209fbf9b63873562865dbcab48b3921c<br>
 Die Markdown-Datei bleibt die maßgebliche Quelle. Die Ansicht benötigt keine Internetverbindung.</details></footer></div></details></article>
 </main></div><script>
 const article = document.querySelector('article');

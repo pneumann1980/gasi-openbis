@@ -1,7 +1,6 @@
 {
   "schema_version": 1,
   "run_id": null,
-  "analysis_id": null,
   "purpose": null,
   "responsible_person": null,
   "dut": {
@@ -17,14 +16,21 @@
   },
   "setup_confirmed": false,
   "setup_evidence": null,
-  "reference_assessment": {"confirmed": false, "basis": null, "scope": null},
+  "reference_assessment": {
+    "confirmed": false,
+    "basis": null,
+    "scope": null
+  },
   "source_association_confirmed": false,
   "source_association_evidence": null,
-  "software_versions": {"acquisition": null, "analysis": null},
+  "software_versions": {
+    "acquisition": null
+  },
   "times": {
-    "preparation": {"start": null, "end": null},
-    "measurement": {"start": null, "end": null},
-    "analysis": {"start": null, "end": null}
+    "measurement": {
+      "start": null,
+      "end": null
+    }
   },
   "stages": [
     {
@@ -33,9 +39,19 @@
       "gas": {
         "carrier": null,
         "basis": null,
-        "components": [{"species": null, "value": null, "unit": "umol/mol"}]
+        "components": [
+          {
+            "species": null,
+            "value": null,
+            "unit": "umol/mol"
+          }
+        ]
       },
-      "temperature": {"controlled": true, "setpoint_C": null, "location": null},
+      "temperature": {
+        "controlled": true,
+        "setpoint_C": null,
+        "location": null
+      },
       "humidity": {
         "controlled": true,
         "quantity": null,
@@ -45,19 +61,61 @@
         "location": null,
         "temperature_reference": null
       },
-      "pressure": {"value_Pa": null, "kind": "absolute", "location": null}
+      "pressure": {
+        "value_Pa": null,
+        "kind": "absolute",
+        "location": null
+      }
     }
   ],
   "channels": [
-    {"column": null, "role": "dut_signal", "object_identifier": null, "quantity": null, "unit": null, "location": null, "confirmed": false},
-    {"column": null, "role": "reference_humidity", "object_identifier": null, "quantity": null, "unit": null, "location": null, "confirmed": false},
-    {"column": null, "role": "temperature", "object_identifier": null, "quantity": null, "unit": null, "location": null, "confirmed": false}
+    {
+      "column": null,
+      "role": "dut_signal",
+      "object_identifier": null,
+      "quantity": null,
+      "unit": null,
+      "location": null,
+      "confirmed": false
+    },
+    {
+      "column": null,
+      "role": "reference_humidity",
+      "object_identifier": null,
+      "quantity": null,
+      "unit": null,
+      "location": null,
+      "confirmed": false
+    },
+    {
+      "column": null,
+      "role": "temperature",
+      "object_identifier": null,
+      "quantity": null,
+      "unit": null,
+      "location": null,
+      "confirmed": false
+    }
   ],
   "files": {
     "preparation": [],
-    "raw_data": [],
-    "analysis": []
+    "raw_data": []
   },
   "source_ranges": [],
-  "stage_ranges": []
+  "stage_ranges": [],
+  "upload_scope": "measurement",
+  "preparation": {
+    "mode": "inline",
+    "identifier": null,
+    "justification": null,
+    "independently_released": false,
+    "reused_across_runs": false
+  },
+  "raw_file_policy": {
+    "mode": "exclusive_run",
+    "confirmed": false,
+    "evidence": null,
+    "shared_sources": []
+  },
+  "reference_evidence": []
 }

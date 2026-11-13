@@ -1,0 +1,28 @@
+{
+  "schema_version": 2,
+  "analysis_id": null,
+  "purpose": null,
+  "purpose_kind": "characterization",
+  "responsible_person": null,
+  "times": {
+    "start": null,
+    "end": null
+  },
+  "software_version": null,
+  "software_objects": [],
+  "parameters": {},
+  "selection_rules": null,
+  "reference_assessment": {
+    "confirmed": false,
+    "basis": null,
+    "scope": null
+  },
+  "reference_evidence": [],
+  "stable_windows": [],
+  "uncertainty": null,
+  "requirements": [],
+  "decision_rule": null,
+  "native_dataset_parents": false,
+  "inputs": [],
+  "files": []
+}

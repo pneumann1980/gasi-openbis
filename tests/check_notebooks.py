@@ -23,6 +23,7 @@ TARGET_NOTEBOOK = "GaSi_Playground_Ziele_einrichten.ipynb"
 PROVISION_NOTEBOOK = "GaSi_Playground_Testbereich_anlegen.ipynb"
 INVENTORY_NOTEBOOKS = ("GaSi_06_Geraetezuordnung_pruefen.ipynb", "GaSi_07_Geraeteinventar_anlegen.ipynb")
 RESEARCH_NOTEBOOK = "GaSi_08_Forschungsablauf_hochladen.ipynb"
+ANALYSIS_NOTEBOOK = "GaSi_09_Auswertung_hochladen.ipynb"
 NOTEBOOKS = ("GaSi_01_Datenmodell_HTML_erzeugen.ipynb", "GaSi_02_Aktuelles_Setup_pruefen.ipynb",
              "GaSi_03_Messdateien_pruefen.ipynb", "GaSi_04_Playground_Bestand_lesen.ipynb", "GaSi_05_Playground_Schreibtest.ipynb")
 
@@ -84,12 +85,21 @@ fake = FakeClient()
 g.connect_playground = lambda: (fake, "LOCAL FAKE CLIENT; no network")
 g.load_target_config = lambda: (fake.cfg, "LOCAL FAKE CONFIG; not real BAM paths")
 """
-        if path.name == RESEARCH_NOTEBOOK:
+        if path.name in (RESEARCH_NOTEBOOK,ANALYSIS_NOTEBOOK):
             setup += """
-from test_research_workflow import WorkflowClient, configuration
-fake = WorkflowClient()
+from test_staged_upload import StagedClient, measurement_fixture, analysis_fixture
+from test_research_workflow import configuration
+import gasi_run
+fake = StagedClient()
 g.connect_playground = lambda: (fake, "LOCAL FAKE CLIENT; no network")
 g.load_target_config = lambda path=None: (configuration(), "LOCAL FAKE WORKFLOW CONFIG")
+"""
+        if path.name == ANALYSIS_NOTEBOOK:
+            setup += """
+run = measurement_fixture(Path.cwd())
+captured = gasi_run.ensure_workflow(fake, gasi_run.prepare_bundle(run), configuration())
+import json
+Path("config/gasi_analysis.json").write_text(json.dumps(analysis_fixture(captured)), encoding="utf-8")
 """
         if path.name == PROVISION_NOTEBOOK:
             setup += f"""
@@ -120,8 +130,9 @@ g.connect_playground = lambda: (fake, "LOCAL FAKE CLIENT; no network")
     if write:
         cell = nb.cells[-1]
         if research:
+            phrase = "UPLOAD GASI ANALYSIS TO PLAYGROUND" if path.name==ANALYSIS_NOTEBOOK else "UPLOAD CONFIGURED GASI RESEARCH WORKFLOW TO PLAYGROUND"
             cell.source = cell.source.replace("UPLOAD_ENABLED = False", "UPLOAD_ENABLED = True").replace(
-                'CONFIRMATION = ""', 'CONFIRMATION = "UPLOAD CONFIGURED GASI RESEARCH WORKFLOW TO PLAYGROUND"')
+                'CONFIRMATION = ""', f'CONFIRMATION = "{phrase}"')
         elif inventory:
             cell.source = cell.source.replace("REGISTER_ENABLED = False", "REGISTER_ENABLED = True").replace(
                 'REGISTER_CONFIRMATION = ""', 'REGISTER_CONFIRMATION = "REGISTER DOCUMENTED GASI DEVICE IDENTITIES ON PLAYGROUND"')
@@ -140,7 +151,9 @@ g.connect_playground = lambda: (fake, "LOCAL FAKE CLIENT; no network")
         if path.name == INVENTORY_NOTEBOOKS[1]:
             assertion = "assert len(fake.created) == 1 and len(fake.saved) == 2" if write else "assert not fake.created and not fake.saved"
         if path.name == RESEARCH_NOTEBOOK:
-            assertion = "assert len(fake.created) == 8 and len(fake.datasets) == 5 and len(fake.samples) == 6" if write else "assert not fake.created"
+            assertion = "assert len(fake.created) == 5 and len(fake.datasets) == 4 and len(fake.samples) == 4" if write else "assert not fake.created"
+        if path.name == ANALYSIS_NOTEBOOK:
+            assertion = "assert len(fake.created) == 8 and len(fake.datasets) == 6" if write else "assert len(fake.created) == 5"
         nb.cells.append(nbformat.v4.new_code_cell(assertion))
     nb.cells.append(nbformat.v4.new_code_cell("assert not network_attempts"))
     km = AsyncKernelManager(kernel_name="gasi-test", connection_file=str(spec_dir / f"connection_{path.stem}.json"),
@@ -266,21 +279,24 @@ def check_inventory_notebooks(base, spec_dir):
 def check_research_notebook(base,spec_dir):
     isolated=base / "research-repo"
     (isolated/"config").mkdir(parents=True)
-    for name in ("gasi_run.py","gasi_local_measurements.py","gasi_openbis_playground.py","gasi_session.py"):
+    for name in ("gasi_run.py","gasi_analysis.py","gasi_local_measurements.py","gasi_openbis_playground.py","gasi_session.py"):
         shutil.copy(ROOT/name,isolated)
-    for name in ("gasi_run.example.json","playground_test_target.example.json"):
+    for name in ("gasi_run.example.json","gasi_analysis.example.json","playground_test_target.example.json"):
         shutil.copy(ROOT/"config"/name,isolated/"config")
     execute(ROOT/RESEARCH_NOTEBOOK,isolated,spec_dir)
     sys.path.insert(0,str(ROOT))
-    from tests.test_research_workflow import run_fixture
-    run=run_fixture(isolated)
+    from tests.test_staged_upload import measurement_fixture
+    run=measurement_fixture(isolated)
     (isolated/"config/gasi_run.json").write_text(json.dumps(run),encoding="utf-8")
     source=isolated/"data/measurements/synthetic.csv"
     original=source.read_bytes()
     execute(ROOT/RESEARCH_NOTEBOOK,isolated,spec_dir,fake=True)
     execute(ROOT/RESEARCH_NOTEBOOK,isolated,spec_dir,fake=True,write=True,repeat=True,research=True)
+    execute(ROOT/ANALYSIS_NOTEBOOK,isolated,spec_dir)
+    execute(ROOT/ANALYSIS_NOTEBOOK,isolated,spec_dir,fake=True)
+    execute(ROOT/ANALYSIS_NOTEBOOK,isolated,spec_dir,fake=True,write=True,repeat=True,research=True)
     assert source.read_bytes()==original
-    print("PASS research notebook: missing metadata, default preview, full graph upload + repeat, raw CSV unchanged")
+    print("PASS staged notebooks: independent capture, later analysis, previews, retries, raw CSV unchanged")
 
 
 def main(html_only=False, inventory_only=False, research_only=False):

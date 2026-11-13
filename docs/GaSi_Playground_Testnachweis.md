@@ -1,5 +1,9 @@
 # GaSi-Playground: eingerichteter Testbereich und Live-Nachweis
 
+**Historischer Schreibnachweis:** Bei der aktuellen lesenden Prüfung ist die
+Laborbuch-Testcollection nicht mehr lesbar. Daraus wird keine aktuelle
+Schreibbestätigung abgeleitet. Siehe [Projektstatus](GaSi_Projektstatus.md).
+
 Stand: 2026-11-12T13:40:00.401078+00:00 (UTC). Ausschließlich synthetische Testeinträge.
 
 ## Festgelegte Ablage

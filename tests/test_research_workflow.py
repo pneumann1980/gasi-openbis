@@ -26,13 +26,13 @@ def configuration():
 
 
 def run_fixture(root):
-    (root/"data/measurements").mkdir(parents=True)
-    (root/"data/results").mkdir(parents=True)
+    (root/"data/measurements").mkdir(parents=True,exist_ok=True)
+    (root/"data/results").mkdir(parents=True,exist_ok=True)
     fixture(root/"data/measurements",{"Datum":"13.11.2026","Uhrzeit":"10:05:00",
                                     "A5B_CH01_mV":"12,5","MBW373_FROST_POINT_C":"-10,0"})
     (root/"data/results/result.csv").write_text("synthetic_result\n1\n",encoding="utf-8")
     run = json.loads((runmod.ROOT/"config/gasi_run.example.json").read_text(encoding="utf-8"))
-    run.update(run_id="SYNTHETIC-SENSOR-RUN-01",analysis_id="ANALYSIS-1",purpose="Synthetic characterization",
+    run.update(upload_scope="workflow",run_id="SYNTHETIC-SENSOR-RUN-01",analysis_id="ANALYSIS-1",purpose="Synthetic characterization",
         responsible_person="Synthetic tester",setup_confirmed=True,setup_evidence="Synthetic fixture, no real setup",
         reference_assessment={"confirmed":True,"basis":"Synthetic fixture only","scope":"No physical accuracy claim"},
         source_association_confirmed=True,source_association_evidence="One synthetic record",

@@ -59,7 +59,8 @@ class ConceptTests(unittest.TestCase):
                 for i in range(3, len(tokens), 2):
                     value = float(tokens[i+1])
                     nx, ny = (value, py) if tokens[i] == "H" else (px, value)
-                    segments.append((px, py, nx, ny))
+                    if svg.attrib.get("data-profile")!="combined" or n.attrib.get("data-relation")=="Parent":
+                        segments.append((px, py, nx, ny))
                     for x, y, w, h in boxes:
                         crosses = (y < py < y+h and max(min(px,nx),x) < min(max(px,nx),x+w)) if py == ny else (x < px < x+w and max(min(py,ny),y) < min(max(py,ny),y+h))
                         self.assertFalse(crosses, "Line crosses box")

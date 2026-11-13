@@ -38,6 +38,7 @@
   },
   "gasi_workflow": {
     "host": "https://playground.datastore.bam.de",
+    "native_dataset_parents": {"confirmed": false, "evidence": ""},
     "approved_scope": {
       "approved": false,
       "reference": "",

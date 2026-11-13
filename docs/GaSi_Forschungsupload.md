@@ -1,201 +1,161 @@
-# GaSi: vom Sensor-Prüfling zum überprüften Forschungsupload
+# GaSi: Messung jetzt erfassen, Auswertung später ergänzen
 
-## Fachliche Festlegung
+## Zwei unabhängige Einstiege
 
-Unser Prüfobjekt („Sample“) ist **ein vorhandener Gas- oder Gasfeuchtesensor**.
-Es wird durch GaSi weder hergestellt noch durch einen Messlauf vervielfältigt.
-Falls das Gerät bereits im Inventar existiert, bleibt seine Identität erhalten.
-Das fachliche Wort Sample schreibt den openBIS-Typ `SAMPLE` nicht vor.
+**Notebook 08** erfasst einen Messlauf mit Originalen und Kontext.
+**Notebook 09** ergänzt später eine Auswertung zu einer oder mehreren bereits
+registrierten Messungen. Beide starten mit frischem Kernel. Run All bleibt
+Vorschau; jeder Schreibaufruf braucht Aktivierung und Bestätigungsphrase.
 
-Die Farblogik der vom Nutzer bereitgestellten `20260630_1_workflow.svg` wird in der
-[GaSi-Ablaufgrafik](GaSi_Konzeptmodell.html) verwendet:
+| Schritt | Pflichtziel | Dateien / Beziehungen |
+|---|---|---|
+| Messung, 08 | `gasi_workflow.targets.measurement` | RAW_DATA; Plan, Kontext und Server-Quellmanifest als ATTACHMENT. Sensor, Ressourcen und ggf. vorhandene Vorbereitung sind Parents. |
+| Vorbereitung, optional | `targets.preparation` nur bei Neuanlage | Eigenständig freigegebener/wiederverwendbarer Plan; Vorbereitung ist Parent der Messung. |
+| Auswertung, 09 | `targets.analysis` | Ergebnisse und Auswertemanifest als ATTACHMENT. Verwendete Messungen und Software sind Parents. |
 
-| Farbe | GaSi-Bedeutung |
+Das automatische `plan.json` allein begründet keinen eigenen Vorbereitungsschritt.
+Allgemeine Modellgrafiken sind Projektdokumentation; zum Lauf gehört der tatsächlich
+verwendete Prüf-/Aufbauplan. Es werden keine Sensoridentitäten, Spaces, Collections,
+Typen oder Wertelisten automatisch angelegt.
+
+## Fachliche Zuordnung
+
+Das Prüfobjekt („Sample“) ist ein vorhandener Gas-/Gasfeuchtesensor. Es behält
+seine Identität über die Beaufschlagung und Messstufen. Vorhandenes INSTRUMENT
+wiederverwenden oder SAMPLE/TEST_OBJECT anhand ihrer Pflichtfelder auswählen.
+Gasquellen sind Materialien; Gaszusammensetzung, T, Feuchtegröße, Druck und Dauer
+sind Bedingungen. Soll, Referenz und Sensorsignal bleiben getrennt.
+
+Relative Feuchte benötigt Temperatur- und Wasser-/Eisbezug; Taupunkt, Frostpunkt
+und Stoffmengenanteil sind andere Größen. Kammer-, Gas- und Sensortemperatur sind
+nicht gleichzusetzen. Eine Rezeptkonzentration ist kein unabhängig gemessener Wert.
+Die farbige [Konzeptansicht](GaSi_Konzeptmodell.html) zeigt diese Unterscheidungen.
+
+## Messung konfigurieren
+
+[Leere Vorlage](../config/gasi_run.example.json) → lokale `config/gasi_run.json`.
+Notebook 08 kopiert nur eine fehlende Datei. Erforderlich sind Laufkennung, Zweck,
+Person, Sensor-ID, Ressourcen, Aufnahmeversion, Messzeiten mit UTC-Offset, Aufbau,
+Kanäle mit Größe/Einheit/Messort, Stufen und explizite Dateien/Record-Bereiche.
+Ergebnisse, Auswertungskennung/-zeiten/-software und Auswertungsziel sind nicht
+erforderlich. Eine noch nicht abgeschlossene Referenzbewertung bleibt im Kontext
+als offen erhalten und verhindert nicht die Erfassung der Originale.
+
+`preparation.mode`:
+
+- `inline`: Plan/Sollprofil am Messlauf; Standard.
+- `create`: eigenes Ziel und Zeiten; `justification` und
+  `independently_released=true` oder `reused_across_runs=true` erforderlich.
+- `reuse`: vorhandene EXPERIMENTAL_STEP-`identifier` als Parent, kein neues Vorbereitungsziel.
+
+Ziele bleiben zentral in `config/playground_test_target.json`. Geprüft wird nur
+das jeweils benötigte Ziel unter dem ausdrücklich freigegebenen Laborbuchprojekt.
+Die lokale Auftragsreferenz ersetzt keine organisatorische BAM-Freigabe.
+
+Original-CSV bleiben bytegleich. Es gelten die bestehenden Prüfungen des
+252-Spalten-Loggers: Zeilenform, endliche Zahlen, Zeiten/JSON und zugeordnete Kanäle.
+`source_ranges` umfassen `file`, `first_record`, `last_record`,
+`utc_offset` und `confirmed=true`. `stage_ranges` ergänzen `stage_id`.
+Records zählen ab 1 ohne Kopfzeilen, nicht physische Textzeilen.
+Ein Lauf kann mehrere Dateien umfassen. Unaufgelöste Uhrumstellungen werden
+gesperrt; Originalzeitstempel und Reihenfolge bleiben erhalten.
+
+`reference_evidence` ordnet verwendete Nachweise dem tatsächlichen Gerät bzw.
+der Gascharge zu: `resource_id`, `document_reference`, `scope` und
+ggf. `conditions` / vorhandene `calibration_id`.
+
+## Eine Datei mit mehreren Läufen
+
+Fundstelle im lesend geprüften Betriebscode: `logger/measurement_logger.py`,
+`write_sample` und `_prepare_candidate`. Der Logger schreibt tagesbezogen im
+Append-Modus. Tageswechsel und Wiederherstellungsdateien können einen Lauf auf
+mehrere Dateien verteilen. `datetime.now()` liefert hier keinen UTC-Offset.
+Eine verlässliche fachliche Lauf-ID ist in der CSV nicht enthalten.
+
+31 lokale Dateien wurden geprüft; sieben enthalten wechselnde Automatikzustände.
+Das ist ein Hinweis auf mögliche gemeinsame Nutzung, kein Nachweis der Anzahl
+fachlicher Läufe. Lokaler Detailbefund:
+`.local_playground_test/prompt-review/file_boundaries.json`.
+
+**Pilot:** `raw_file_policy.mode=exclusive_run` mit bestätigtem Beleg.
+`shared_sources` zeigt betroffene `file` und `run_ids` in der Vorschau;
+solche Dateien bleiben schreibgesperrt. Schon von einem anderen GaSi-Messobjekt
+registrierte RAW_DATA-Hashes werden nicht erneut hochgeladen.
+
+Vorgesehene gemeinsame Ablage: **ein erfassendes Aufnahmeobjekt besitzt das
+Original einmalig**. Mehrere fachliche Läufe referenzieren dieselbe Dataset-ID
+mit ihren eigenen Record-Bereichen; Aufnahme → Lauf als Objekt-Parent-Beziehung.
+Diese vollständige Zuordnung ist noch synthetisch live abzunehmen. Bis dahin
+ist dieser Fall nicht zum Schreiben freigegeben. Native Dataset-Parents allein
+lösen die Zuordnung eines Originals zu mehreren fachlichen Läufen nicht.
+
+## Server-Quellmanifest
+
+Nach RAW_DATA-Registrierung/Rücklesen legt Notebook 08 `source_receipt.json` als
+ATTACHMENT an der Messung ab: tatsächliche Server-Dataset-ID/Code und relativer
+Dateipfad, Original-SHA-256, Record-/Stufenbereiche, UTC-Offset, Messzeiten,
+Ressourcen, Kanäle und Referenznachweise. Die lokale `verification.json` enthält
+dieselben Eingabezeiger. Ein fehlendes Quellmanifest wird bei Wiederaufnahme
+ergänzt; abweichende vorhandene Inhalte werden nicht überschrieben.
+
+## Spätere Auswertung
+
+[Leere Vorlage](../config/gasi_analysis.example.json) → `config/gasi_analysis.json`.
+Notebook 09 braucht keine lokale Laufkonfiguration oder lokalen Rohdaten.
+`inputs` übernehmen aus dem Quellmanifest `measurement_id`, `dataset_id`,
+`file_path` und `sha256`; eigene `source_ranges`/`stage_ranges` beschreiben
+die wirklich verwendete Teilmenge. Mehrere Bereiche und mehrere Messungen sind möglich.
+
+Zusätzlich: eigene `analysis_id`, Zweck/Person/Zeiten, Code bzw. Version,
+`parameters`, `selection_rules` und Ergebnisdateien. Für `calibration` sind
+Nachweise/Bezugsbedingungen, stabile Fenster und Messunsicherheit erforderlich.
+Für `conformity` zusätzlich Grenzwerte mit Einheiten und Entscheidungsregel.
+Unbewertete Unsicherheit bei reiner Charakterisierung bleibt als fehlend erkennbar.
+
+Vor jedem Schreiben: Server-Quellmanifest und RAW_DATA erneut lesen, Originaldatei
+herunterladen, Hash und Eigentümer prüfen. Die Auswahl muss Teilmenge der
+registrierten Record-/Stufen-/Zeitbereiche sein. Grenzzeitstempel werden in UTC
+im Manifest festgehalten. CALIBRATION-Verweise werden gegen das Referenzgerät geprüft.
+
+`analysis_manifest.json` enthält die aufgelösten Server-IDs/Pfade, Hashes, Auswahl,
+Zeitfenster, Nachweise, Parameter und Regeln. Jede eigenständige Auswertung erhält
+eine neue Kennung und verwendet bestehende Messungen/Rohdaten erneut.
+
+## Native Dataset-Parents
+
+Die [pyBIS-API](https://openbis.readthedocs.io/en/20.10.12-plus/software-developer-documentation/apis/python-v3-api.html#get-set-add-and-remove-parent-datasets)
+stellt `add_parents`, `save` und `get_parents` bereit. Im Testclient ist
+Ergebnisdataset → Eingabedataset geprüft. Die Live-Probe wurde vor jeder Mutation
+abgebrochen: Die konfigurierte Laborbuch-Testcollection ist aktuell nicht lesbar.
+`native_dataset_parents=false` bleibt Standard. Aktivierung erfordert
+`gasi_workflow.native_dataset_parents.confirmed=true` und `evidence` eines
+erfolgreichen synthetischen Instanztests. Das präzise Manifest bleibt auch dann nötig.
+
+## Suche und Browser-Abnahme
+
+| Gesucht | Vorhandene Properties / Beziehungen |
 |---|---|
-| Gelb | Vorbereitung, Beaufschlagung/Messung und Auswertung |
-| Grün | Der Sensor als Prüfobjekt; vorhandene Identität |
-| Lila | Verwendete Gasquellen, GaSi-Geräte, Referenzen, Verfahren und Software |
-| Rot | Dateien/Datasets der jeweils erzeugenden Tätigkeit |
-| Blau | Belastungsprofil als Parameterkontext, kein zusätzliches Sensor-/Gasflaschenobjekt |
+| Laufkennung | `$NAME` enthält Kennung; zusätzlich `REFERENCE` |
+| Prüfzweck | `EXPERIMENTAL_STEP.EXPERIMENTAL_GOALS` |
+| Datum | `START_DATE` / `END_DATE` |
+| Prüfling | Sensor als Parent; dessen Children/Hierarchie zeigt den Lauf |
+| Kanal, Messort, Stufen, Bereiche | `context.json` und Server-Quellmanifest |
 
-„Treatment Solution“ der Vorlage wird für GaSi durch **Gasquellen und ein
-Belastungsprofil** ersetzt. Temperatur und Feuchte sind Bedingungen. Sie sind
-keine Chemikalien und keine eigene Sensorprobe. Beaufschlagung und
-Signalerfassung bilden gemeinsam den Messlauf, da der Sensor gerade unter diesen
-Bedingungen beobachtet wird. Ein eigener Konditionierungsschritt braucht einen
-realen, gesondert dokumentierten Vorgang; er wird nicht aus der Vorlage erfunden.
+Diese Properties sind lesend bestätigt. Eine Masterdata-Erweiterung ist für den
+Pilot nicht erforderlich. Erst eine gewünschte instanzweite kanalweise Zahlenabfrage
+wäre eine konkrete neue Suchlücke.
 
-## Was vor dem ersten echten Upload bekannt sein muss
+Browser-Abnahme nach bewusst aktiviertem Pilot:
 
-| Information | Was noch konkret fehlt / zu bestätigen ist |
-|---|---|
-| Sensor | Identität des tatsächlich getesteten Gas-/Gasfeuchtesensors; vorhandene openBIS-ID oder Angaben für seine einmalige Registrierung. Kein konkreter DUT ist aus den bereitgestellten Loggerdateien zweifelsfrei zugeordnet. |
-| Sensor-Objekttyp | Vorhandenes `INSTRUMENT` verwenden, wenn es ein so verwaltetes Gerät ist. Für einen neuen Prüfling `TEST_OBJECT` oder passenden `SAMPLE`-Typ samt Pflichtfeldern in Notebook 04 prüfen. Nicht beide für denselben Sensor anlegen. |
-| Gasquellen | Tatsächlich eingesetzte Flaschen/Chargen, Trägergas, Komponenten, nomineller Gehalt und trocken/feucht-Bezug; vorhandene Materialobjekte und gegebenenfalls Zertifikate. Ein Rezept-Gascode allein identifiziert keine Flasche. |
-| Temperatur | Was wird geregelt, was nur gemessen? Kammer, Gas am Prüfling und Sensorkörper unterscheiden. Werte, Einheiten, Messorte und Kanalbezug bestätigen. `KLIKA_C` ist nicht automatisch Sensortemperatur. |
-| Feuchte | Relative Feuchte, Taupunkt, Frostpunkt oder Stoffmengenanteil von Wasser; Einheit, Wasser-/Eisbezug und Messort. Bei relativer Feuchte zugehörigen Temperaturbezug nennen. Fehlend ist nicht „trocken“. |
-| Referenz und Sensorantwort | Kanäle, physische Objekte, Größen, Einheiten und Messorte bestätigen. A5B-Spannungen werden nicht automatisch als Sensorsignal eingestuft. Die Eignung/Gültigkeit der Referenz ist fachlich zu bewerten. |
-| Lauf und Stufen | Fachliche Laufgrenzen, Zeitstempel mit UTC-Offset und bestätigte Datensatzbereiche pro Datei und Messstufe. Eine Datei ist nicht automatisch ein Lauf. |
-| Ziele | Drei ausdrückliche Collection-Ziele im freigegebenen FB-8.1-Laborbuchprojekt; diese Ziele werden nicht aus dem persönlichen synthetischen Test abgeleitet. |
-| Instanzprüfung | Erneuerter Session-Zugang und lesender Schema-/Ressourcenabgleich. Der zusätzliche Zugriff am 13.11.2026 war nicht erfolgreich; keine neuen Typ- oder Schreibrechtsbestätigungen daraus ableiten. |
+1. Sensor über vorhandene ID öffnen → Children/Hierarchie → Messlauf.
+2. Im Laborbuch Laufkennung/REFERENCE, Zweck und Messdatum suchen.
+3. Sensor-/Ressourcen-Parents, RAW_DATA, konkreten Plan und Kontext prüfen.
+4. Quellmanifest: Dataset-ID, Pfad, Hash und Record-Bereich mit Original vergleichen.
+5. Spätere Auswertung öffnen → Parents führen zu allen verwendeten Messungen.
+6. Ergebnis und `analysis_manifest.json` öffnen → exakte Eingaben, UTC-Fenster,
+   Auswahlregeln und Referenznachweise nachvollziehen.
+7. Nach nativer Live-Abnahme zusätzlich Dataset-Parent-Graph prüfen.
+8. Wiederholung: keine neuen Rohdaten/Messungen; neue Auswertung nur mit neuer analysis_id.
 
-Der vorhandene Gerätebestand dokumentiert zehn Identitäten des Prüfstands.
-Das bestätigt noch nicht den Einbau aller Komponenten, den konkreten Sensor oder
-eine laufbezogen gültige Referenz. Seriennummern und konkrete Gerätebelege bleiben
-in den lokalen Berichten.
-
-## Lokale Konfiguration
-
-`GaSi_08_Forschungsablauf_hochladen.ipynb` legt eine fehlende
-`config/gasi_run.json` einmal aus [der leeren Vorlage](../config/gasi_run.example.json)
-an. Vorhandene Angaben werden erhalten. Die Datei bleibt außerhalb von Git.
-
-| Abschnitt | Inhalt |
-|---|---|
-| `run_id` | Stabile fachliche Kennung des Messlaufs |
-| `analysis_id` | Eigene Kennung der Auswertung; neue Auswertung erhält eine neue Kennung |
-| `dut` | Vorhandene Objekt-ID, `gas_sensor` oder `gas_humidity_sensor`, bestätigte Identität |
-| `resources` | Vorhandene Geräte-/Referenz- und Gasquellen-IDs; gegebenenfalls SOP-/Softwareobjekte |
-| `software_versions` | Getrennte Versionen von Erfassung und Auswertung |
-| `times` | Beginn/Ende jeder Tätigkeit als ISO-8601-Zeitstempel mit UTC-Offset |
-| `stages` | Eindeutige Stufenkennung, positive Dauer, Gaszusammensetzung, Temperatur, Feuchte und absoluter Druck mit Messorten |
-| `channels` | Bestätigte Zuordnung von CSV-Zahlenfeld, Rolle, physischem Objekt, Größe, Einheit und Messort |
-| `files` | Ausschließlich ausgewählte Dateien; keine automatische Ordnerübernahme |
-| `source_ranges` | Bestätigte Grenzen des Datenbereichs pro Loggerdatei mit ausdrücklich bekanntem `utc_offset` |
-| `stage_ranges` | Bestätigte Datenbereiche jeder aufgenommenen Stufe, innerhalb der Laufbereiche |
-| Bestätigungen | Laufbezogener Aufbau und Datei-/Laufzuordnung mit eigener Begründung/Beleg |
-| `reference_assessment` | Fachlich bestätigte Referenzgrundlage und ihr Geltungsbereich; kein automatisch erteilter Kalibrierstatus |
-
-Datenbereiche zählen **Datenrecords ab 1**, ohne Kopfzeile und ohne wiederholte
-Kopfzeilen. Das ist nicht die physische Textzeilennummer bei CSV mit mehrzeiligen
-Feldern. Das Original wird nicht gekürzt oder verändert.
-
-Ein schematischer Bereich — Zahlen nur nach tatsächlicher Zuordnung setzen:
-
-```json
-{
-  "source_ranges": [
-    {"file": "data/measurements/mein_lauf.csv", "first_record": 1, "last_record": 600, "utc_offset": "+01:00", "confirmed": true}
-  ],
-  "stage_ranges": [
-    {"stage_id": "S1", "file": "data/measurements/mein_lauf.csv", "first_record": 1, "last_record": 300, "confirmed": true},
-    {"stage_id": "S2", "file": "data/measurements/mein_lauf.csv", "first_record": 301, "last_record": 600, "confirmed": true}
-  ]
-}
-```
-
-Bei bewusst **ungeregelter** Temperatur oder Feuchte `controlled: false`,
-`uncontrolled_reason` und den Messort angeben; keinen Sollwert eintragen.
-Die beobachtete Größe bleibt über die dokumentierten Kanäle nachvollziehbar.
-Jeder ausgewählte Quelldatensatz muss nach Anwendung des bestätigten UTC-Offsets
-innerhalb des angegebenen Messlaufs liegen. Eine Zeitrückstellung innerhalb des
-ausgewählten Bereichs wird in diesem ersten Uploadweg gesperrt; die Reihenfolge
-wird nicht umsortiert und ein Offsetwechsel nicht geraten.
-Für Feuchte gelten `%RH` für relative Feuchte, `degC` für Tau-/Frostpunkt und
-`umol/mol` für den Stoffmengenanteil von Wasser. Umrechnungen erfolgen nicht stillschweigend.
-
-Die **Ziele bleiben zentral** in `config/playground_test_target.json`:
-
-```json
-{
-  "gasi_workflow": {
-    "host": "https://playground.datastore.bam.de",
-    "approved_scope": {
-      "approved": false,
-      "reference": "",
-      "lab_path_prefix": ""
-    },
-    "targets": {
-      "preparation": {"space": "", "project": "", "collection": ""},
-      "measurement": {"space": "", "project": "", "collection": ""},
-      "analysis": {"space": "", "project": "", "collection": ""}
-    }
-  }
-}
-```
-
-Nur diesen Abschnitt ergänzen, bestehende Testziele und `gasi_inventory` erhalten.
-Der freigegebene Projektpräfix hat die Form `/8.1_.../PROJEKT`; jeder Zielpfad liegt
-darunter. `approved_scope.reference` dokumentiert den konkreten lokalen Auftrag,
-ersetzt keine organisatorische BAM-Freigabe. Die Collections müssen bereits existieren.
-Das Notebook legt keine Spaces, Collections, Rollen, Typen oder Wertelisten an.
-
-## Was geschrieben wird
-
-Der erste vollständige Uploadweg umfasst **einen Sensor und einen Messlauf**.
-Sensor und Ressourcen existieren bereits; Notebook 08 legt keine neue Sensoridentität an.
-Mehrere Sensor-Kanäle sind möglich. Sammelauswertungen mehrerer Läufe sind im
-Konzept möglich, im ersten Uploadweg aber noch nicht implementiert.
-
-| Eintrag / Datei | Ziel / Beziehung |
-|---|---|
-| Vorbereitung, `EXPERIMENTAL_STEP` | Konfigurierte Vorbereitungs-Collection; SOP-Objekte gegebenenfalls Parents |
-| `plan.json` und ausdrücklich gewählte Vorbereitungsdateien | `ATTACHMENT` an Vorbereitung; enthält Sensorbezug und nominelles Belastungsprofil |
-| Beaufschlagung/Messung, `EXPERIMENTAL_STEP` | Konfigurierte Messlauf-Collection; Vorbereitung, Sensor, Geräte/Referenzen und Gasquellen sind Parents |
-| Ausgewählte Original-Loggerdateien | Je `RAW_DATA` an Messung, bytegenau unverändert |
-| `context.json` | `ATTACHMENT` an Messung; Aufbau-/Kanalbezüge, Messorte, Zeitbezug, Aufnahmeversion und bestätigte Datenbereiche |
-| Auswertung, `EXPERIMENTAL_STEP` | Konfigurierte Auswertungs-Collection; Messung und gegebenenfalls Auswertesoftware sind Parents |
-| Ergebnisdateien, Bericht und gegebenenfalls Code | Je `ATTACHMENT` an Auswertung; weitere Spezialtypen erst nach Schemaabgleich |
-| `analysis_context.json` | `ATTACHMENT` an Auswertung; Auswerteversion und exakte Eingabedataset-Namen, erzeugender Objektcode und SHA-256 |
-
-Die Vorbereitung hat in diesem Uploadweg immer ein eigenes Prüfplandataset.
-Die generelle Vereinfachungsregel „Vorbereitung ohne eigene Dateien integrieren“
-erfordert daher hier keine zusätzliche Variante.
-
-Die lokalen Pakete liegen ausschließlich unter
-`.local_playground_test/gasi_runs/<stabile Kennung>/<Manifest-Hashpräfix>/`.
-Erlaubte Dateiquellen sind `data/measurements/`, `data/results/` und `docs/`.
-`.env`, Konfigurationen, Geräteunterlagen und Pfade außerhalb des Repositorys
-werden nicht als Uploaddateien zugelassen. Öffentliche Modell-HTML/SVG/Markdown
-können ausdrücklich als Vorbereitungsdateien ausgewählt werden.
-
-RAW_DATA durchläuft nochmals die vorhandene GaSi-CSV-Prüfung: Zeilenform,
-Zahlen einschließlich NaN/Inf, Zeit-/JSON-Felder und 252-Spalten-Schema.
-Alle ausgewählten Zahlenkanäle und Record-Grenzen werden am Originalinhalt geprüft.
-Jeder ausgewertete Kanal braucht gültige Messwerte im gewählten Bereich.
-Für den Gasfeuchtesensor muss mindestens eine gemeinsame Aufnahme von Sensorantwort
-und Feuchtereferenz vorhanden sein. Dies prüft die Vollständigkeit, nicht die
-messtechnische Güte: Referenzeignung, Gerätestatus, Stabilitätskriterien und
-Unsicherheit bleiben Gegenstand der ausdrücklich dokumentierten fachlichen Bewertung.
-Andere Rohdatenformate brauchen zuerst einen passenden Validator.
-
-## Schreiben, Wiederholen und Verifizieren
-
-**Run All bleibt eine lokale Vorschau.** Der Schreibaufruf benötigt in der letzten
-Zelle `UPLOAD_ENABLED = True` und die genaue dort angegebene Bestätigungsphrase.
-Er liest Laufkonfiguration, Ziele, Playground-Host, vorhandene Ressourcen,
-Collections, Typ-Assignments, Pflichtfelder und relevante Wertelisten erneut.
-Der Paket-Hash muss mit der zuvor angezeigten Vorschau übereinstimmen.
-Änderungen seit der Vorschau erfordern eine erneute Prüfung.
-
-Stabile Objektcodes und Dataset-Namen verhindern Dubletten bei serieller
-Wiederholung. Ein gespeicherter Teilstand wird ergänzt; verlorene Serverantworten
-nach einem erfolgreichen Speichern sind im Test berücksichtigt.
-Vorhandene Metadaten und Dateien müssen zur Konfiguration passen.
-Unpassende zusätzliche Parents, abweichende Hashes oder geänderte Messbedingungen
-führen zum Abbruch. Es werden keine vorhandenen Ergebnisse automatisch ersetzt.
-
-Eine **neue `analysis_id`** erzeugt einen neuen Auswertungsschritt und verwendet
-unveränderte Vorbereitung und Messung erneut. Änderungen an Erfassungsbedingungen,
-Sensor, Quelldaten oder bestätigtem Aufbau benötigen eine neue fachliche Laufkennung.
-Nur ein schreibender Kernel pro Lauf; keine parallelen Uploads desselben Laufs.
-
-Alle Tätigkeiten und Parents werden zurückgelesen. Jedes Dataset wird nach
-dem Speichern beziehungsweise Wiederfinden erneut geladen und seine Datei
-heruntergeladen. SHA-256, zugehöriger Arbeitsschritt und Ziel-Collection werden
-geprüft. IDs, Collections und Browserlinks erscheinen nach Erfolg; der vollständige
-Nachweis bleibt lokal als `verification.json` beim Paket.
-
-## Prüfstand und Grenzen
-
-Lokal geprüft: leere und vollständige Konfiguration, eindeutiger Sensorbezug,
-Gas-/Temperatur-/Feuchtegrößen, CSV-/Kanal-/Bereichsprüfung, Host-/Zielsperren,
-Dateiintegrität, kompletter Parent-Graph, Dataset-Zuordnung, Rückdownload,
-Wiederholung und Wiederaufnahme nach bereits gespeichertem Teilstand.
-Neue Auswertungen verwenden im Test dieselbe Messung wieder.
-
-**Nicht neu live bestätigt:** zusätzliche Typ-Assignments für Sensoren/Gasquellen,
-konkrete Ressourcen und Forschungsziele, Schreibrechte und Instanz-Validatoren.
-Der verfügbare Session-Zugang reichte beim erneuten Versuch nicht für eine Verbindung.
-Notebook 00 erneuert den Token verdeckt; Notebook 04 liest den Bestand anschließend neu.
-Echte Loggerdaten wurden bei der Entwicklung nicht hochgeladen.
+Aktueller Stand und Pilotlücken: [GaSi_Projektstatus.md](GaSi_Projektstatus.md).
+In diesem Auftrag wurden keine echten Messdaten hochgeladen.

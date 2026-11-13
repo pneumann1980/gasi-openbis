@@ -1,7 +1,8 @@
-"""Prepare and explicitly upload one complete GaSi workflow to the Playground.
+"""Record a measurement and optional released preparation on the Playground.
 
 The DUT/resources must already have verified inventory identities. No types,
-spaces, collections or duplicate sensor identities are created here.
+spaces, collections or duplicate sensor identities are created here. Later
+analysis has its independent entry point in gasi_analysis.
 """
 from contextlib import redirect_stderr, redirect_stdout
 from copy import deepcopy
@@ -23,6 +24,12 @@ PHRASE = "UPLOAD CONFIGURED GASI RESEARCH WORKFLOW TO PLAYGROUND"
 ACTIVITIES = ("preparation", "measurement", "analysis")
 LABELS = {"preparation":"Vorbereitung", "measurement":"Beaufschlagung und Messung", "analysis":"Auswertung"}
 HUMIDITY_UNITS = {"relative_humidity":"%RH", "dew_point":"degC", "frost_point":"degC", "water_amount_fraction":"umol/mol"}
+
+def activities(run):
+    if run.get("upload_scope","measurement")=="workflow":
+        return ACTIVITIES
+    mode=(run.get("preparation") or {}).get("mode","inline")
+    return ("preparation","measurement") if mode=="create" else ("measurement",)
 
 
 def _json(value):
@@ -69,6 +76,14 @@ def load_run(path=None):
     return value
 
 
+def load_measurement(path=None):
+    value=load_run(path)
+    if value is not None:
+        value["upload_scope"]="measurement"
+        value.setdefault("preparation",{"mode":"inline"})
+    return value
+
+
 def _source(root, value):
     if not isinstance(value,str) or not value:
         raise ob.CheckFailed("Expliziter Dateipfad fehlt.")
@@ -78,6 +93,8 @@ def _source(root, value):
         raise ob.CheckFailed("Uploaddateien müssen ausdrücklich unter data/measurements, data/results oder docs liegen.")
     if any(part.startswith(".") for part in path.relative_to(root).parts):
         raise ob.CheckFailed("Versteckte Dateien werden nicht in ein Uploadpaket aufgenommen.")
+    if path.name.startswith(("GaSi_Konzeptmodell","GaSi_Datenmodell")):
+        raise ob.CheckFailed("Allgemeine Modellgrafiken sind Projektdokumentation, kein tatsächlich verwendeter Laufplan.")
     return path
 
 
@@ -89,10 +106,12 @@ def validate_run(run, root=ROOT):
         return ["Lokale Laufkonfiguration fehlt: config/gasi_run.example.json nach config/gasi_run.json kopieren."]
     if run.get("schema_version") != 1:
         issues.append("Laufschema muss Version 1 haben.")
-    for key in ("run_id","analysis_id","purpose","responsible_person"):
+    active=activities(run)
+    later="analysis" in active
+    for key in (("run_id","analysis_id","purpose","responsible_person") if later else ("run_id","purpose","responsible_person")):
         if not isinstance(run.get(key),str) or not run[key].strip():
             issues.append(f"Pflichtangabe fehlt: {key}.")
-    for key in ("acquisition","analysis"):
+    for key in (("acquisition","analysis") if later else ("acquisition",)):
         if not str((run.get("software_versions") or {}).get(key) or "").strip():
             issues.append(f"Softwareversion fehlt: {key}.")
     dut = run.get("dut") or {}
@@ -104,17 +123,22 @@ def validate_run(run, root=ROOT):
         if run.get(flag) is not True or not str(run.get(evidence) or "").strip():
             issues.append(f"Bestätigung mit Beleg fehlt: {flag}.")
     assessment=run.get("reference_assessment") or {}
-    if assessment.get("confirmed") is not True or not assessment.get("basis") or not assessment.get("scope"):
+    if later and (assessment.get("confirmed") is not True or not assessment.get("basis") or not assessment.get("scope")):
         issues.append("Referenzgrundlage und Geltungsbereich der fachlichen Bewertung bestätigen.")
     resources = run.get("resources") or {}
+    resource_refs={v for values in resources.values() if isinstance(values,list) for v in values if isinstance(v,str)}
+    for evidence in run.get("reference_evidence",[]):
+        if (not isinstance(evidence,dict) or evidence.get("resource_id") not in resource_refs or
+            not evidence.get("document_reference") or not evidence.get("scope")):
+            issues.append("Referenznachweis braucht verwendetes Gerät/Gascharge, Dokumentreferenz und Geltungsbereich.")
     for kind in ("instruments","gas_sources","sop","software"):
-        values = resources.get(kind)
+        values = resources.get(kind,[])
         if not isinstance(values,list) or (kind in ("instruments","gas_sources") and not values) or any(not _reference(v) for v in (values or [])):
             issues.append(f"Vorhandene Ressourcen-IDs prüfen: {kind}.")
         elif len(values) != len(set(values)):
             issues.append(f"Ressourcen-IDs sind mehrfach aufgeführt: {kind}.")
     times = run.get("times") or {}
-    for activity in ACTIVITIES:
+    for activity in active:
         try:
             entry = times.get(activity) or {}
             start,end = [_time(entry[k]) for k in ("start","end")]
@@ -195,10 +219,10 @@ def validate_run(run, root=ROOT):
             issues.append("Der zu prüfende Sensor darf nicht seine eigene unabhängige Referenz sein.")
     if not dut_channels:
         issues.append("Mindestens ein bestätigter Sensorsignalkanal fehlt.")
-    if dut.get("kind") == "gas_humidity_sensor" and not any(c.get("role") == "reference_humidity" for c in channels if isinstance(c,dict)):
+    if later and dut.get("kind") == "gas_humidity_sensor" and not any(c.get("role") == "reference_humidity" for c in channels if isinstance(c,dict)):
         issues.append("Für die Feuchtebewertung den Referenzkanal und seine Größe dokumentieren.")
-    for role in ("preparation","raw_data","analysis"):
-        files = (run.get("files") or {}).get(role)
+    for role in (("preparation","raw_data","analysis") if later else ("preparation","raw_data")):
+        files = (run.get("files") or {}).get(role,[])
         if not isinstance(files,list) or (role != "preparation" and not files):
             issues.append(f"Explizite Dateien fehlen: {role}.")
             continue
@@ -247,6 +271,20 @@ def validate_run(run, root=ROOT):
             if isinstance(other,dict) and other.get("file")==entry.get("file") and _record(other.get("first_record")) and _record(other.get("last_record")):
                 if max(entry["first_record"],other["first_record"])<=min(entry["last_record"],other["last_record"]):
                     issues.append("Stufenbereiche derselben Loggerdatei dürfen sich nicht überschneiden.")
+    if not later:
+        preparation=run.get("preparation") or {"mode":"inline"}
+        if preparation.get("mode") not in ("inline","create","reuse"):
+            issues.append("Vorbereitung: inline, create oder reuse wählen.")
+        if preparation.get("mode")=="create" and (not preparation.get("justification") or
+            not (preparation.get("independently_released") is True or preparation.get("reused_across_runs") is True)):
+            issues.append("Eigene Vorbereitung benötigt Freigabe-/Wiederverwendungsgrund, nicht nur plan.json.")
+        if preparation.get("mode")=="reuse" and not _reference(preparation.get("identifier")):
+            issues.append("Vorhandenen Vorbereitungsschritt ausdrücklich identifizieren.")
+        policy=run.get("raw_file_policy") or {}
+        if policy.get("mode")!="exclusive_run" or policy.get("confirmed") is not True or not policy.get("evidence"):
+            issues.append("Pilot: eindeutige Dateizuordnung exclusive_run ausdrücklich bestätigen.")
+        if policy.get("shared_sources"):
+            issues.append("Gemeinsame Originaldateien: Vorschau möglich, Schreiben bis Live-Abnahme der gemeinsamen Ablage gesperrt.")
     return issues
 
 
@@ -257,11 +295,16 @@ def prepare_bundle(run, root=ROOT):
     if issues:
         raise ob.CheckFailed("Uploadpaket gesperrt: " + " ".join(issues))
     data = deepcopy(run)
+    data.setdefault("upload_scope","measurement")
+    data["resources"].setdefault("sop",[])
+    data["resources"].setdefault("software",[])
     sources = []
     coverage={c["column"]:False for c in data["channels"]}
     paired_humidity=False
-    for role in ("preparation","raw_data","analysis"):
-        values = data["files"][role]
+    active=activities(data)
+    later="analysis" in active
+    for role in (("preparation","raw_data","analysis") if later else ("preparation","raw_data")):
+        values = data["files"].get(role,[])
         for index,value in enumerate(values):
             path = _source(root,value)
             content = path.read_bytes()
@@ -303,19 +346,19 @@ def prepare_bundle(run, root=ROOT):
                         has_dut=any(row[c["column"]].strip() for c in data["channels"] if c["role"]=="dut_signal")
                         has_reference=any(row[c["column"]].strip() for c in data["channels"] if c["role"]=="reference_humidity")
                         paired_humidity|=has_dut and has_reference
-            sources.append({"activity":"measurement" if role=="raw_data" else role,
+            sources.append({"activity":"measurement" if role=="raw_data" or role=="preparation" and "preparation" not in active else role,
                 "type":"RAW_DATA" if role=="raw_data" else "ATTACHMENT",
                 "slot":f"{role}_{index+1}", "filename":path.name,"sha256":_hash(content),"bytes":content})
     if not all(coverage.values()):
         raise ob.CheckFailed("Ein ausgewerteter Kanal enthält im bestätigten Datenbereich keine gültigen Messwerte.")
-    if data["dut"]["kind"]=="gas_humidity_sensor" and not paired_humidity:
+    if later and data["dut"]["kind"]=="gas_humidity_sensor" and not paired_humidity:
         raise ob.CheckFailed("Im Datenbereich fehlt eine gemeinsame Aufnahme von Sensorsignal und Feuchtereferenz.")
     key = "GASI_" + _hash(data["run_id"].encode("utf-8"))[:16].upper()
     # These two JSON datasets carry the scientific distinctions from the diagram.
     for activity,slot,payload in (
-        ("preparation","plan",{"dut":data["dut"],"stages":data["stages"],"purpose":data["purpose"]}),
+        ("preparation" if "preparation" in active else "measurement","plan",{"dut":data["dut"],"stages":data["stages"],"purpose":data["purpose"]}),
         ("measurement","context",{"dut":data["dut"],"resources":{k:v for k,v in data["resources"].items() if k!="software"},"channels":data["channels"],
-            "reference_assessment":data["reference_assessment"],
+            "reference_assessment":data.get("reference_assessment",{"confirmed":False}),
             "setup_evidence":data["setup_evidence"],"source_association_evidence":data["source_association_evidence"],
             "times":data["times"]["measurement"],"source_ranges":data["source_ranges"],"stage_ranges":data["stage_ranges"],
             "software_version":data["software_versions"]["acquisition"]}),
@@ -323,26 +366,28 @@ def prepare_bundle(run, root=ROOT):
         content = _json(payload)
         sources.append({"activity":activity,"type":"ATTACHMENT","slot":slot,"filename":slot+".json",
                         "sha256":_hash(content),"bytes":content})
-    content = _json({"analysis_id":data["analysis_id"],"software_version":data["software_versions"]["analysis"],
+    content = _json({"analysis_id":data.get("analysis_id"),"software_version":data["software_versions"].get("analysis"),
         "input_object_code":key+"_MEASUREMENT","inputs":[
             {"dataset_name":key+"_"+e["slot"],"sha256":e["sha256"],"filename":e["filename"]}
             for e in sources if e["activity"]=="measurement"]})
-    sources.append({"activity":"analysis","type":"ATTACHMENT","slot":"analysis_context",
-                    "filename":"analysis_context.json","sha256":_hash(content),"bytes":content})
+    if later:
+        sources.append({"activity":"analysis","type":"ATTACHMENT","slot":"analysis_context",
+                        "filename":"analysis_context.json","sha256":_hash(content),"bytes":content})
     manifest = {"schema_version":1,"key":key,"run":data,
         "datasets":[{k:v for k,v in entry.items() if k!="bytes"} for entry in sources]}
     acquisition = deepcopy(data)
-    acquisition.pop("analysis_id")
-    acquisition["times"].pop("analysis")
-    acquisition["resources"].pop("software")
-    acquisition["software_versions"].pop("analysis")
-    acquisition["files"].pop("analysis")
+    acquisition.pop("analysis_id",None)
+    acquisition["times"].pop("analysis",None)
+    acquisition["resources"].pop("software",None)
+    acquisition["software_versions"].pop("analysis",None)
+    acquisition["files"].pop("analysis",None)
     acquisition_digest = _hash(_json({"run":acquisition,"datasets":[e for e in manifest["datasets"] if e["activity"]!="analysis"]}))
     manifest["acquisition_sha256"] = acquisition_digest
-    manifest["analysis_key"] = key + "_A" + _hash(data["analysis_id"].encode("utf-8"))[:12].upper()
+    manifest["activities"]=list(active)
+    manifest["analysis_key"] = key + "_A" + _hash(str(data.get("analysis_id","")).encode("utf-8"))[:12].upper()
     manifest["analysis_sha256"] = _hash(_json({"acquisition_sha256":acquisition_digest,
-        "analysis_id":data["analysis_id"],"times":data["times"]["analysis"],
-        "software_version":data["software_versions"]["analysis"],"software_objects":data["resources"]["software"],
+        "analysis_id":data.get("analysis_id"),"times":data["times"].get("analysis"),
+        "software_version":data["software_versions"].get("analysis"),"software_objects":data["resources"].get("software",[]),
         "datasets":[e for e in manifest["datasets"] if e["activity"]=="analysis"]}))
     digest = _hash(_json(manifest))
     # Keep paths usable in Windows workspaces and nested fresh-kernel test copies.
@@ -359,7 +404,7 @@ def prepare_bundle(run, root=ROOT):
     return {"path":output,"manifest":manifest,"sha256":digest}
 
 
-def _targets(config):
+def _targets(config, active=ACTIVITIES):
     settings = (config or {}).get("gasi_workflow") or {}
     scope = settings.get("approved_scope") or {}
     if settings.get("host") != ob.PLAYGROUND_HOST or scope.get("approved") is not True or not scope.get("reference"):
@@ -368,24 +413,28 @@ def _targets(config):
     if not isinstance(prefix,str) or not re.fullmatch(r"/8[.]1[A-Z0-9_.-]*/[A-Z0-9_.-]+",prefix):
         raise ob.CheckFailed("Expliziten FB-8.1-Laborbuchprojekt-Präfix für den Forschungsablauf konfigurieren.")
     targets = settings.get("targets") or {}
-    for activity in ACTIVITIES:
+    for activity in active:
         path = ob.target_path(targets.get(activity,{ }))
         if not path.startswith(prefix + "/"):
             raise ob.CheckFailed("Alle Forschungsziele müssen im ausdrücklich freigegebenen Laborbuchprojekt liegen.")
-    return targets
+    return {key:targets[key] for key in active}
 
 
 def preflight(client, bundle, config):
     """Read host, identities, schemas, vocabularies and every target again."""
     if str(client.url).rstrip("/") != ob.PLAYGROUND_HOST:
         raise ob.CheckFailed("Forschungsupload ist ausschließlich auf dem BAM-Playground erlaubt.")
-    targets = _targets(config)
+    active=bundle["manifest"].get("activities",ACTIVITIES)
+    targets = _targets(config,active)
     report = ob.discover_playground(client,config)
     for activity,target in targets.items():
         if activity in ACTIVITIES and ob.identifier(client.get_experiment(ob.target_path(target))) != ob.target_path(target):
             raise ob.CheckFailed("Laborbuch-Collection nicht eindeutig lesbar.")
     run = bundle["manifest"]["run"]
-    refs = {run["dut"]["identifier"]} | {v for values in run["resources"].values() for v in values}
+    refs = {run["dut"]["identifier"]} | {v for key,values in run["resources"].items() if key!="software" or "analysis" in active for v in values}
+    preparation=run.get("preparation") or {}
+    if preparation.get("mode")=="reuse":
+        refs.add(preparation["identifier"])
     for reference in sorted(refs):
         obj = client.get_sample(reference)
         if ob.identifier(obj) != reference or not ob.code(ob.field(obj,"type")):
@@ -399,8 +448,10 @@ def preflight(client, bundle, config):
             raise ob.CheckFailed("Eine konfigurierte Gasquelle ist kein bestätigtes Gas-/Materialobjekt.")
         if reference in run["resources"]["sop"] and type_code not in ("SOP","DOCUMENT"):
             raise ob.CheckFailed("Die konfigurierte SOP hat keinen bestätigten Verfahrenstyp.")
-        if reference in run["resources"]["software"] and type_code not in ("SOFTWARE_CODE","JUPYTER_NOTEBOOK"):
+        if reference in run["resources"].get("software",[]) and type_code not in ("SOFTWARE_CODE","JUPYTER_NOTEBOOK"):
             raise ob.CheckFailed("Die konfigurierte Auswertesoftware hat keinen bestätigten Softwaretyp.")
+        if reference==preparation.get("identifier") and type_code!="EXPERIMENTAL_STEP":
+            raise ob.CheckFailed("Vorbereitungsreferenz ist kein EXPERIMENTAL_STEP.")
     for t in ("EXPERIMENTAL_STEP",):
         if not report["object_types"].get(t,{}).get("schema_confirmed"):
             raise ob.CheckFailed("EXPERIMENTAL_STEP-Schema nicht bestätigt.")
@@ -408,7 +459,7 @@ def preflight(client, bundle, config):
         if not report["dataset_types"].get(t,{}).get("schema_confirmed"):
             raise ob.CheckFailed(f"{t}-Schema nicht bestätigt.")
     planned = {}
-    for activity in ACTIVITIES:
+    for activity in active:
         suffix = f" – {run['analysis_id']}" if activity=="analysis" else ""
         values = {"$NAME":f"GaSi {run['run_id']} – {LABELS[activity]}{suffix}",
             "START_DATE":run["times"][activity]["start"],"END_DATE":run["times"][activity]["end"],
@@ -416,10 +467,16 @@ def preflight(client, bundle, config):
                           "content_sha256":bundle["manifest"]["analysis_sha256" if activity=="analysis" else "acquisition_sha256"],"purpose":run["purpose"],
                           "responsible_person":run["responsible_person"]}).decode("utf-8")}
         planned[activity] = ob.mapped_properties(values,report["object_types"]["EXPERIMENTAL_STEP"],report)
+        assigned={a["code"] for a in report["object_types"]["EXPERIMENTAL_STEP"]["assignments"]}
+        for key,value in (("REFERENCE",run["run_id"]),("EXPERIMENTAL_STEP.EXPERIMENTAL_GOALS",run["purpose"])):
+            if key in assigned:
+                planned[activity][key]=value
     dataset_props = {}
     for entry in bundle["manifest"]["datasets"]:
         owner_key = bundle["manifest"]["analysis_key"] if entry["activity"]=="analysis" else bundle["manifest"]["key"]
-        values = {"$NAME":owner_key+"_"+entry["slot"],"NOTES":_json({"sha256":entry["sha256"]}).decode("utf-8")}
+        stable_name=("GASI_RAW_"+entry["sha256"] if run.get("upload_scope")=="measurement" and entry["type"]=="RAW_DATA"
+                     else owner_key+"_"+entry["slot"])
+        values = {"$NAME":stable_name,"NOTES":_json({"sha256":entry["sha256"]}).decode("utf-8")}
         dataset_props[entry["slot"]] = ob.mapped_properties(values,report["dataset_types"][entry["type"]],report)
     return targets, planned, dataset_props
 
@@ -437,7 +494,8 @@ def ensure_workflow(client, bundle, config):
     gateway = ob.PybisGateway(client)
     run = bundle["manifest"]["run"]
     existing = {}
-    for activity in ACTIVITIES:
+    active=bundle["manifest"].get("activities",ACTIVITIES)
+    for activity in active:
         object_code = (bundle["manifest"]["analysis_key"] if activity=="analysis" else bundle["manifest"]["key"]+"_"+activity.upper())
         obj = gateway.find_object(targets[activity],"EXPERIMENTAL_STEP",object_code)
         if obj and not _object_matches(obj,properties[activity]):
@@ -456,20 +514,35 @@ def ensure_workflow(client, bundle, config):
         expected = set(run["resources"]["sop"] if activity=="preparation" else
             [run["dut"]["identifier"],*run["resources"]["instruments"],*run["resources"]["gas_sources"]]
             if activity=="measurement" else run["resources"]["software"])
-        predecessor = "preparation" if activity=="measurement" else "measurement" if activity=="analysis" else None
+        if activity=="measurement" and "preparation" not in active and run.get("preparation",{}).get("mode","inline")=="inline":
+            expected.update(run["resources"].get("sop",[]))
+        predecessor = "preparation" if activity=="measurement" and "preparation" in active else "measurement" if activity=="analysis" else None
         if predecessor:
             if not existing.get(predecessor):
                 raise ob.CheckFailed("Vorhandener Folgeschritt ohne Vorgänger; Teilstand manuell prüfen.")
             expected.add(ob.identifier(existing[predecessor]))
         if gateway.object_parents(obj)-expected:
-            raise ob.CheckFailed("Vorhandener Schritt hat zusätzliche, nicht konfigurierte Parents; manuell prüfen.")
+            allowed={run.get("preparation",{}).get("identifier")} if activity=="measurement" else set()
+            if gateway.object_parents(obj)-expected-allowed:
+                raise ob.CheckFailed("Vorhandener Schritt hat zusätzliche, nicht konfigurierte Parents; manuell prüfen.")
     objects, results = {}, {"objects":{},"datasets":[]}
-    for activity in ACTIVITIES:
+    if run.get("upload_scope")=="measurement":
+        raw_hashes=[e["sha256"] for e in bundle["manifest"]["datasets"] if e["type"]=="RAW_DATA"]
+        if len(raw_hashes)!=len(set(raw_hashes)):
+            raise ob.CheckFailed("Identische Originaldatei mehrfach ausgewählt; Quelle einmalig zuordnen.")
+        _check_raw_ownership(client,bundle,existing.get("measurement"))
+    for activity in active:
         parents = []
         if activity == "preparation":
             parents = run["resources"]["sop"]
         elif activity == "measurement":
-            parents = [ob.identifier(objects["preparation"]),run["dut"]["identifier"],*run["resources"]["instruments"],*run["resources"]["gas_sources"]]
+            parents = [run["dut"]["identifier"],*run["resources"]["instruments"],*run["resources"]["gas_sources"]]
+            if "preparation" in objects:
+                parents.append(ob.identifier(objects["preparation"]))
+            elif run.get("preparation",{}).get("mode")=="reuse":
+                parents.append(run["preparation"]["identifier"])
+            else:
+                parents.extend(run["resources"].get("sop",[]))
         else:
             parents = [ob.identifier(objects["measurement"]),*run["resources"]["software"]]
         obj = existing[activity]
@@ -499,9 +572,64 @@ def ensure_workflow(client, bundle, config):
             _dataset_target(dataset,targets[activity])
             digest = gateway.verify_dataset_hash(dataset,entry["sha256"],entry["filename"])
             results["datasets"].append({"activity":activity,"identifier":ob.identifier(dataset),
-                "sha256":digest,"created":created,**ob.browser_reference(dataset,"dataset")})
+                "sha256":digest,"filename":entry["filename"],"slot":entry["slot"],
+                "created":created,**ob.browser_reference(dataset,"dataset")})
     results["dut"] = {"identifier":run["dut"]["identifier"],"reused":True}
+    if run.get("upload_scope")=="measurement":
+        _save_source_receipt(client,gateway,bundle,targets["measurement"],objects["measurement"],results)
     return results
+
+
+def dataset_file(dataset, filename):
+    """Resolve the actual server-side relative path, never assume basename layout."""
+    paths=list(dataset.file_list)
+    matches=[str(p).lstrip("/") for p in paths if Path(str(p)).name==filename]
+    if len(matches)!=1 or ".." in Path(matches[0]).parts:
+        raise ob.CheckFailed("Dateipfad im Dataset nicht eindeutig.")
+    return matches[0]
+
+
+def _check_raw_ownership(client,bundle,measurement):
+    hashes={e["sha256"] for e in bundle["manifest"]["datasets"] if e["type"]=="RAW_DATA"}
+    for row in ob.table_records(client.get_datasets(type="RAW_DATA",props=["$NAME","NOTES"])):
+        note=next((v for k,v in {**ob.props(row),**row}.items() if ob.propkey(k)=="notes"),"")
+        try: digest=json.loads(note).get("sha256")
+        except (ValueError,TypeError,AttributeError): digest=None
+        if digest not in hashes and ob.name(row) not in {"GASI_RAW_"+h for h in hashes}:
+            continue
+        dataset=client.get_dataset(ob.identifier(row))
+        owner=ob.field(ob.field(dataset,"attrs",dataset),"sample")
+        owner=owner if isinstance(owner,str) else ob.identifier(owner)
+        if measurement is None or owner!=ob.identifier(measurement):
+            raise ob.CheckFailed("Originaldatei ist bereits einem anderen erfassenden Objekt zugeordnet. Gemeinsame Ablage ist gesperrt.")
+
+
+def _save_source_receipt(client,gateway,bundle,target,measurement,results):
+    run=bundle["manifest"]["run"]
+    inputs=[]
+    for entry in bundle["manifest"]["datasets"]:
+        if entry["type"]!="RAW_DATA":continue
+        saved=next(r for r in results["datasets"] if r["slot"]==entry["slot"])
+        dataset=client.get_dataset(saved["identifier"])
+        source=run["files"]["raw_data"][int(entry["slot"].rsplit("_",1)[1])-1]
+        inputs.append({"measurement_id":ob.identifier(measurement),"dataset_id":ob.identifier(dataset),
+            "dataset_code":ob.field(dataset,"code"),"file_path":dataset_file(dataset,entry["filename"]),
+            "sha256":entry["sha256"],"source_ranges":[v for v in run["source_ranges"] if v["file"]==source],
+            "stage_ranges":[v for v in run["stage_ranges"] if v["file"]==source]})
+    receipt={"schema_version":2,"run_id":run["run_id"],"inputs":inputs,"times":run["times"]["measurement"],
+        "reference_assessment":run.get("reference_assessment"),"reference_evidence":run.get("reference_evidence",[]),
+        "resources":run["resources"],"channels":run["channels"],"stages":run["stages"]}
+    content=_json(receipt);digest=_hash(content)
+    path=bundle["path"]/"source_receipt.json";path.write_bytes(content)
+    stable=bundle["manifest"]["key"]+"_SOURCE_RECEIPT"
+    dataset=gateway.find_dataset(measurement,"ATTACHMENT",stable)
+    if dataset is None:
+        gateway.create_dataset(target,measurement,"ATTACHMENT",{"$NAME":stable},path)
+        dataset=gateway.find_dataset(measurement,"ATTACHMENT",stable)
+    if dataset is None:raise ob.CheckFailed("Quellmanifest nicht zurücklesbar.")
+    gateway.verify_dataset_hash(dataset,digest,path.name)
+    results["source_receipt"]={"dataset_id":ob.identifier(dataset),"sha256":digest,"inputs":inputs,
+                             **ob.browser_reference(dataset,"dataset")}
 
 
 def _notes(obj):
@@ -534,21 +662,21 @@ def upload_workflow(*, enabled=False, confirmation="", expected_manifest_sha=Non
         return None,"Upload gesperrt: zuerst die vollständige lokale Vorschau erzeugen."
     try:
         root = Path(root).resolve()
-        run = load_run(root / "config/gasi_run.json")
+        run = load_measurement(root / "config/gasi_run.json")
         bundle = prepare_bundle(run,root)
         if bundle["sha256"]!=expected_manifest_sha:
             raise ob.CheckFailed("Laufdaten haben sich seit der Vorschau geändert. Vorschau erneut prüfen.")
         config,message = ob.load_target_config(root / "config/playground_test_target.json")
         if config is None:
             return None,message
-        _targets(config)
+        _targets(config,bundle["manifest"]["activities"])
         client,message = ob.connect_playground()
         if client is None:
             return None,message
         with redirect_stdout(io.StringIO()),redirect_stderr(io.StringIO()):
             result = ensure_workflow(client,bundle,config)
         (bundle["path"] / "verification.json").write_bytes(_json(result))
-        return result,"Forschungsablauf, Parents und alle Datei-Hashes nach Rückdownload bestätigt."
+        return result,"Messung, Parents, Quellmanifest und alle Original-Hashes nach Rückdownload bestätigt."
     except ob.CheckFailed as exc:
         return None,str(exc)
     except Exception:

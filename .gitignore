@@ -13,6 +13,7 @@
 /config/.gasi-target-*.tmp
 /config/gasi_setup.json
 /config/gasi_run.json
+/config/gasi_analysis.json
 /data/results/*
 !/data/results/.gitkeep
 /.local_playground_test/

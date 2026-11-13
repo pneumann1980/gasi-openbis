@@ -49,7 +49,8 @@ Empfohlene Reihenfolge; jedes Notebook funktioniert unabhängig mit einem frisch
 | [GaSi_05_Playground_Schreibtest.ipynb](GaSi_05_Playground_Schreibtest.ipynb) | Einen synthetischen Testlauf schreiben und verifizieren | Vorschau und lesende Prüfung; Schreiben standardmäßig deaktiviert |
 | [GaSi_06_Geraetezuordnung_pruefen.ipynb](GaSi_06_Geraetezuordnung_pruefen.ipynb) | Gerätebelege und Anlagen-Inventarnummern lokal abgleichen | Offline; erzeugt ausschließlich lokale Berichte |
 | [GaSi_07_Geraeteinventar_anlegen.ipynb](GaSi_07_Geraeteinventar_anlegen.ipynb) | Belegte Geräteidentitäten im eigenen GaSi-Inventar registrieren | Vorschau und lesender Dublettenabgleich; Schreiben deaktiviert |
-| [GaSi_08_Forschungsablauf_hochladen.ipynb](GaSi_08_Forschungsablauf_hochladen.ipynb) | Einen Sensor-Prüflauf mit Vorbereitung, Messung und Auswertung hochladen | Lokal prüfen/Paket vorbereiten; Upload standardmäßig deaktiviert |
+| [GaSi_08_Forschungsablauf_hochladen.ipynb](GaSi_08_Forschungsablauf_hochladen.ipynb) | Messung mit Originalen und Kontext erfassen; Vorbereitung optional | Lokale Vorschau; kein Auswertungsziel/Ergebnis nötig; Schreiben deaktiviert |
+| [GaSi_09_Auswertung_hochladen.ipynb](GaSi_09_Auswertung_hochladen.ipynb) | Später eine oder mehrere registrierte Messungen auswerten | Lokale Vorschau; Eingaben vor Schreiben vom Server verifizieren; Schreiben deaktiviert |
 
 Die bisherigen Dateinamen wurden ersetzt:
 
@@ -143,12 +144,16 @@ Die [Parserübersicht](https://datastore.bam.de/en/parsers) dient als Ausgangspu
 für einen späteren GaSi-Importer, sobald Laufgrenzen und Kanalzuordnungen feststehen.
 
 Dieser Schritt ändert die **lokale Modelldokumentation und ihre Visualisierung**.
-Die drei Forschungsaktivitäten können nach vollständiger Konfiguration mit
-Notebook 08 geschrieben werden. Der vollständige Ablauf ist bisher lokal mit einem
-Testclient bestätigt. Echte Laborbuch-Collections sowie die konkreten Sensor-,
-Gas-/SOP- und Softwareobjekte sind damit noch nicht live angelegt oder bestätigt.
-Das vorhandene Geräteinventar und Notebook 05 bleiben die separat bestätigten
-Instanzbefunde.
+**Messung und Auswertung sind unabhängig:** Notebook 08 erfasst sofort RAW_DATA,
+den tatsächlichen Plan und Laufkontext. Standard ist genau ein Messobjekt.
+Vorbereitung wird nur eigenständig registriert, wenn der Plan separat freigegeben
+oder wiederverwendet wird. Notebook 09 ergänzt später eine oder mehrere Messungen
+mit Ergebnisdateien und einem genauen Auswertemanifest.
+
+**Aktueller Projektstatus:** [GaSi_Projektstatus.md](docs/GaSi_Projektstatus.md).
+Die zehn Geräte sind aktuell sichtbar und zusätzliche Typ-Schemata lesend bestätigt.
+Die bisherige Laborbuch-Testcollection ist zurzeit nicht lesbar. Historische
+Schreibnachweise bleiben dokumentiert, ersetzen aber keine heutige Abnahme.
 
 Nach einer Modelländerung Notebook 01 erneut ausführen. Der Generator wird auch beim
 erneuten Ausführen nur der Erzeugungszelle frisch geladen. Die HTML-Datei funktioniert
@@ -183,10 +188,10 @@ steht in `config/playground_test_target.example.json`.
 Die vorhandenen Ziele und Freigaben des synthetischen Tests gelten nicht automatisch
 für echte Forschungsdaten.
 
-Notebook 08 überträgt erst nach bewusster Aktivierung der letzten Zelle.
+Notebook 08 erfasst die Messung erst nach bewusster Aktivierung der letzten Zelle.
 Es verwendet den vorhandenen Sensor, verknüpft die Ressourcen, hängt Plan/CSV/
 Kontext/Ergebnisse an die erzeugende Tätigkeit und prüft alle Rückdownloads per
-SHA-256. Eine neue `analysis_id` verwendet dieselbe unveränderte Messung erneut.
+SHA-256. Eine spätere Auswertung wird unabhängig in Notebook 09 mit eigener `analysis_id` ergänzt.
 Offen sind derzeit vor allem die tatsächliche Sensoridentität, Mess-/Kanalzuordnung,
 Gasquellen und ausdrückliche Forschungsziele; das wird nicht mit Beispielwerten gefüllt.
 
@@ -423,31 +428,28 @@ oder hochgeladen; GaSi verwendet weiterhin seine eigene kleine synthetische CSV.
 
 ## Prüfung: lokal und live getrennt
 
-Der Sensor-/Belastungsprofil-Abgleich erweitert die CSV-Vorschau um Sensorrolle,
-Gas-/Temperatur-/Feuchtebedingungen und den getrennten Auswertungsschritt.
-Notebook 04 prüft zusätzlich Sensor-/Prüflings-, Gas-, Parameter-, Umwelt-,
-SOP- und Softwaretypen. Der erneute lesende Verbindungsversuch war mit dem
-vorhandenen Session-Zugang nicht erfolgreich; daraus wird keine neue Live-Bestätigung
-abgeleitet. Der vollständige Forschungsupload wird ausschließlich mit einem
-synthetischen Testclient geprüft, einschließlich Teilfehler, Wiederholung,
-eigenständiger Neuauswertung und Hashvergleich.
+**Aktuelle Überarbeitung:** 109 Tests und alle 13 GaSi-Notebooks in frischen
+Kernels (30 lokale Durchläufe einschließlich Workshop-Einrichtung).
+Netzwerk ist im Notebook-Test gesperrt; Schreibabläufe laufen nur gegen Testclients.
+Geprüft sind eigenständige Messung, optionale/wiederverwendete Vorbereitung,
+spätere Auswertung, mehrere Dateien/Messungen, geteilte-Datei-Sperre, Teilfehler,
+Wiederholung und Ergebnisprovenienz bis zur exakten Serverdatei und Record-Auswahl.
+31 echte Original-CSVs bleiben laut SHA-256 unverändert.
 
-**Konzept-/Uploadabgleich 13.11.2026:** 101 lokale Tests bestanden.
-Alle zwölf GaSi-Notebooks wurden mit frischen Kernels und gesperrtem Netzwerk
-geprüft (27 lokale Durchläufe einschließlich Workshop-Einrichtung).
-Notebook 08 prüft fehlende Angaben, Vorschau sowie den aktivierten vollständigen
-Testclient-Upload mit Wiederholung. Die 31 Original-CSVs blieben laut SHA-256
-unverändert. Notebook 01 wurde
-zusätzlich mit frischem Kernel und gesperrtem Netzwerk ausgeführt: beide
-Markdown-Quellen unverändert, alle drei HTML-Dateien und die vier Konzept-SVGs
-erzeugt. Die vier Ansichten wurden in Edge geprüft; je Auswahl ist genau ein
-Schritt sichtbar. Alle neuen Diagrammkanten und Beschriftungen stammen aus der
-Konzeptquelle; Boxen und Verbindungslinien überschneiden sich in den geprüften
-Layouts nicht. Die verlinkten BAM-Seiten und ihre Beispielgrafiken wurden gelesen.
-Zusätzlich geprüft: drei direkt sichtbare Typentabellen je Tätigkeit,
-gemeinsame Hierarchie-/Beziehungsansicht und separat exportierte SVGs.
-Es fand für diesen
-Konzeptabgleich kein neuer Live-Schreibtest statt.
+Die Grafikprüfung bestätigt vollständige Knoten/Kanten und keine Linien durch
+Objektboxen. Parent-Pfeile bleiben kreuzungsfrei. In der Gesamtansicht sind
+zusätzliche Ablage- und Dataset-Linien unterschiedlich markiert; Kreuzungen
+zwischen diesen Bedeutungen können vorkommen. Optionale/spätere Objekte haben
+gestrichelte Umrandungen.
+
+**Live nur lesend:** Verbindung, zehn Inventargeräte und Typ-/Pflichtfelder
+aktuell bestätigt. Die Laborbuch-Testcollection ist derzeit nicht lesbar.
+Die native Dataset-Parent-Probe wurde deswegen vor jeder Mutation abgebrochen.
+Echte Messdaten wurden nicht hochgeladen. Siehe
+[Projektstatus und Pilotlücken](docs/GaSi_Projektstatus.md) und
+[Browser-Abnahmetest](docs/GaSi_Forschungsupload.md#suche-und-browser-abnahme).
+
+Die folgenden älteren Nachweise sind als historische Prüfergebnisse zu lesen.
 
 ```powershell
 .\.venv\Scripts\python -m unittest discover -s tests -v

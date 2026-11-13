@@ -68,13 +68,16 @@ def _profile(kind):
             ("LS", "LP"): "M845 150 V190", ("LP", "PC"): "M560 250 V290",
             ("LP", "MC"): "M850 250 V290", ("LP", "EC"): "M1140 250 V290",
             ("RS", "RP"): "M1430 150 V190", ("RP", "RC"): "M1430 250 V290",
+            ("IC","I"):"M250 350 V540",("PC","P"):"M600 350 V540",
+            ("MC","M"):"M900 350 V540",("EC","E"):"M1180 350 V540",("RC","Q"):"M1430 350 V400",
             ("Q", "P"): "M1320 435 H560 V540", ("P", "M"): "M670 590 H740",
             ("M", "E"): "M960 590 H1030", ("I", "M"): "M370 590 H410 V820 H780 V640",
             ("G", "M"): "M1320 575 H1280 V500 H850 V540",
             ("W", "E"): "M1320 735 H1280 V615 H1250",
             ("D", "M"): "M1320 875 H950 V640",
+            ("P","DP"):"M560 640 V980",("M","DM"):"M850 640 V980",("E","DE"):"M1140 640 V980",
         }
-        return (1600, 1200), boxes, routes
+        return (1600, 1240), boxes, routes
     raise ValueError(f"Unbekannte Konzeptgrafik: {kind}")
 
 
@@ -84,6 +87,8 @@ def concept_svg(source):
     if not profile:
         raise ValueError("Konzeptgrafik benötigt eine gasi-view-Angabe.")
     kind = profile.group(1)
+    optional_match=re.search(r"%% gasi-optional: ([A-Za-z,\w]+)",source)
+    optional=set(optional_match.group(1).split(",")) if optional_match else set()
     (width, height), boxes, routes = _profile(kind)
     node = r"([A-Za-z]\w*)(?:\[([^\]]+)\])?"
     edge = re.compile(rf"{node}\s*-->\s*\|([^|]+)\|\s*{node}")
@@ -139,7 +144,8 @@ def concept_svg(source):
         if kind == "relations":
             expected = "Parent"
         elif kind == "combined":
-            expected = "enthält" if pair[0] in {"IS", "IP", "LS", "LP", "RS", "RP"} else "Parent"
+            expected = ("enthält" if pair[0] in {"IS", "IP", "IC", "LS", "LP", "PC", "MC", "EC", "RS", "RP", "RC"} else
+                        "Dataset-Zuordnung" if pair[1] in {"DP","DM","DE"} else "Parent")
         if expected and relation != expected:
             raise ValueError("Beziehungsart passt nicht zur Ebene der Konzeptgrafik.")
 
@@ -149,6 +155,8 @@ def concept_svg(source):
         f'<defs><marker id="{kind}-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#527889"/></marker></defs>',
     ]
     if kind == "combined":
+        for marker,color in (("contains","#8499a3"),("dataset","#b85450")):
+            parts.append(f'<defs><marker id="{kind}-{marker}" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="{color}"/></marker></defs>')
         for x, w, label in ((130, 240, "FB-8.1-Geräteinventar"), (440, 810, "Laborbuch"), (1310, 240, "Weitere Ressourcen")):
             parts.append(f'<rect x="{x}" y="20" width="{w}" height="35" fill="#163f50"/><text x="{x+w/2}" y="44" text-anchor="middle" font-family="sans-serif" font-size="17" fill="white">{label}</text>')
         for y, h, label, color in ((90,60,"SPACE","#e9eef5"),(190,60,"PROJECT","#e8f4e9"),(290,60,"COLLECTION","#fff4d6"),(400,510,"OBJECT","#e4effb"),(980,90,"DATASET","#f2eafb")):
@@ -157,8 +165,12 @@ def concept_svg(source):
             parts.append(f'<path d="M{x} 65 V1060" stroke="#b9cdd6" stroke-dasharray="5 5" fill="none"/>')
     for (start, end), path in routes.items():
         relation = edges[start, end]
-        dash = ' stroke-dasharray="5 4"' if kind == "combined" and relation == "enthält" else ""
-        parts.append(f'<path class="connection" data-source="{start}" data-target="{end}" data-relation="{escape(relation, quote=True)}" d="{path}" fill="none" stroke="#527889" stroke-width="2"{dash} marker-end="url(#{kind}-arrow)"><title>{escape(relation)}</title></path>')
+        containment=kind=="combined" and relation=="enthält"
+        attachment=kind=="combined" and relation=="Dataset-Zuordnung"
+        dash=' stroke-dasharray="5 4"' if containment else ' stroke-dasharray="2 5"' if attachment else ""
+        color="#8499a3" if containment else "#b85450" if attachment else "#527889"
+        marker=kind+"-contains" if containment else kind+"-dataset" if attachment else kind+"-arrow"
+        parts.append(f'<path class="connection" data-source="{start}" data-target="{end}" data-relation="{escape(relation, quote=True)}" d="{path}" fill="none" stroke="{color}" stroke-width="2"{dash} marker-end="url(#{marker})"><title>{escape(relation)}</title></path>')
         # Labels are in free lanes, never on the connectors or a node.
         if kind == "workflow":
             x, y, w, h = boxes[start]
@@ -186,7 +198,8 @@ def concept_svg(source):
         stroke = "#b3cbd6"
         if key in roles:
             fill, stroke, ink = styles[roles[key]]
-        parts.append(f'<g data-node="{key}" data-role="{roles.get(key, "")}"><title>{escape(label)}</title><rect class="node-box" x="{x}" y="{y}" width="{w}" height="{h}" rx="10" fill="{fill}" stroke="{stroke}"/>')
+        dash=' stroke-dasharray="8 4"' if key in optional else ""
+        parts.append(f'<g data-node="{key}" data-role="{roles.get(key, "")}" data-optional="{str(key in optional).lower()}"><title>{escape(label)}</title><rect class="node-box" x="{x}" y="{y}" width="{w}" height="{h}" rx="10" fill="{fill}" stroke="{stroke}"{dash}/>')
         title, _, subtitle = label.partition(" / ")
         heading = textwrap.wrap(title, width=max(14, int(w/10)))
         detail = textwrap.wrap(subtitle, width=max(16, int(w/8)))
@@ -206,6 +219,10 @@ def concept_svg(source):
             w = (width-70)/len(used)-12
             fill, stroke, ink = styles[role]
             parts.append(f'<g class="legend"><rect x="{x}" y="{height-65}" width="{w}" height="42" fill="{fill}" stroke="{stroke}"/><text x="{x+w/2}" y="{height-38}" text-anchor="middle" font-family="sans-serif" font-size="15" fill="{ink}">{captions[role]}</text></g>')
+    if kind=="combined":
+        for index,(title,color,dash) in enumerate((("Collection enthält Objekt","#8499a3","5 4"),("Objekt: Parent → Child","#527889",""),("Dataset am Arbeitsschritt","#b85450","2 5"))):
+            x=45+index*515
+            parts.append(f'<path d="M{x} 1125 H{x+90}" stroke="{color}" stroke-width="2" stroke-dasharray="{dash}"/><text x="{x+105}" y="1130" font-size="17" font-family="sans-serif">{escape(title)}</text>')
     return "".join(parts) + "</svg>"
 
 

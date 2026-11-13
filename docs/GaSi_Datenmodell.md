@@ -83,22 +83,23 @@ Es wird kein Änderungsjournal und keine Rekonstruktion früherer Umbauten aufge
 
 ### Vorbereiten, messen und auswerten
 
-Die BAM-Anleitung verlangt die Zuordnung von Forschungsdateien zur Tätigkeit,
-die sie erzeugt. Deshalb umfasst der vollständige GaSi-Ablauf drei mögliche
-`EXPERIMENTAL_STEP`-Objekte: Vorbereitung mit Prüfplan/Startkonfiguration,
-Messung mit Loggerdateien und tatsächlich verwendetem Setup-Snapshot sowie
-Auswertung mit berechneten Daten, Diagrammen und Bericht. Erzeugt die Vorbereitung
-keine eigenständig aufbewahrten Dateien, wird sie in die Messung integriert.
+Die Messung ist ein eigenständig registrierbarer `EXPERIMENTAL_STEP` mit
+Original-RAW_DATA und Laufkontext. Prüfplan und Sollprofil gehören standardmäßig
+als ATTACHMENT zu diesem Lauf. Eine automatisch erzeugte Datei begründet kein
+zusätzliches Vorbereitungsobjekt.
 
-Auswertung ist ein eigener Schritt, sobald sie eigene Ergebnisse erzeugt.
-Die Messung ist Parent der Auswertung; der Auswertungsschritt benennt die
-verwendeten Eingabedatasets, Bereiche und Hashes. Ein während der Aufnahme
-erzeugtes Messprotokoll gehört hingegen direkt zur Messung. Mehrere Auswertungen
-können denselben Lauf verwenden, eine Auswertung kann mehrere Läufe vergleichen.
-Notebook 08 kann diesen Ablauf nach vollständiger lokaler Konfiguration und
-bewusster Aktivierung schreiben. Der vollständige Ablauf ist bisher nur mit einem
-synthetischen Testclient bestätigt; für echte Daten fehlen noch die unten
-dokumentierten fachlichen Zuordnungen und ein erfolgreicher Instanzabgleich.
+Eine unabhängig freigegebene oder laufübergreifend wiederverwendete Vorbereitung
+kann als eigener EXPERIMENTAL_STEP registriert bzw. als vorhandener Parent benutzt
+werden. Die spätere Auswertung ist ein eigener Schritt mit eigener analysis_id,
+eigenen Ergebnisdateien und den tatsächlich verwendeten Messungen als Parents.
+Notebook 08 erfasst die Messung ohne Auswertungsziel oder Ergebnisse; Notebook 09
+ergänzt die Auswertung unabhängig in einem frischen Kernel.
+
+Das Auswertemanifest speichert tatsächliche Server-Dataset-IDs, Dateipfade, Hashes,
+ausgewählte Records/Stufen, Zeitbezug, Codeversion, Parameter und Referenznachweise.
+Mehrere Messungen können eine Auswertung speisen. Geteilte Originaldateien bleiben
+bis zur Live-Abnahme ihrer einmaligen Ablage schreibgesperrt.
+Aktuelle Instanzbefunde: [Projektstatus](GaSi_Projektstatus.md).
 
 ### Das „Sample“ ist der zu prüfende Sensor
 
