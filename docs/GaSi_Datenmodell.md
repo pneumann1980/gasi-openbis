@@ -88,6 +88,16 @@ Original-RAW_DATA und Laufkontext. Prüfplan und Sollprofil gehören standardmä
 als ATTACHMENT zu diesem Lauf. Eine automatisch erzeugte Datei begründet kein
 zusätzliches Vorbereitungsobjekt.
 
+Eine erste **Rohdatenerfassung** darf offene fachliche Angaben enthalten:
+Aufnahmeversion, Ressourcen, Kanalbelegung und Messbedingungen werden als
+`metadata_gaps` dokumentiert. Eindeutiger Prüfling, Zweck/Person, Datenbereich,
+bekannte Zeitbasis und Zuordnung unveränderter Originale bleiben erforderlich.
+Das Formular in Notebook 03 erzeugt die lokale Laufkonfiguration aus diesen
+Auswahlen. Loggerprofile und Logabschnitte bleiben Rohbeobachtungen und bestätigen
+keine fachlichen Messstufen. Bei fehlender Stufenzuordnung erfolgt die spätere
+Auswertung über exakte Records/Zeitbereiche und nennt die offenen Angaben;
+bekannte Stufen müssen in ihrer Auswahl erhalten bleiben.
+
 Eine unabhängig freigegebene oder laufübergreifend wiederverwendete Vorbereitung
 kann als eigener EXPERIMENTAL_STEP registriert bzw. als vorhandener Parent benutzt
 werden. Die spätere Auswertung ist ein eigener Schritt mit eigener analysis_id,

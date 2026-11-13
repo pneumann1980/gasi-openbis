@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="gasi-concept-sha256" content="2800c43fb97e5803f419be266c14cf8be21f1319b1a98d6bf537edaf2f2d7cb6"><title>GaSi: Konzeptmodell in vier Schritten</title>
+<meta name="gasi-concept-sha256" content="34b8f76f7d41a76a666bc1995546b9ca98ce10a885e5efd006670cb1db18db15"><title>GaSi: Konzeptmodell in vier Schritten</title>
 <style>
 :root{font:18px/1.5 system-ui,sans-serif;color:#183a4b;background:#f4f7f8}
 *{box-sizing:border-box}body{margin:0}header,main,footer{max-width:1400px;margin:auto;padding:16px 26px}
@@ -32,7 +32,11 @@ sind getrennte Aussagen.</p>
 <p><strong>Aktueller Umsetzungsstand:</strong> Messung sofort mit Originalen und Kontext erfassen;
 Vorbereitung nur bei eigenständiger Freigabe/Wiederverwendung; Auswertung später
 unabhängig ergänzen. <a href="GaSi_Projektstatus.md">Projektstatus und aktuelle Instanzbefunde</a>.
-Das Erzeugen dieser Projektdokumentation schreibt nichts in openBIS.</p></div><nav aria-label="Die vier BAM-Schritte">
+Das Erzeugen dieser Projektdokumentation schreibt nichts in openBIS.
+Eine erste Rohdatenerfassung darf offene Aufnahmeversion, Ressourcen, Kanalbelegung
+und Messbedingungen enthalten. Diese Lücken sind am Lauf und im Quellmanifest
+gekennzeichnet; Datenbereich, Prüfling und Zeitbasis müssen eindeutig sein.
+CSV-Logabschnitte werden dabei nicht automatisch zu fachlichen Messstufen.</p></div><nav aria-label="Die vier BAM-Schritte">
 <a href="#schritt-1">1 · Ablauf</a><a href="#schritt-2">2 · Bausteine</a>
 <a href="#schritt-3">3 · Ablage</a><a href="#schritt-4">4 · Verbindungen</a></nav>
 <section class="step" id="schritt-1"><h2>1. Draw the research workflow</h2><p><strong>Ein Gas- oder Gasfeuchtesensor wird definierten Prüfbedingungen ausgesetzt,

@@ -4,9 +4,10 @@
 
 **Messdaten hochladen** erfasst einen Messlauf mit Originalen und Kontext.
 **Optionale Auswertung im Unterordner notebooks/** ergänzt später eine Auswertung zu einer oder mehreren bereits
-registrierten Messungen. Beide starten mit frischem Kernel. Run All bleibt
-Vorschau, solange `SCHREIBEN = False` in der Session gilt. `True` führt den jeweiligen
-Arbeitsaufruf aus. Es gibt keine weiteren Schreibschalter oder Bestätigungsphrasen.
+registrierten Messungen. Beide starten mit frischem Kernel. Notebook 03 öffnet
+bei Run All ein lokales Formular. Erst **Messung ausführen** verwendet den zentralen
+Sessionmodus: False zeigt die Vorschau, True schreibt. Es gibt keine weiteren
+Schreibschalter oder Bestätigungsphrasen.
 
 | Schritt | Pflichtziel | Dateien / Beziehungen |
 |---|---|---|
@@ -34,13 +35,31 @@ Die farbige [Konzeptansicht](GaSi_Konzeptmodell.html) zeigt diese Unterscheidung
 
 ## Messung konfigurieren
 
-[Leere Vorlage](../config/gasi_run.example.json) → lokale `config/gasi_run.json`.
-Die einmalige Einrichtung kopiert nur eine fehlende Vorlage. Erforderlich sind Laufkennung, Zweck,
-Person, Sensor-ID, Ressourcen, Aufnahmeversion, Messzeiten mit UTC-Offset, Aufbau,
-Kanäle mit Größe/Einheit/Messort, Stufen und explizite Dateien/Record-Bereiche.
-Ergebnisse, Auswertungskennung/-zeiten/-software und Auswertungsziel sind nicht
-erforderlich. Eine noch nicht abgeschlossene Referenzbewertung bleibt im Kontext
-als offen erhalten und verhindert nicht die Erfassung der Originale.
+Das Formular in [Notebook 03](../GaSi_03_Messdaten_hochladen.ipynb) bereitet die lokale
+`config/gasi_run.json` vor. Dateien und Records auswählen, Sensor-ID, Zweck, Person
+und tatsächliche Zeitbasis angeben; die eindeutige Zugehörigkeit der Originale
+auswählen. Speichern ist lokal. Frühere Konfigurationen werden vor Änderung gesichert.
+Für einen neuen Lauf gibt es **Neuen Lauf vorbereiten**. Die Laufkennung wird bei
+leerem Feld stabil aus Sensor und ausgewählten Daten erzeugt.
+
+**Rohdatenerfassung (`metadata_profile=raw_capture`):** Prüfling, Zweck, Person,
+ausgewählte Originale/Records, bekannte UTC-Offsets und exklusiver Dateibesitz
+bleiben erforderlich. Hashes binden die Auswahl an unveränderte Originale.
+Aufnahmeversion, beteiligte Geräte/Gaschargen, Kanalbelegung und fachliche
+Messbedingungen dürfen unbekannt bleiben. `metadata_gaps` hält sie im Kontext
+und Server-Quellmanifest fest. Leere Stufenlisten bedeuten **nicht dokumentiert**.
+CSV-Gasprofile und Logabschnitte sind Rohbeobachtungen im Entwurf, keine bestätigten
+Messstufen. Das Formular erzeugt keine Sensor- oder Ressourcenidentitäten.
+Bereits hochgeladene Laufmetadaten werden durch diesen Entwurf nicht geändert.
+Eine abweichende Konfiguration derselben Laufkennung bleibt gegen Überschreiben
+gesperrt; ein gezielter Ergänzungsablauf ist ein nächster Schritt.
+
+**Vollständig beschriebener Lauf:** Das bisherige Profil mit Ressourcen,
+Aufnahmeversion, Aufbau, Kanälen mit Größe/Einheit/Messort und Messstufen bleibt
+verwendbar. Bekannte Angaben werden weiterhin fachlich geprüft. Die ausgefüllte
+[JSON-Vorlage](../config/gasi_run.example.json) ist weiter nutzbar.
+Ergebnisse, Auswertungskennung/-zeiten/-software und Auswertungsziel sind für die
+Messung nicht erforderlich.
 
 `preparation.mode`:
 
@@ -57,7 +76,8 @@ die Ausführung; lokale Freigabereferenzen sind nicht mehr erforderlich.
 Original-CSV bleiben bytegleich. Es gelten die bestehenden Prüfungen des
 252-Spalten-Loggers: Zeilenform, endliche Zahlen, Zeiten/JSON und zugeordnete Kanäle.
 `source_ranges` umfassen `file`, `first_record`, `last_record`,
-`utc_offset` und `confirmed=true`. `stage_ranges` ergänzen `stage_id`.
+`utc_offset` und `confirmed=true`. Das Formular speichert diese Zuordnung aus der
+gewählten Auswahl. `stage_ranges` ergänzen bei bekannten Messstufen `stage_id`.
 Records zählen ab 1 ohne Kopfzeilen, nicht physische Textzeilen.
 Ein Lauf kann mehrere Dateien umfassen. Unaufgelöste Uhrumstellungen werden
 gesperrt; Originalzeitstempel und Reihenfolge bleiben erhalten.

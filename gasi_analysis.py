@@ -57,7 +57,7 @@ def validate_analysis(config,root=ROOT):
         if key in seen:issues.append("Eine Eingabedatei nur einmal aufführen; mehrere Bereiche in ranges angeben.")
         seen.add(key)
         for label in ("source_ranges","stage_ranges"):
-            if not item.get(label):issues.append(f"Auswahl {label} fehlt.")
+            if not isinstance(item.get(label), list) or label == "source_ranges" and not item[label]:issues.append(f"Auswahl {label} fehlt.")
             for area in item.get(label,[]):
                 if not runs._record(area.get("first_record")) or not runs._record(area.get("last_record")) or area["last_record"]<area["first_record"]:
                     issues.append("Ungültiger Record-Bereich in der Auswertung.")
@@ -150,6 +150,8 @@ def resolve_inputs(client,config):
         digest=runs._hash(raw)
         if digest!=item["sha256"] or digest!=original["sha256"]:raise ob.CheckFailed("Eingabe-Hash stimmt nicht mit Original und Messmanifest überein.")
         _subset(item["source_ranges"],original["source_ranges"])
+        if original["stage_ranges"] and not item["stage_ranges"]:
+            raise ob.CheckFailed("Für diese Eingabe sind Messstufen dokumentiert; ausgewertete Stufenbereiche angeben.")
         _subset(item["stage_ranges"],original["stage_ranges"],stage=True)
         for stage in item["stage_ranges"]:
             _subset([stage],[{**s,"utc_offset":stage.get("utc_offset")} for s in item["source_ranges"]])
@@ -168,6 +170,7 @@ def resolve_inputs(client,config):
             "measurement_id":ob.identifier(measurement),"measurement_times":receipt["times"],
             "record_windows":windows,
             "source_receipt":receipt["_server_source"],
+            **({"recorded_metadata_gaps":receipt["metadata_gaps"]} if "metadata_gaps" in receipt else {}),
             "recorded_reference_evidence":receipt.get("reference_evidence",[]),
             "recorded_reference_assessment":receipt.get("reference_assessment")})
     all_resources={x for receipt in cache.values() for values in receipt.get("resources",{}).values() for x in values}

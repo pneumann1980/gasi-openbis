@@ -37,7 +37,7 @@ def copy_repo(path):
         shutil.copy2(source, path / 'docs')
 
 
-def execute(name, cwd, spec_dir, *, write=False, fake=False, repeat=False):
+def execute(name, cwd, spec_dir, *, write=False, fake=False, repeat=False, guided=False):
     nb = nbformat.read(ROOT / name, as_version=4)
     nbformat.validate(nb)
     for cell in nb.cells:
@@ -127,6 +127,23 @@ before = len(client.saved), len(client.created)
 originals = {{p: p.read_bytes() for p in (root / 'data/measurements').glob('*.csv')}}
 '''
     nb.cells.insert(0, nbformat.v4.new_code_cell(preamble))
+    if name == MEASUREMENT and fake:
+        form_action = ''
+        if guided:
+            form_action = '''
+editor.new_run()
+editor.files.value = tuple(run['files']['raw_data'])
+editor.load_sources()
+for row in editor.file_rows.values(): row['offset'].value = '+01:00'
+editor.dut.value = run['dut']['identifier']
+editor.purpose.value = run['purpose']
+editor.person.value = run['responsible_person']
+editor.ownership.value = 'exclusive'
+draft = editor.save()
+assert not draft['issues'], draft['issues']
+assert draft['config']['metadata_profile'] == 'raw_capture'
+'''
+        nb.cells.append(nbformat.v4.new_code_cell(form_action + 'result, message = editor.execute()'))
     assertions = f'assert session.writes_enabled() is {write!r}\nassert not network_attempts\n'
     if name == SESSION:
         assertions += "assert session.session_value(session.TOKEN_ENV) == 'SYNTHETIC_NOTEBOOK_TOKEN'\nassert 'token' not in globals()\n"
@@ -138,6 +155,8 @@ originals = {{p: p.read_bytes() for p in (root / 'data/measurements').glob('*.cs
             assertions += 'assert before == (len(client.saved), len(client.created))\n'
         if write and name in (SETUP, MEASUREMENT, DUT, ANALYSIS):
             assertions += "assert result, message\n"
+        if write and name == MEASUREMENT:
+            assertions += "assert result.get('verification'), message\n"
         if repeat:
             method = {SETUP:'app.setup_project(root)', MEASUREMENT:'app.upload_measurement(root)', DUT:'dut.manage_dut(root)',
                       ANALYSIS:'gasi_analysis.upload_analysis(expected_manifest_sha=preview_sha256, root=root)'}[name]
@@ -165,18 +184,20 @@ def main():
                  (MEASUREMENT, False, False), (MEASUREMENT, False, True), (MEASUREMENT, True, True),
                  (DUT, False, False), (DUT, False, True), (DUT, True, True),
                  (ANALYSIS, False, False), (ANALYSIS, False, True), (ANALYSIS, True, True)]
+    scenarios = [(*scenario, False) for scenario in scenarios] + [
+        (MEASUREMENT, False, True, True), (MEASUREMENT, True, True, True), (MEASUREMENT, True, False, False)]
     with tempfile.TemporaryDirectory(prefix='simple-notebooks-', dir=runtime) as temp:
         base = Path(temp)
         spec = base / 'kernels/gasi-test'
         spec.mkdir(parents=True)
         (spec / 'kernel.json').write_text(json.dumps(dict(argv=[sys.executable, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             display_name='GaSi test', language='python')), encoding='utf-8')
-        for index, (name, write, fake) in enumerate(scenarios):
+        for index, (name, write, fake, guided) in enumerate(scenarios):
             cwd = base / str(index)
             copy_repo(cwd)
-            execute(name, cwd, spec.parent, write=write, fake=fake, repeat=write and fake)
+            execute(name, cwd, spec.parent, write=write, fake=fake, repeat=write and fake, guided=guided)
     assert all(hashlib.sha256(p.read_bytes()).hexdigest() == digest for p, digest in originals.items())
-    print(f'PASS: 5 notebooks, 14 fresh kernels; {len(originals)} original CSVs unchanged.')
+    print(f'PASS: 5 notebooks, {len(scenarios)} fresh kernels; {len(originals)} original CSVs unchanged.')
 
 
 if __name__ == '__main__':

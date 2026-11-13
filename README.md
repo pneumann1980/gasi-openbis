@@ -7,7 +7,7 @@ Prüfling. Jedes startet mit einem frischen Kernel. Arbeitsverzeichnis ist diese
 |---|---|---|
 | 1 · pro Session | [Session starten](GaSi_01_Session_starten.ipynb) | Token verdeckt eingeben/erneuern und den einzigen Schreibmodus setzen |
 | 2 · einmalig | [Einmalig einrichten](GaSi_02_Einmalig_einrichten.ipynb) | Requirements installieren, Ziele konfigurieren, Collections und belegte Geräte einrichten, synthetischen Test prüfen; Modell/HTML erzeugen |
-| 3 · pro Messlauf | [Messdaten hochladen](GaSi_03_Messdaten_hochladen.ipynb) | Originaldateien prüfen, Lauf und Ressourcen verknüpfen, hochladen und per Rückdownload/Hash verifizieren |
+| 3 · pro Messlauf | [Messdaten hochladen](GaSi_03_Messdaten_hochladen.ipynb) | Lauf im Formular vorbereiten, Originale prüfen, hochladen und per Rückdownload/Hash verifizieren |
 | Bei neuem Sensor | [Prüfling verwalten](GaSi_Pruefling_verwalten.ipynb) | Vorhandene Sensor-ID verwenden oder eine neue Identität registrieren und in die leere Laufvorlage übernehmen |
 
 Die alten Einzelnotebooks sind zusammengeführt. Ihre lokalen Zustände einschließlich
@@ -24,7 +24,7 @@ SCHREIBEN = False
 ```
 
 - `False`: Die Arbeitsnotebooks zeigen, was geschehen würde. Kein Schreiben in openBIS.
-- `True`: Das jeweils ausgeführte Arbeitsnotebook schreibt in den BAM-Playground.
+- `True`: Die ausgeführte Arbeitsaktion schreibt in den BAM-Playground. In Notebook 03 ist das **Messung ausführen**.
 
 Die Zelle mit dem Schalter ausführen. Der Modus wird in der ignorierten `.env`
 gespeichert und vor jedem Arbeitsaufruf erneut gelesen, auch in anderen Kernels.
@@ -100,11 +100,36 @@ ausführen. Vorhandene `identifier` bevorzugen. Zur Neuanlage sind eine stabile
 Prüfling wird nicht nochmals angelegt. Bei bereits anderer Sensor-ID im Lauf bleibt
 die Zuordnung erhalten, bis ein neuer Lauf ausdrücklich konfiguriert wird.
 
-Für jede Messung steht in `config/gasi_run.json`: Laufkennung, Prüfling, tatsächlich
-verwendete Geräte/Gase, Aufbau, Kanäle, Einheiten/Messorte, Stufen, Zeitbasis mit
-UTC-Offset und ausgewählte Originaldateien/Records. Dann **Messdaten hochladen**
-ausführen. Eine Auswertung ist dafür nicht erforderlich; der Plan liegt standardmäßig
-am Messlauf. Fehlende fachliche Informationen werden nicht durch Beispieldaten ersetzt.
+Notebook **Messdaten hochladen** öffnet ein lokales Formular:
+
+1. Dateien auswählen und **Dateiauswahl einlesen** anklicken.
+2. Den zu diesem Lauf gehörenden Record-Bereich und die tatsächliche Zeitbasis wählen.
+3. Sensor-ID, Prüfzweck und verantwortliche Person eintragen. Angeben, ob die Originale ausschließlich diesem Lauf gehören.
+4. Optional beteiligte Geräte, Aufbauhinweis und Prüflingskanal zuordnen.
+5. **Entwurf lokal speichern**, anschließend **Messung ausführen**.
+
+Die Laufkennung wird bei leerem Feld aus Prüfling und ausgewählten Daten stabil
+erzeugt. CSV-Zeiten, Hashes, Record-Anzahl, vorhandene Profile und Logabschnitte werden
+eingelesen. Die Vorlage steht anschließend lokal in `config/gasi_run.json`;
+vorherige Versionen bleiben unter `.local_playground_test/run_drafts/` erhalten.
+**Neuen Lauf vorbereiten** beginnt eine neue Zuordnung und ändert die gespeicherte
+Konfiguration erst beim Speichern. Änderungen aus einem zweiten Formular werden erkannt.
+
+**Run All öffnet nur das Formular**, auch bei aktivem Schreibmodus. Öffnen und
+Speichern kontaktieren openBIS nicht. **Messung ausführen** prüft die gespeicherten
+Angaben und verwendet den zentralen Sessionmodus: False zeigt die Vorschau,
+True führt den Upload mit Rückleseprüfung aus. Ungespeicherte Änderungen werden angezeigt.
+
+Das Profil **Rohdatenerfassung** erlaubt ausdrücklich offene Aufnahmeversion,
+Geräte-/Gaszuordnungen, Messbedingungen und Kanäle. Die Lücken bleiben im Kontext
+und im Server-Quellmanifest dokumentiert. Eindeutiger Prüfling, Datenzuordnung,
+Zeitbasis, Originalhashes und unveränderte CSVs bleiben erforderlich.
+CSV-Sollwerte oder Logabschnitte bestätigen keine physikalischen Messstufen.
+Vollständig beschriebene Läufe behalten die bisherigen fachlichen Prüfungen.
+Eine Auswertung ist für die Erfassung nicht erforderlich.
+Bereits hochgeladene Läufe werden mit diesem ersten Formularentwurf nicht
+nachträglich geändert. Geänderte Metadaten derselben Kennung führen zum Konflikt;
+eine spätere Ergänzung bestehender Laufmetadaten benötigt noch einen eigenen Ablauf.
 
 Originaldateien unter `data/measurements/` bleiben unverändert. Wiederholung und
 Fortsetzung nach Teilfehlern verwenden stabile Kennungen. Gemeinsame Originaldateien
@@ -125,9 +150,13 @@ und Auswahlbereiche; die Rohdaten werden nicht erneut hochgeladen.
 
 Die Notebook-Prüfung startet isolierte frische Kernels mit gesperrtem Netzwerk.
 Die Paketinstallation wird simuliert; Schreibabläufe verwenden synthetische Testclients.
-Aktuell bestanden: **117 Unit-Tests**, fünf Notebooks in **14 frischen Kernels**;
-31 Original-CSVs unverändert. Die neue gebündelte Einrichtung wurde lokal geprüft,
-in diesem Schritt nicht live schreibend ausgeführt.
+Aktuell bestanden: **128 Unit-Tests**, fünf Notebooks in **17 frischen Kernels**
+plus zwei gezielte Kernel-Prüfungen des fertigen Formularablaufs. Geprüft sind
+Rohdatenerfassung mit offenen Metadaten, Hashbindung, Wiederholung, Teilfehler,
+Erhalt bereits beschriebener Läufe und spätere Auswertung ohne erfundene Messstufen.
+31 Original-CSVs unverändert. Formular und eine reale lokale CSV wurden zusätzlich
+lesend geprüft; Konfiguration und Sessiondatei blieben unverändert. In diesem
+Schritt wurde nicht live geschrieben.
 Prüfstand, Live-Befunde und noch fehlende Pilotangaben stehen im
 [Projektstatus](docs/GaSi_Projektstatus.md).
 

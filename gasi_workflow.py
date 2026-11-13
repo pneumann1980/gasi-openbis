@@ -170,6 +170,7 @@ def upload_measurement(root=ROOT):
         result["issues"] = [str(exc)]
         return result, "Laufkonfiguration korrigieren; keine Änderungen in openBIS."
     result["issues"] = runs.validate_run(run, root)
+    result["metadata_gaps"] = runs.metadata_gaps(run) if (run or {}).get("metadata_profile") == "raw_capture" else []
     config, _ = ob.load_target_config(root / "config/playground_test_target.json")
     try:
         targets = runs._targets(config, runs.activities(run) if run else ("measurement",))
@@ -209,8 +210,14 @@ def show_result(result, message):
     print(result.get("mode", session.mode_status()))
     for line in result.get("planned", []):
         print("-", line)
-    for line in result.get("issues", []):
-        print("Offen:", line)
+    if result.get("issues"):
+        print("Vor der Ausführung klären:")
+        for line in result["issues"]:
+            print("-", line)
+    if result.get("metadata_gaps"):
+        print("Im Laufkontext als offen dokumentiert:")
+        for line in result["metadata_gaps"]:
+            print("-", line)
     print(message)
     for key in ("collections", "devices", "synthetic_test", "verification", "pruefling"):
         if result.get(key):

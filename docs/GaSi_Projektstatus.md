@@ -19,14 +19,42 @@ Der lokale Modus in `.env` wird von jedem Arbeitsaufruf neu gelesen; er gilt auc
 Confirmation-Strings oder weiteren lokalen Schreibfreigaben. Fachliche Belege,
 Pflichtfelder, Zielgrenzen und serverseitige Rechte bleiben erforderlich.
 
-**Bestanden:** 117 Unit-Tests, alle fünf verbleibenden Notebooks in 14 frischen
+**Bestanden:** 128 Unit-Tests, alle fünf verbleibenden Notebooks in 17 frischen
 Kernels mit gesperrtem Netzwerk. Paketinstallation simuliert, echte Paketimports;
 Schreiben nur gegen synthetische Testclients. Einrichtung, Prüfling und Upload
-einschließlich Wiederholung geprüft. 31 Original-CSVs unverändert.
+einschließlich Wiederholung geprüft. Zwei zusätzliche Kernel-Prüfungen testen
+den fertigen Formularablauf mit False/True und Wiederholung. 31 Original-CSVs unverändert.
 Die neue gebündelte Einrichtung wurde in diesem Schritt nicht live schreibend
 ausgeführt. Die folgenden Live-Befunde stammen aus dem vorherigen lesenden Abgleich.
 
-## Ergebnis dieses Auftrags
+## Geführte Laufvorbereitung: erster Entwurf
+
+Notebook 03 öffnet ein Formular. Dateien einlesen, Records/Zeitbasis auswählen,
+Prüfling/Zweck/Person angeben und die Zugehörigkeit der Originale festlegen.
+Geräte, Aufbauhinweis und Prüflingskanal lassen sich optional zuordnen.
+Ein leeres Kennungsfeld wird aus Prüfling und ausgewählten Daten stabil befüllt.
+Speichern bleibt lokal und sichert den vorherigen Konfigurationsstand;
+gleichzeitige Änderungen werden erkannt. Erst **Messung ausführen** verwendet
+den zentralen Sessionmodus. Run All öffnet auch bei True lediglich das Formular.
+
+Das Profil `raw_capture` dokumentiert unbekannte Aufnahmeversion, Ressourcen,
+Kanäle und Messbedingungen als `metadata_gaps` im Kontext und Quellmanifest.
+Der openBIS-Name kennzeichnet die Rohdatenerfassung. Sensoridentität, tatsächliche
+Record-Zuordnung, UTC-Offsets und exklusive Originalzugehörigkeit bleiben nötig.
+CSV-Profile und Logabschnitte sind Vorschläge; es entstehen keine erfundenen Stufen.
+Bei bereits beschriebenen Läufen bleiben bekannte Stufen, Referenzen, Kanäle und
+Zeitgrenzen bei unveränderter Quellzuordnung erhalten.
+
+Zusätzlich lokal gelesen: Formular mit 31 CSVs und zehn Geräteoptionen; eine
+vorhandene Datei technisch geprüft. Keine openBIS-Verbindung,
+keine Änderungen an Originalen, Laufkonfiguration oder Sessiondatei.
+
+**Grenze des Entwurfs:** Nachträgliche Ergänzungen bereits hochgeladener
+Laufmetadaten sind noch kein eigener Ablauf. Geänderte Metadaten derselben
+Kennung bleiben gegen Überschreiben gesperrt. Gemeinsame Originale mehrerer
+Läufe bleiben bis zur entsprechenden Live-Abnahme gesperrt.
+
+## Messung und spätere Auswertung
 
 Messung und Auswertung sind unabhängig nutzbar. Das Messdaten-Notebook braucht weder
 Auswertungskennung noch Ergebnisse/Auswertungsziel. Der Plan liegt standardmäßig
@@ -38,7 +66,7 @@ Der aktuelle Stand ist **für einen eindeutig zugeordneten Pilotlauf lokal gepr�
 aber noch nicht als Forschungsupload in der Instanz abgenommen**.
 Ein echter Messdaten-Upload wurde in diesem Auftrag nicht ausgeführt.
 
-## Aktuell live gelesen
+## Letzter dokumentierter Live-Lesebefund
 
 | Befund | Status |
 |---|---|
@@ -105,11 +133,11 @@ von Rezept-Sollwerten getrennt.
    Vorbereitung nur bei eigenständiger Registrierung.
 2. **Prüfling:** den tatsächlichen Gas-/Gasfeuchtesensor identifizieren, vorhandene
    Objekt-ID verwenden oder ihn einmalig mit fachlich passendem Typ registrieren.
-3. **Aufbau/Kanäle:** aktuelle Positionen, Sensorantwort, Referenz, Messorte, Einheiten,
-   Feuchtegröße und Temperatur-/Druckbezug bestätigen. Die Inventarregistrierung
-   bestätigt keinen aktuellen Einbau.
+3. **Aufbau/Kanäle:** bekannte Positionen, Sensorantwort, Referenz, Messorte und
+   Bezugsbedingungen zuordnen; ungeklärte Angaben im Rohdatenprofil offen halten.
+   Vor einer fachlichen Bewertung klären. Die Inventarregistrierung bestätigt keinen Einbau.
 4. **Originale/Laufgrenzen:** einen eindeutig zuordenbaren Lauf, tatsächliche
-   Dateien, Daten-/Stufenbereiche und belegten UTC-Offset festlegen.
+   Dateien, Datenbereiche und belegten UTC-Offset festlegen; Messstufen nur übernehmen, wenn belegt.
 5. **Ressourcen:** tatsächliche Geräte/Referenzen, Gasflaschen/Chargen und
    verwendete Nachweise samt Geltungsbereich auswählen.
 6. **Messung abnehmen:** zunächst ein synthetischer Lauf im nun bestätigten

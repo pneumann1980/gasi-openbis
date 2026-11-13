@@ -113,6 +113,7 @@ class StagedUploadTests(unittest.TestCase):
         stored=next(d for d in self.client.datasets.values() if d["filename"]=="analysis_manifest.json")
         manifest=json.loads(stored["bytes"])
         source=manifest["inputs"][0]
+        self.assertNotIn("recorded_metadata_gaps", source)  # Existing described-run manifests stay byte-compatible.
         self.assertEqual(source["dataset_id"],recorded["source_receipt"]["inputs"][0]["dataset_id"])
         self.assertEqual(source["file_path"],"original/synthetic.csv")
         self.assertEqual(source["source_receipt"]["dataset_id"],recorded["source_receipt"]["dataset_id"])
@@ -180,6 +181,8 @@ class StagedUploadTests(unittest.TestCase):
         wrong=deepcopy(config);wrong["inputs"][0]["source_ranges"][0]["last_record"]=2
         with self.assertRaises(ob.CheckFailed):a.ensure_analysis(self.client,a.prepare_analysis(wrong,self.root),self.targets)
         wrong=deepcopy(config);wrong["inputs"][0]["source_ranges"][0]["file"]="data/measurements/wrong.csv"
+        with self.assertRaises(ob.CheckFailed):a.ensure_analysis(self.client,a.prepare_analysis(wrong,self.root),self.targets)
+        wrong=deepcopy(config);wrong["inputs"][0]["stage_ranges"]=[]
         with self.assertRaises(ob.CheckFailed):a.ensure_analysis(self.client,a.prepare_analysis(wrong,self.root),self.targets)
         self.assertEqual(len(self.client.created),count)
 

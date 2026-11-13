@@ -9,6 +9,10 @@ sind getrennte Aussagen.
 Vorbereitung nur bei eigenständiger Freigabe/Wiederverwendung; Auswertung später
 unabhängig ergänzen. [Projektstatus und aktuelle Instanzbefunde](GaSi_Projektstatus.md).
 Das Erzeugen dieser Projektdokumentation schreibt nichts in openBIS.
+Eine erste Rohdatenerfassung darf offene Aufnahmeversion, Ressourcen, Kanalbelegung
+und Messbedingungen enthalten. Diese Lücken sind am Lauf und im Quellmanifest
+gekennzeichnet; Datenbereich, Prüfling und Zeitbasis müssen eindeutig sein.
+CSV-Logabschnitte werden dabei nicht automatisch zu fachlichen Messstufen.
 
 ## 1. Draw the research workflow
 

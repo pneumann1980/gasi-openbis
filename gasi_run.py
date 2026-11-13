@@ -105,13 +105,18 @@ def validate_run(run, root=ROOT):
         return ["Lokale Laufkonfiguration fehlt: config/gasi_run.example.json nach config/gasi_run.json kopieren."]
     if run.get("schema_version") != 1:
         issues.append("Laufschema muss Version 1 haben.")
+    raw_capture = run.get("metadata_profile") == "raw_capture"
+    if run.get("metadata_profile") not in (None, "described_run", "raw_capture"):
+        issues.append("Unbekanntes Profil für die Metadaten.")
     active=activities(run)
     later="analysis" in active
+    if raw_capture and (later or (run.get("preparation") or {}).get("mode", "inline") != "inline"):
+        issues.append("Rohdatenerfassung verwendet einen Messlauf mit Plan am Lauf; Auswertung separat ergänzen.")
     for key in (("run_id","analysis_id","purpose","responsible_person") if later else ("run_id","purpose","responsible_person")):
         if not isinstance(run.get(key),str) or not run[key].strip():
             issues.append(f"Pflichtangabe fehlt: {key}.")
     for key in (("acquisition","analysis") if later else ("acquisition",)):
-        if not str((run.get("software_versions") or {}).get(key) or "").strip():
+        if not raw_capture and not str((run.get("software_versions") or {}).get(key) or "").strip():
             issues.append(f"Softwareversion fehlt: {key}.")
     dut = run.get("dut") or {}
     if not _reference(dut.get("identifier")) or dut.get("identity_confirmed") is not True:
@@ -119,7 +124,7 @@ def validate_run(run, root=ROOT):
     if dut.get("kind") not in ("gas_sensor","gas_humidity_sensor"):
         issues.append("Prüflingsart: gas_sensor oder gas_humidity_sensor angeben.")
     for flag, evidence in (("setup_confirmed","setup_evidence"),("source_association_confirmed","source_association_evidence")):
-        if run.get(flag) is not True or not str(run.get(evidence) or "").strip():
+        if ((not raw_capture or flag == "source_association_confirmed") and run.get(flag) is not True or run.get(flag) is True and not str(run.get(evidence) or "").strip()):
             issues.append(f"Bestätigung mit Beleg fehlt: {flag}.")
     assessment=run.get("reference_assessment") or {}
     if later and (assessment.get("confirmed") is not True or not assessment.get("basis") or not assessment.get("scope")):
@@ -132,7 +137,7 @@ def validate_run(run, root=ROOT):
             issues.append("Referenznachweis braucht verwendetes Gerät/Gascharge, Dokumentreferenz und Geltungsbereich.")
     for kind in ("instruments","gas_sources","sop","software"):
         values = resources.get(kind,[])
-        if not isinstance(values,list) or (kind in ("instruments","gas_sources") and not values) or any(not _reference(v) for v in (values or [])):
+        if not isinstance(values,list) or (not raw_capture and kind in ("instruments","gas_sources") and not values) or any(not _reference(v) for v in (values or [])):
             issues.append(f"Vorhandene Ressourcen-IDs prüfen: {kind}.")
         elif len(values) != len(set(values)):
             issues.append(f"Ressourcen-IDs sind mehrfach aufgeführt: {kind}.")
@@ -146,7 +151,7 @@ def validate_run(run, root=ROOT):
         except (ValueError, TypeError, KeyError):
             issues.append(f"{LABELS[activity]}: Beginn/Ende mit UTC-Offset und gültiger Reihenfolge fehlen.")
     stages = run.get("stages")
-    if not isinstance(stages,list) or not stages:
+    if not isinstance(stages,list) or not stages and not raw_capture:
         issues.append("Mindestens eine ausdrücklich beschriebene Messstufe fehlt.")
         stages = []
     ids = []
@@ -216,7 +221,7 @@ def validate_run(run, root=ROOT):
             issues.append("Feuchtereferenz benötigt eine konkrete Feuchtegröße und passende Einheit.")
         if channel["role"].startswith("reference_") and channel["object_identifier"]==dut.get("identifier"):
             issues.append("Der zu prüfende Sensor darf nicht seine eigene unabhängige Referenz sein.")
-    if not dut_channels:
+    if not dut_channels and not raw_capture:
         issues.append("Mindestens ein bestätigter Sensorsignalkanal fehlt.")
     if later and dut.get("kind") == "gas_humidity_sensor" and not any(c.get("role") == "reference_humidity" for c in channels if isinstance(c,dict)):
         issues.append("Für die Feuchtebewertung den Referenzkanal und seine Größe dokumentieren.")
@@ -235,6 +240,10 @@ def validate_run(run, root=ROOT):
     raw_files = (run.get("files") or {}).get("raw_data",[])
     if not isinstance(raw_files,list):
         raw_files=[]
+    if raw_capture:
+        hashes = run.get("source_file_sha256") or {}
+        if set(hashes) != set(raw_files) or any(not isinstance(v,str) or not re.fullmatch(r"[a-f0-9]{64}",v) for v in hashes.values()):
+            issues.append("Originaldateien im Entwurf erneut einlesen; ihre SHA-256-Zuordnung fehlt.")
     selections = run.get("source_ranges")
     if not isinstance(selections,list):
         selections = []
@@ -287,6 +296,25 @@ def validate_run(run, root=ROOT):
     return issues
 
 
+def metadata_gaps(run):
+    """Scientific gaps remain explicit; they are not fabricated from CSV setpoints."""
+    if not isinstance(run, dict):
+        return []
+    gaps = []
+    for missing, message in (
+        (not (run.get("software_versions") or {}).get("acquisition"), "Version der Aufnahmesoftware unbekannt."),
+        (run.get("setup_confirmed") is not True, "Verwendeter Aufbau noch nicht vollständig belegt."),
+        (not (run.get("resources") or {}).get("instruments"), "Beteiligte Geräte noch nicht zugeordnet."),
+        (not (run.get("resources") or {}).get("gas_sources"), "Gasflaschen/Chargen noch nicht zugeordnet."),
+        (not run.get("stages"), "Fachliche Messstufen und ihre Gas-, Temperatur-, Feuchte- und Druckbedingungen noch offen."),
+        (not any(c.get("role") == "dut_signal" for c in run.get("channels", [])), "Prüflingskanal noch nicht fachlich zugeordnet; Originalspalten bleiben erhalten."),
+        ((run.get("reference_assessment") or {}).get("confirmed") is not True, "Referenz- und Kalibriergrundlage noch nicht bewertet."),
+    ):
+        if missing:
+            gaps.append(message)
+    return gaps
+
+
 def prepare_bundle(run, root=ROOT):
     """Copy only explicitly selected files; originals and local source evidence stay intact."""
     root = Path(root).resolve()
@@ -295,6 +323,11 @@ def prepare_bundle(run, root=ROOT):
         raise ob.CheckFailed("Uploadpaket gesperrt: " + " ".join(issues))
     data = deepcopy(run)
     data.setdefault("upload_scope","measurement")
+    if data.get("metadata_profile") == "raw_capture":
+        data.setdefault("software_versions", {}).setdefault("acquisition", None)
+        for key in ("setup_evidence", "source_association_evidence"):
+            data.setdefault(key, None)
+        data["metadata_gaps"] = metadata_gaps(data)
     data["resources"].setdefault("sop",[])
     data["resources"].setdefault("software",[])
     sources = []
@@ -308,6 +341,9 @@ def prepare_bundle(run, root=ROOT):
             path = _source(root,value)
             content = path.read_bytes()
             if role == "raw_data":
+                expected = (data.get("source_file_sha256") or {}).get(value)
+                if expected is not None and _hash(content) != expected:
+                    raise ob.CheckFailed("Eine Originaldatei hat sich seit der Laufvorbereitung geändert; Auswahl erneut prüfen.")
                 if path.suffix.lower() != ".csv":
                     raise ob.CheckFailed("Dieser GaSi-Importer erwartet validierbare Logger-CSV als RAW_DATA.")
                 with tempfile.TemporaryDirectory(prefix="gasi-validate-") as temp:
@@ -360,7 +396,10 @@ def prepare_bundle(run, root=ROOT):
             "reference_assessment":data.get("reference_assessment",{"confirmed":False}),
             "setup_evidence":data["setup_evidence"],"source_association_evidence":data["source_association_evidence"],
             "times":data["times"]["measurement"],"source_ranges":data["source_ranges"],"stage_ranges":data["stage_ranges"],
-            "software_version":data["software_versions"]["acquisition"]}),
+            "software_version":data["software_versions"]["acquisition"],
+            **({"metadata_profile":"raw_capture", "metadata_gaps":data["metadata_gaps"],
+                "setup_snapshot":data.get("setup_snapshot"), "draft_provenance":data.get("draft_provenance")}
+               if data.get("metadata_profile")=="raw_capture" else {})}),
     ):
         content = _json(payload)
         sources.append({"activity":activity,"type":"ATTACHMENT","slot":slot,"filename":slot+".json",
@@ -459,11 +498,14 @@ def preflight(client, bundle, config):
     planned = {}
     for activity in active:
         suffix = f" – {run['analysis_id']}" if activity=="analysis" else ""
-        values = {"$NAME":f"GaSi {run['run_id']} – {LABELS[activity]}{suffix}",
+        capture_label = " [Rohdatenerfassung]" if run.get("metadata_profile") == "raw_capture" else ""
+        values = {"$NAME":f"GaSi {run['run_id']} – {LABELS[activity]}{suffix}{capture_label}",
             "START_DATE":run["times"][activity]["start"],"END_DATE":run["times"][activity]["end"],
             "NOTES":_json({"gasi_workflow":1,"key":bundle["manifest"]["key"],"activity":activity,
                           "content_sha256":bundle["manifest"]["analysis_sha256" if activity=="analysis" else "acquisition_sha256"],"purpose":run["purpose"],
-                          "responsible_person":run["responsible_person"]}).decode("utf-8")}
+                          "responsible_person":run["responsible_person"],
+                          **({"metadata_profile":"raw_capture", "metadata_gaps":metadata_gaps(run)}
+                             if run.get("metadata_profile")=="raw_capture" else {})}).decode("utf-8")}
         planned[activity] = ob.mapped_properties(values,report["object_types"]["EXPERIMENTAL_STEP"],report)
         assigned={a["code"] for a in report["object_types"]["EXPERIMENTAL_STEP"]["assignments"]}
         for key,value in (("REFERENCE",run["run_id"]),("EXPERIMENTAL_STEP.EXPERIMENTAL_GOALS",run["purpose"])):
@@ -617,6 +659,8 @@ def _save_source_receipt(client,gateway,bundle,target,measurement,results):
     receipt={"schema_version":2,"run_id":run["run_id"],"inputs":inputs,"times":run["times"]["measurement"],
         "reference_assessment":run.get("reference_assessment"),"reference_evidence":run.get("reference_evidence",[]),
         "resources":run["resources"],"channels":run["channels"],"stages":run["stages"]}
+    if run.get("metadata_profile") == "raw_capture":
+        receipt.update(metadata_profile="raw_capture", metadata_gaps=run["metadata_gaps"])
     content=_json(receipt);digest=_hash(content)
     path=bundle["path"]/"source_receipt.json";path.write_bytes(content)
     stable=bundle["manifest"]["key"]+"_SOURCE_RECEIPT"

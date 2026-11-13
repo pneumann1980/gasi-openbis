@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="gasi-view" content="full"><meta name="gasi-model-sha256" content="ddc062612154abe1aed8e403014a0845f178f2359f611beed362fb165d5a558d">
+<meta name="gasi-view" content="full"><meta name="gasi-model-sha256" content="3e2a71679a3474156292387e83d407bb9dfa1a55aadcd9965c16e22b79c39335">
 <title>GaSi-Datenmodell: aktueller Aufbau und Messlauf</title><style>
 :root { color-scheme: light; --ink:#183448; --muted:#526b7b; --blue:#126b88;
   --line:#d9e4e9; --paper:#fff; --wash:#f0f5f7; }
@@ -291,6 +291,15 @@ bleiben getrennt vom <code>openbis_identifier</code>. Die API-Properties <code>I
 Original-RAW_DATA und Laufkontext. Prüfplan und Sollprofil gehören standardmäßig
 als ATTACHMENT zu diesem Lauf. Eine automatisch erzeugte Datei begründet kein
 zusätzliches Vorbereitungsobjekt.</p>
+<p>Eine erste <strong>Rohdatenerfassung</strong> darf offene fachliche Angaben enthalten:
+Aufnahmeversion, Ressourcen, Kanalbelegung und Messbedingungen werden als
+<code>metadata_gaps</code> dokumentiert. Eindeutiger Prüfling, Zweck/Person, Datenbereich,
+bekannte Zeitbasis und Zuordnung unveränderter Originale bleiben erforderlich.
+Das Formular in Notebook 03 erzeugt die lokale Laufkonfiguration aus diesen
+Auswahlen. Loggerprofile und Logabschnitte bleiben Rohbeobachtungen und bestätigen
+keine fachlichen Messstufen. Bei fehlender Stufenzuordnung erfolgt die spätere
+Auswertung über exakte Records/Zeitbereiche und nennt die offenen Angaben;
+bekannte Stufen müssen in ihrer Auswahl erhalten bleiben.</p>
 <p>Eine unabhängig freigegebene oder laufübergreifend wiederverwendete Vorbereitung
 kann als eigener EXPERIMENTAL_STEP registriert bzw. als vorhandener Parent benutzt
 werden. Die spätere Auswertung ist ein eigener Schritt mit eigener analysis_id,
@@ -583,7 +592,7 @@ weiterhin gesondert zu bestätigen. Der synthetische Test importiert keine echte
 <li><a href="https://bamresearch.github.io/bam-masterdata/howtos/object_references/">BAM Objektverweise</a> und <a href="https://github.com/BAMresearch/bam-masterdata/blob/main/bam_masterdata/datamodel/v0/object_types.py">öffentliche Typdefinitionen</a>. Öffentlicher Quellcode bestätigt kein Deployment im Playground.</li>
 </ul></div></details></section>
 <footer class="source-note">Quelle: <a href="GaSi_Datenmodell.md">GaSi_Datenmodell.md</a> · Neu erzeugen: GaSi_02_Einmalig_einrichten.ipynb (Zelle Datenmodell und HTML) → Run All.
-<details><summary>Quellstand und Offline-Ansicht</summary>SHA-256: ddc062612154abe1aed8e403014a0845f178f2359f611beed362fb165d5a558d<br>
+<details><summary>Quellstand und Offline-Ansicht</summary>SHA-256: 3e2a71679a3474156292387e83d407bb9dfa1a55aadcd9965c16e22b79c39335<br>
 Die Markdown-Datei bleibt die maßgebliche Quelle. Die Ansicht benötigt keine Internetverbindung.</details></footer></div></details></article>
 </main></div><script>
 const article = document.querySelector('article');

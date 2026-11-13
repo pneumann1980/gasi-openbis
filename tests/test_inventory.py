@@ -17,6 +17,7 @@ from test_playground_provision import ProvisionClient
 import gasi_inventory as local
 import gasi_inventory_openbis as remote
 import gasi_openbis_playground as g
+import gasi_session as session
 
 
 def write_identity_pdf(path, content):
@@ -76,6 +77,9 @@ class InventoryTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
+        switch = patch.object(session, "SESSION_FILE", self.root / ".env")
+        switch.start()
+        self.addCleanup(switch.stop)
         self.setup = fixture(self.root)
         self.client = InventoryClient()
         self.settings = remote.default_settings()
