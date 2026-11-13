@@ -173,8 +173,8 @@ def check_html_notebook(base, spec_dir):
     assert concept_digest in concept.with_suffix(".html").read_text(encoding="utf-8")
     assert 'href="GaSi_Konzeptmodell.html"' in simple
     assert hashlib.sha256(concept.read_bytes()).hexdigest() == concept_digest
-    assert len(list(isolated.glob("docs/GaSi_Konzeptmodell_*.svg"))) == 3
-    print("PASS HTML notebook: both current sources, four BAM steps, three SVGs, Markdown unchanged")
+    assert len(list(isolated.glob("docs/GaSi_Konzeptmodell_*.svg"))) == 4
+    print("PASS HTML notebook: both current sources, four BAM steps, four SVGs, Markdown unchanged")
 
 
 def check_session_notebook(base, spec_dir):

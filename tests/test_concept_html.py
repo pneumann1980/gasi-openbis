@@ -24,7 +24,7 @@ class ConceptTests(unittest.TestCase):
         source = SOURCE.read_text(encoding="utf-8")
         html = render_concept_html(source)
         page = Page(html)
-        self.assertEqual(page.diagrams, 3)
+        self.assertEqual(page.diagrams, 4)
         self.assertFalse(page.scripts, "No external scripts or Mermaid CDN")
         self.assertTrue({f"schritt-{n}" for n in range(1, 5)}.issubset(page.ids))
         self.assertTrue(set(page.anchors).issubset(page.ids))
@@ -76,10 +76,11 @@ class ConceptTests(unittest.TestCase):
 
     def test_source_changes_never_silently_drop_entities_or_replace_relationship_semantics(self):
         source = SOURCE.read_text(encoding="utf-8")
-        workflow, _, relations = graphs(source)
+        workflow, _, combined, relations = graphs(source)
         for broken in (workflow + "\nE -->|erzeugt| NEW[Neues Ergebnis]",
                        workflow.replace("M -->|danach| E", "M -->|danach| DP"),
-                       relations.replace("|Parent|", "|Dataset attachment|", 1)):
+                       relations.replace("|Parent|", "|Dataset attachment|", 1),
+                       combined.replace("|enthält|", "|Parent|", 1)):
             with self.assertRaises(ValueError):
                 concept_svg(broken)
         changed = workflow.replace("Ergebnisse beurteilen", "Neue Ergebnisse")
@@ -99,7 +100,7 @@ class ConceptTests(unittest.TestCase):
             self.assertIn('href="GaSi_Konzeptmodell.html"', simple.read_text(encoding="utf-8"))
             first = concept.with_suffix(".html").read_bytes()
             self.assertIn(sha256(original).hexdigest().encode("ascii"), first)
-            for kind in ("workflow", "mapping", "relations"):
+            for kind in ("workflow", "mapping", "combined", "relations"):
                 svg = root / f"GaSi_Konzeptmodell_{kind}.svg"
                 self.assertTrue(svg.exists())
                 ET.fromstring(svg.read_text(encoding="utf-8"))
@@ -109,6 +110,31 @@ class ConceptTests(unittest.TestCase):
             concept.write_text(original.decode("utf-8").replace("Ergebnisse beurteilen", "Neue Ergebnisse"), encoding="utf-8")
             generate_simple_html(model)
             self.assertIn("Neue Ergebnisse", concept.with_suffix(".html").read_text(encoding="utf-8"))
+
+    def test_activity_type_tables_are_visible_and_combined_view_keeps_openbis_levels(self):
+        source = SOURCE.read_text(encoding="utf-8")
+        html = render_concept_html(source)
+        second = re.search(r'<section class="step" id="schritt-2">(.*?)</section>', html, re.S).group(1)
+        visible = " ".join(VisibleText(second).text)
+        self.assertEqual(visible.count("Entitätstyp"), 3, "One visible type table per GaSi activity")
+        for label in ("Vorbereitung: Objekte und Typen", "Messung: Objekte und Typen",
+                      "Auswertung: Objekte und Typen", "MFC/MFM", "RAW_DATA", "SOFTWARE_CODE"):
+            self.assertIn(label, visible)
+        combined = ET.fromstring(concept_svg(graphs(source)[2]))
+        text = " ".join(combined.itertext())
+        for level in ("SPACE", "PROJECT", "COLLECTION", "OBJECT", "DATASET"):
+            self.assertIn(level, text)
+        objects = {}
+        for node in combined.iter():
+            if "data-node" in node.attrib:
+                box = next(n for n in node.iter() if n.attrib.get("class") == "node-box")
+                objects[node.attrib["data-node"]] = tuple(float(box.attrib[k]) for k in ("x", "y", "width", "height"))
+        for activity, output in (("P","DP"),("M","DM"),("E","DE")):
+            ax,ay,aw,ah = objects[activity]
+            dx,dy,dw,dh = objects[output]
+            self.assertEqual(ax+aw/2, dx+dw/2, "Dataset belongs below its generating activity")
+            self.assertGreater(dy, max(objects[k][1]+objects[k][3] for k in ("I","P","M","E","Q","G","W","D")))
+        self.assertIn('href="GaSi_Konzeptmodell_combined.svg" download', html)
 
 
 if __name__ == "__main__":

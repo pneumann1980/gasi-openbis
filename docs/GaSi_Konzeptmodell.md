@@ -52,6 +52,38 @@ Feld- und Zeitregeln stehen im [detaillierten Datenmodell](GaSi_Datenmodell.md).
 **Verwendete Dinge:** Geräte, Prüfling, Gasquellen und versionierte Verfahren.<br>
 **Ergebnisse:** Plan, Messdateien und Auswerteergebnisse.
 
+### Vorbereitung: Objekte und Typen
+
+| Entitätstyp | GaSi-Objekte bzw. Dateien | Ort |
+|---|---|---|
+| `EXPERIMENTAL_STEP` | Vorbereitung: Prüfaufgabe und Messplan festlegen | Laborbuch |
+| `SOP`, Kandidat | Verwendete, gültige Verfahrensversion | Vorhandenes BAM-/FB-Inventar; Ziel prüfen |
+| `ATTACHMENT`, Dataset | Prüfplan, Stufensollprofil und Startkonfiguration | An der Vorbereitung |
+
+### Messung: Objekte und Typen
+
+| Entitätstyp | GaSi-Objekte bzw. Dateien | Ort |
+|---|---|---|
+| `EXPERIMENTAL_STEP` | Ein fachlich zusammenhängender GaSi-Messlauf | Laborbuch |
+| `INSTRUMENT` | Verwendete MFC/MFM, Druckregler, Feuchtereferenzen und Erfassung | Geräteinventar; als Parents der Messung |
+| Vorhandener Prüflingstyp | Geprüfter Sensor bzw. geprüftes Gerät, mit seiner vorhandenen Identität | Passendes Inventar; als Parent der Messung |
+| `GAS_BOTTLE`, Kandidat | Tatsächlich verwendete Gasquelle bzw. Flasche | Materialinventar; als Parent der Messung |
+| `RAW_DATA`, Dataset | Unveränderte Loggerdateien | An der Messung |
+| `ATTACHMENT`, Dataset | Tatsächlich verwendeter Aufbau, Kanalplan und Messprotokoll | An der Messung |
+
+### Auswertung: Objekte und Typen
+
+| Entitätstyp | GaSi-Objekte bzw. Dateien | Ort |
+|---|---|---|
+| `EXPERIMENTAL_STEP` | Auswertung eines oder mehrerer Messläufe | Laborbuch; verwendete Messungen sind Parents |
+| `SOFTWARE_CODE`, Kandidat | Verwendete Version der Auswertesoftware | Vorhandenes BAM-/FB-Inventar; als Parent der Auswertung |
+| `ATTACHMENT`, Dataset | Auswerteergebnisse, Diagramme, Bericht und reproduzierbarer Code | An der Auswertung |
+
+Die Tabellen entsprechen der Sicht **Arbeitsschritt → Typen → konkrete Dinge**
+im BAM-Beispiel. Sie zeigen GaSi-Kategorien; einzelne Seriennummern bleiben im
+lokalen Gerätebericht. Dataset-Zeilen sind ausdrücklich Dateienablagen und keine
+zusätzlichen Inventarobjekte. Spezialtypen für Ergebnisdaten sind unten aufgeführt.
+
 <details markdown="1">
 <summary>Entitäten, Typen und notwendige Angaben anzeigen</summary>
 
@@ -138,6 +170,47 @@ unveränderten Eingabedatasets mit PermID und SHA-256.
 **Pfeile zwischen Objekten bedeuten Parent → Child.**
 Die Dateien bleiben bei dem Arbeitsschritt, der sie erzeugt hat.
 
+### Gesamtmodell: Laborbuch und Inventare
+
+Wie im BAM-Beispiel sind **Space, Project, Collection, Object und Dataset**
+gemeinsam dargestellt. Spalten und Ebenen zeigen die Ablage. Gestrichelte Linien
+im oberen Bereich ordnen Container zu; durchgezogene Objektpfeile zeigen Parents.
+Datasets stehen unter ihrer erzeugenden Tätigkeit und benennen diese zusätzlich.
+Das Laborbuchziel und weitere
+Ressourcenablagen sind Vorschläge beziehungsweise noch offen.
+
+```mermaid
+flowchart LR
+    %% gasi-view: combined
+    IS[8.1_EQUIPMENT / Geräteinventar] -->|enthält| IP[GASI / Bestehendes Projekt]
+    IP -->|enthält| IC[INSTRUMENTS / Bestehende Collection]
+    LS[FB-8.1-Laborbuch / Ziel noch offen] -->|enthält| LP[GASI / Projektvorschlag]
+    LP -->|enthält| PC[PREPARATION / Vorschlag]
+    LP -->|enthält| MC[RUNS / Vorschlag]
+    LP -->|enthält| EC[ANALYSIS / Vorschlag]
+    RS[BAM-/FB-Inventar / Weitere Ziele offen] -->|enthält| RP[Ressourcenprojekte / Ziele prüfen]
+    RP -->|enthält| RC[Ressourcen / Gas, SOP, Software]
+    Q[Verfahren / SOP als Kandidat] -->|Parent| P[Vorbereitung / EXPERIMENTAL_STEP]
+    P -->|Parent| M[Messung / EXPERIMENTAL_STEP]
+    M -->|Parent| E[Auswertung / EXPERIMENTAL_STEP]
+    I[Verwendete Geräte / INSTRUMENT] -->|Parent| M
+    G[Gasquelle / GAS_BOTTLE als Kandidat] -->|Parent| M
+    D[Prüfling / Vorhandenes Objekt] -->|Parent| M
+    W[Auswertesoftware / SOFTWARE_CODE als Kandidat] -->|Parent| E
+    DP[Prüfplan / ATTACHMENT an Vorbereitung]
+    DM[Logger-CSV und Aufbau / RAW_DATA, ATTACHMENT an Messung]
+    DE[Ergebnisse und Bericht / ATTACHMENT an Auswertung]
+```
+
+Ressourcenkästen stehen für einzelne wiederverwendbare Objekte. Bei einem
+verwalteten Gerät als Prüfling wird seine bestehende Geräteidentität verwendet;
+für andere Prüflinge bleibt Inventartyp und Ablage zu prüfen. Die rechte Spalte
+fasst noch festzulegende Ressourcenablagen zusammen und behauptet keinen
+gemeinsamen bereits existierenden Space.
+
+<details markdown="1">
+<summary>Nur die Objektbeziehungen groß anzeigen</summary>
+
 ```mermaid
 flowchart LR
     %% gasi-view: relations
@@ -149,6 +222,8 @@ flowchart LR
     D[Prüfling / Vorhandenes Objekt] -->|Parent| M
     W[Auswertesoftware / SOFTWARE_CODE als Kandidat] -->|Parent| E
 ```
+
+</details>
 
 Die Kästen für Geräte und Gasquellen fassen mehrere mögliche Objekte zusammen.
 Jedes tatsächlich verwendete Objekt wird einzeln verknüpft. Die Grafik zeigt
@@ -205,6 +280,7 @@ Die bestehenden Inventar- und synthetischen Testbefunde sind getrennt dokumentie
 
 - [BAM: Conceptual Data Model, Schritte 1–4](https://datastore.bam.de/en/openbis_20-10-12/how-to_guides/user_ui/represent_research_data), gelesen am 13.11.2026.
 - [BAM: EuVSOP](https://datastore.bam.de/en/use_cases/euvsop), Abschnitte **Register data in the Lab Notebook** und **Connect Inventory and ELN**: getrennte Tätigkeiten mit Datasets, Ressourcen als Parents. Als Strukturvorbild verwendet, ohne dessen Forschungsobjekte oder Sondertypen auf GaSi zu übertragen.
+- Direkt abgeglichene Beispielgrafiken: [Objekte und Typen je Arbeitsschritt](https://datastore.bam.de/use_case_pics/20260728_use_case_euvsop_objects_and_object_types.svg) und [Gesamtmodell mit Hierarchie und Beziehungen](https://datastore.bam.de/use_case_pics/20260728_use_case_euvsop_data_model.svg). Die GaSi-Ansicht verwendet deren Darstellungsprinzip mit eigenen Tätigkeiten, Typen und Dateien.
 - [BAM: Parsers](https://datastore.bam.de/en/parsers), Einstieg zu Beispielen, Workshop und ETL-Pipeline. Weitere Umsetzung nach Bestätigung der GaSi-Semantik.
 - [GaSi-Wiki](../data/wiki/home.txt), **1 Verfahrensprinzip**, **Aufbau**.
 - [GaSi-Paper, Supporting Information](../data/paper/tg5c00105_si_001.pdf), **1 Humidification unit**, insbesondere Figure S1 und Referenzmessung auf Seite 3.

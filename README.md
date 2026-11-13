@@ -40,7 +40,7 @@ Empfohlene Reihenfolge; jedes Notebook funktioniert unabhängig mit einem frisch
 |---|---|---|
 | [GaSi_Projekt_einrichten.ipynb](GaSi_Projekt_einrichten.ipynb) | Projektpakete im ausgewählten Python-Kernel installieren und prüfen | Installiert `requirements-dev.txt`; kein openBIS-Zugriff |
 | [GaSi_00_Session_einrichten.ipynb](GaSi_00_Session_einrichten.ipynb) | Session-Token zentral und verdeckt speichern | Nur lokale `.env`; keine Verbindung zu openBIS |
-| [GaSi_01_Datenmodell_HTML_erzeugen.ipynb](GaSi_01_Datenmodell_HTML_erzeugen.ipynb) | Modellübersicht und die vier BAM-Konzeptschritte erzeugen | Offline; schreibt Modell-/Konzept-HTML und drei Konzept-SVGs |
+| [GaSi_01_Datenmodell_HTML_erzeugen.ipynb](GaSi_01_Datenmodell_HTML_erzeugen.ipynb) | Modellübersicht und die vier BAM-Konzeptschritte erzeugen | Offline; schreibt Modell-/Konzept-HTML und vier Konzept-SVGs |
 | [GaSi_02_Aktuelles_Setup_pruefen.ipynb](GaSi_02_Aktuelles_Setup_pruefen.ipynb) | Aktuelle Gerätepositionen und Kanalzuordnungen lokal prüfen | Liest die lokale Setup-Datei; erzeugt einen lokalen Bericht |
 | [GaSi_03_Messdateien_pruefen.ipynb](GaSi_03_Messdateien_pruefen.ipynb) | CSV-Dateien prüfen und eine lokale Vorschau erzeugen | Offline; Originale unverändert; kein Upload |
 | [GaSi_04_Playground_Bestand_lesen.ipynb](GaSi_04_Playground_Bestand_lesen.ipynb) | Sichtbare Bereiche, Typen und Pflichtfelder aus openBIS lesen | Ausschließlich lesend |
@@ -100,15 +100,20 @@ Variablen aus einem vorherigen Notebook werden nicht benötigt.
 
 **Neu: [GaSi-Konzeptmodell in vier Schritten](docs/GaSi_Konzeptmodell.html)**:
 Forschungsablauf zeichnen, Entitäten und Typen bestimmen, in Laborbuch/Inventar
-einordnen und Objekte verbinden. Die HTML zeigt einen Schritt pro Ansicht;
-Tabellen und Fachfragen lassen sich bei Bedarf aufklappen. Die
+einordnen und Objekte verbinden. Die HTML zeigt einen Schritt pro Ansicht.
+In **2 · Bausteine** stehen drei Tabellen direkt sichtbar: jeweils Entitätstyp,
+GaSi-Objekte/Dateien und Ort für Vorbereitung, Messung und Auswertung.
+**4 · Verbindungen** zeigt das Gesamtmodell wie im BAM-Beispiel mit
+Space-, Project-, Collection-, Object- und Dataset-Ebene sowie Parent-Pfeilen.
+Die einfachere Objektansicht und weitere Fachfragen lassen sich aufklappen. Die
 [Markdown-Quelle](docs/GaSi_Konzeptmodell.md) enthält die Entscheidungen und Fundstellen.
 
 **Neu erzeugen:** Notebook **01** mit frischem Kernel öffnen und **Run All**
 ausführen. Den erzeugten Link **Einfache Grafik öffnen** anklicken und dort
 **Forschungsablauf: die vier BAM-Schritte ansehen** wählen. Derselbe Aufruf
-aktualisiert die neue Konzeptansicht und die drei separat nutzbaren SVGs
-`GaSi_Konzeptmodell_workflow.svg`, `_mapping.svg` und `_relations.svg` in `docs/`.
+aktualisiert die Konzeptansicht mit ihren Tabellen und vier separat nutzbaren SVGs
+`GaSi_Konzeptmodell_workflow.svg`, `_mapping.svg`, `_combined.svg` und `_relations.svg`
+in `docs/`. Jede Grafik bietet auch **SVG herunterladen**.
 Kein zusätzliches Notebook und kein BAM-Zugang erforderlich.
 
 Quelle: [docs/GaSi_Datenmodell.md](docs/GaSi_Datenmodell.md).
@@ -383,13 +388,16 @@ oder hochgeladen; GaSi verwendet weiterhin seine eigene kleine synthetische CSV.
 
 ## Prüfung: lokal und live getrennt
 
-**Konzeptabgleich 13.11.2026:** 89 lokale Tests bestanden. Notebook 01 wurde
+**Konzeptabgleich 13.11.2026:** 90 lokale Tests bestanden. Notebook 01 wurde
 zusätzlich mit frischem Kernel und gesperrtem Netzwerk ausgeführt: beide
-Markdown-Quellen unverändert, alle drei HTML-Dateien und die drei Konzept-SVGs
+Markdown-Quellen unverändert, alle drei HTML-Dateien und die vier Konzept-SVGs
 erzeugt. Die vier Ansichten wurden in Edge geprüft; je Auswahl ist genau ein
 Schritt sichtbar. Alle neuen Diagrammkanten und Beschriftungen stammen aus der
 Konzeptquelle; Boxen und Verbindungslinien überschneiden sich in den geprüften
-Layouts nicht. Die verlinkten BAM-Seiten wurden gelesen. Es fand für diesen
+Layouts nicht. Die verlinkten BAM-Seiten und ihre Beispielgrafiken wurden gelesen.
+Zusätzlich geprüft: drei direkt sichtbare Typentabellen je Tätigkeit,
+gemeinsame Hierarchie-/Beziehungsansicht und separat exportierte SVGs.
+Es fand für diesen
 Konzeptabgleich kein neuer Live-Schreibtest statt.
 
 ```powershell
