@@ -729,6 +729,16 @@ def generate_html(source_path: str | Path = SOURCE) -> Path:
     return output
 
 
+def generate_simple_html(source_path: str | Path = SOURCE) -> Path:
+    """Compatibility for old open kernels; emits only the current reference/concept views.
+
+    importlib.reload retains removed functions in the module dictionary. Replacing
+    the old entry point prevents it from calling render_html with obsolete arguments.
+    No separate _einfach.html file is created.
+    """
+    return generate_html(source_path)
+
+
 def show_model_export_button(repo_root: str | Path = ROOT):
     """Optional notebook UI: absence of these extras never breaks offline CSV checks."""
     root = Path(repo_root).resolve()

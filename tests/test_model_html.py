@@ -210,6 +210,34 @@ class HtmlModelTests(unittest.TestCase):
             self.assertTrue(source.with_suffix(".html").is_file())
             self.assertFalse(source.with_name("GaSi_Datenmodell_einfach.html").exists())
 
+    def test_old_open_notebook_survives_mixed_module_reload_without_extra_html(self):
+        import importlib
+        import gasi_model_html
+        import gasi_workflow
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "GaSi_Datenmodell.md"
+            source.write_text("# Current model\n\nCurrent content.", encoding="utf-8")
+
+            def old_simple(path):
+                # Previous function retained in a module dict by importlib.reload.
+                return gasi_model_html.render_html(path.read_text(encoding="utf-8"), details_href="old.html")
+
+            def cached_workflow():
+                detailed = gasi_model_html.generate_html(source)
+                simple = gasi_model_html.generate_simple_html(source)
+                return dict(overview=simple, details=detailed)
+
+            with patch.object(gasi_model_html, "generate_simple_html", old_simple, create=True), \
+                 patch.object(gasi_workflow, "generate_model", cached_workflow):
+                # Exactly the reload order in an older, still-open notebook cell.
+                importlib.reload(gasi_model_html)
+                result = gasi_workflow.generate_model()
+            self.assertEqual(result["overview"], source.with_suffix(".html"))
+            self.assertEqual(list(root.glob("*.html")), [source.with_suffix(".html")])
+            self.assertIn("Current content.", result["details"].read_text(encoding="utf-8"))
+
     def test_unsupported_mermaid_remains_visible_instead_of_a_wrong_graph(self):
         html = render_html("# Model\n\n```mermaid\nsequenceDiagram\nA->>B: New syntax\n```\n")
         self.assertIn("sequenceDiagram", html)

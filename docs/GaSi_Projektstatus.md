@@ -8,8 +8,10 @@ Die optionale spätere Auswertung liegt im Unterordner `notebooks/`.
 Einrichtung, Zielkonfiguration, Geräteinventar und synthetischer Schreibtest sind
 zusammengeführt. Die zentrale Konzept-HTML, die ausführliche Datenmodell-HTML und
 vier Konzept-SVGs werden über eine separat ausführbare Offline-Zelle der Einrichtung erzeugt.
-Die zusätzliche einfache HTML entfällt. Diese Bereinigung ist mit 15 HTML-/SVG-Tests
+Die zusätzliche einfache HTML entfällt. Diese Bereinigung ist mit 16 HTML-/SVG-Tests
 und dem Einrichtungsnotebook in einem frischen Kernel geprüft.
+Auch der alte Aufruf in einem bereits geöffneten Notebook funktioniert nach dem
+Neuladen der Module; er erzeugt keine zusätzliche einfache HTML.
 
 **Ein Schalter:** `SCHREIBEN = False/True` ausschließlich im Session-Notebook.
 Der lokale Modus in `.env` wird von jedem Arbeitsaufruf neu gelesen; er gilt auch
